@@ -13,7 +13,7 @@ class mmWaveBS{
 public:
     /* Explicitly using the default constructor to
      * underline the fact that it does get called */
-    mmWaveBS(double x, double y, uint32_t id, Status st=idle);
+    mmWaveBS(double x, double y, uint32_t id, double ptx, Status st=idle);
     ~mmWaveBS();
     void Start();
 	
@@ -39,6 +39,10 @@ public:
 	std::size_t getColor(){return m_color;}
     std::size_t* get_rgb_Color(){return m_rgb_color;}
     
+    void set_transmit_power(double ptx);
+    double calculate_SNR_of_link(double x, double y);
+    double calculate_Rate_of_link(double x, double y);
+    
 private:
     std::thread the_thread;
 	bool stop_thread = false;
@@ -53,6 +57,13 @@ private:
 	timer_t T;
 	std::size_t m_rgb_color[3];
 	std::size_t m_color;
+    
+    // RF parameters
+    double m_TxP;
+    double m_TxP_dBm;
+    double m_RxPower;
+    double m_Antenna_Gain;
+    
 };
 
 

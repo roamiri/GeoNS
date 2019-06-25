@@ -1,9 +1,11 @@
 #include "mmwavebs.h"
 
-mmWaveBS::mmWaveBS(double x, double y, uint32_t id, Status st)
+mmWaveBS::mmWaveBS(double x, double y, uint32_t id, double ptx, Status st)
 : the_thread()
 {
 	m_xx =x; m_yy =y; m_id =id; m_status = st;
+    m_TxP_dBm = ptx;
+    set_transmit_power(ptx);
 }
 
 mmWaveBS::~mmWaveBS()
@@ -69,3 +71,33 @@ void mmWaveBS::declare_as_cluster_head()
 	cluster_head_msg message(m_xx, m_yy, m_id, m_color);
 	clusterHead.emit(message);
 }
+
+void mmWaveBS::set_transmit_power(double ptx)
+{
+    double p = ptx - 30;
+    m_TxP = pow(10.,p/10.0);
+}
+
+double mmWaveBS::calculate_SNR_of_link(double x, double y)
+{
+    double dist = euclidean_dist(x, y, m_xx, m_yy);
+    double path_loss_db = def_beta + 10.* def_backhaul_alpha_los * log10(dist) + def_backhaul_zeta_los; //TODO implement zeta better with randn
+    double plg = m_TxP_dBm + def_G_max + def_G_max - path_loss_db;
+    double noise_dBm = -174 + 10*log10(def_BW) + def_NoiseFigure; // -174 dBm/Hz + 10log10(BW) + noise figure
+    double snr = dBm_to_watt(plg)/dBm_to_watt(noise_dBm);
+    return snr;
+}
+
+double mmWaveBS::calculate_Rate_of_link(double x, double y)
+{
+    double snr = calculate_SNR_of_link(x, y);
+    double rate = def_BW * log2(1+snr);
+    return rate;
+}
+
+
+
+
+
+
+
