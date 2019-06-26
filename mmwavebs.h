@@ -43,6 +43,12 @@ public:
     double calculate_SNR_of_link(double x, double y);
     double calculate_Rate_of_link(double x, double y);
     
+    void set_hop_count(int i){m_hop_cnt=i;}
+    int get_hop_count(){return m_hop_cnt;}
+    
+    void set_IAB_parent(uint32_t i){m_IAB_parent=i;}
+    int get_IAB_parent(){return m_IAB_parent;}
+    
 private:
     std::thread the_thread;
 	bool stop_thread = false;
@@ -63,6 +69,10 @@ private:
     double m_TxP_dBm;
     double m_RxPower;
     double m_Antenna_Gain;
+    
+    // Routing parameters
+    int m_hop_cnt = -1;
+    uint32_t m_IAB_parent = -1;
     
 };
 
