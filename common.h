@@ -27,6 +27,7 @@ static double out_bound = 200.0;
 #define def_NoiseFigure 10 // dB
 
 #define RED 0xff // red color
+#define BLUE 0xff // BLUE color
 
 
 enum Status{idle, candiate, inBound, outBound, clusterHead};

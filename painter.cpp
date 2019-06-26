@@ -98,14 +98,32 @@ void Painter::update()
 		std::size_t green =(color & 0x00ff00) >> 8; 
 		std::size_t blue = (color & 0x0000ff);  	
 // 		std::cout << "Status = " << dd.get()->getStatus() << std::endl;
+        // Text of number of hops to the wired node
         *m_doc << Text(Point(x, y+2), std::to_string(dd->get_hop_count()), Fill(Color(0,0,0)), Font(2.,"Verdana"));
+        // Drawing the nodes
 		if(dd.get()->getStatus()==Status::clusterHead)
 			*m_doc << Circle(Point(x, y), 2, Fill(Color(0,0,0)), Stroke(1, Color(RED,0,0)));
 		else
 			*m_doc << Circle(Point(x, y), 2, Fill(Color(red,green,blue)), Stroke(1, Color(red, green, blue)));
 		
-		m_doc->save();
 	}
+	
+	for(int i=0;i<size;i++)
+    {
+        // Drawing paths
+        std::shared_ptr<mmWaveBS> mmB = m_nodes[i];
+        double x1 = (0.1) * (mmB->getX()+x_shift);
+        double y1 = (0.1) * (mmB->getY()+y_shift);
+        uint32_t parent = mmB->get_IAB_parent();
+        if(parent!=-1)
+        {
+            double x2 = (0.1) * (m_nodes[parent]->getX()+x_shift);
+            double y2 = (0.1) * (m_nodes[parent]->getY()+y_shift);
+        
+        *m_doc << Line(Point(x1,y1), Point(x2,y2), Stroke(1, Color(0,0,BLUE)));
+        }
+    }
+    m_doc->save();
 }
 
 
