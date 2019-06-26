@@ -26,8 +26,11 @@ static double out_bound = 200.0;
 #define def_teta_b 10 // degree beam-width
 #define def_NoiseFigure 10 // dB
 
+#define RED 0xff // red color
+
 
 enum Status{idle, candiate, inBound, outBound, clusterHead};
+enum BS_type{wired, IAB};
 
 static double dBm_to_watt(double pp)
 {
@@ -50,6 +53,13 @@ static void counter(int seconds)
 	clock_t endTurn = clock() + seconds * CLOCKS_PER_SEC;
 	while(clock() < endTurn){}
 }
+
+struct update_parent_msg
+{
+    uint32_t id;
+    int hop_cnt;
+    update_parent_msg(uint32_t iidd, int hcnt){id=iidd; hop_cnt=hcnt;}
+};
 
 struct candidacy_msg
 {

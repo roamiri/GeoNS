@@ -1,9 +1,9 @@
 #include "mmwavebs.h"
 
-mmWaveBS::mmWaveBS(double x, double y, uint32_t id, double ptx, Status st)
+mmWaveBS::mmWaveBS(double x, double y, uint32_t id, double ptx, /*BS_type type,*/ Status st)
 : the_thread()
 {
-	m_xx =x; m_yy =y; m_id =id; m_status = st;
+	m_xx =x; m_yy =y; m_id =id; /*m_type= type;*/ m_status = st;
     m_TxP_dBm = ptx;
     set_transmit_power(ptx);
 }
@@ -23,12 +23,12 @@ void mmWaveBS::Start()
     the_thread = std::thread(&mmWaveBS::ThreadMain,this);
     
     char thread_name [20];
-    sprintf(thread_name, "BS_%d",m_id);
+    sprintf(thread_name, "SBS_%d",m_id);
     prctl(PR_SET_NAME,thread_name,0,0,0);
     
     char thread_name_buffer[20];
     prctl(PR_GET_NAME, thread_name_buffer, 0L, 0L, 0L);
-    std::cout << "Class " << thread_name_buffer << "has started!" << std::endl;
+//     std::cout << "Class " << thread_name_buffer << " has started!" << std::endl;
 }
 
 void mmWaveBS::listen(const std::string& message)
@@ -40,21 +40,25 @@ void mmWaveBS::ThreadMain()
 {
     while(!stop_thread)
     {
-		if(m_status == Status::idle)
-		{
-			srand(time(NULL));
-			double p = ((double)rand()/(double)(RAND_MAX));
-// 			std::cout << "pp = " << p << std::endl;
-			counter(p * 10.0);
-			if(m_status == Status::idle)
-			{
-				candidacy_msg message(m_xx, m_yy, m_id);
-				candidacy.emit(message);
-			}
-		}
-
-        // Do something useful, e.g:
-//         std::this_thread::sleep_for( std::chrono::seconds(1) );
+        // Time interval to avoid overwhelming the thread!
+        srand(time(NULL));
+        double p = ((double)rand()/(double)(RAND_MAX));
+        counter(p * 10.0);
+        if(is_route_found())
+            stop_thread = true;
+        // Clustering
+// 		if(m_status == Status::idle)
+// 		{
+// 			srand(time(NULL));
+// 			double p = ((double)rand()/(double)(RAND_MAX));
+// // 			std::cout << "pp = " << p << std::endl;
+// 			counter(p * 10.0);
+// 			if(m_status == Status::idle)
+// 			{
+// 				candidacy_msg message(m_xx, m_yy, m_id);
+// 				candidacy.emit(message);
+// 			}
+// 		}
     }
 }
 
@@ -96,8 +100,8 @@ double mmWaveBS::calculate_Rate_of_link(double x, double y)
 }
 
 
-
-
-
-
-
+void mmWaveBS::emit_update_parent()
+{
+    update_parent_msg msg(m_id, m_hop_cnt);
+    update_parent.emit(msg);
+}

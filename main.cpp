@@ -12,7 +12,7 @@
 #include "manager.h"
 #include "mmwavebs.h"
 #include "idgenerator.h"
-// #include "painter.h"
+#include "painter.h"
 #include "ppunfix5.h"
 
 
@@ -21,18 +21,20 @@ int main()
   bool create_output = true;
   IDGenerator* _idGenerator = IDGenerator::instance();
   Manager manager;
+   std::shared_ptr<Painter> _painter = std::make_shared<Painter>(manager.m_vector_BSs);
+  _painter.get()->Start();
   
-  int num_nodes = 3;
+  int num_nodes = 10;
   
     // Read a file from matlab to simulate poisson point process
 	double data[num_nodes][2];
-	std::fstream _file("../data/3Nodes.txt");
+	std::fstream _file("../data/exptable_148.txt");
 	int i =0;
 	if(_file.fail())
     {
 		std::cerr << "input data file does not exis!" << std::endl;
     }
-	while(_file)
+	while(i<num_nodes)
 	{
 		int j=0;
 		std::string line;
@@ -48,18 +50,19 @@ int main()
 	}
   
   //   Create the nodes
-	for(int i =0;i<3;i++)
+	for(int i =0;i<num_nodes;i++)
 	{
 // 		if(data[i][0])
 		{
-			std::shared_ptr<mmWaveBS> BS = std::make_shared<mmWaveBS>(10.0 *data[i][0], 10.0 *data[i][1], _idGenerator->next(), def_P_tx);
+			std::shared_ptr<mmWaveBS> BS = std::make_shared<mmWaveBS>(1000.0 *data[i][0], 1000.0 *data[i][1], _idGenerator->next(), def_P_tx);
 			BS.get()->setColor(0);
 			manager.m_vector_BSs.push_back(BS);
-            BS.get()->Start();
-			BS.get()->candidacy.connect_member(&manager, &Manager::listen_For_Candidacy);
+//             BS.get()->Start();
+			BS.get()->update_parent.connect_member(&manager, &Manager::listen_For_parent_update);
 		}
 	}
 	
+	// Fidning the parents of nodes
 	manager.m_vector_BSs[0]->setStatus(Status::clusterHead);
     manager.m_vector_BSs[0]->set_hop_count(0);
     
@@ -80,7 +83,11 @@ int main()
             if(mmB2.get()->getID() != cid)
             { 
                 double snr = mmB->calculate_SNR_of_link(mmB2->getX(), mmB2->getY());
-                if(snr>max_snr)
+                // Rules
+                bool b_snr = snr>max_snr;
+                bool b_parent = mmB2.get()->get_IAB_parent()!=mmB.get()->getID();
+
+                if(b_snr && b_parent)
                 {
                     max_snr = snr;
                     parent = mmB2.get()->getID();
@@ -90,11 +97,41 @@ int main()
             }
         }
         mmB->set_IAB_parent(parent);
-        std::cout << "SBS= "<< mmB.get()->getID() << "parent= "<< parent << std::endl;
+        std::cout << "SBS= "<< mmB.get()->getID() << " parent= "<< parent << std::endl;
+    }
+    
+    // set hop count of the nodes
+//     manager.m_vector_BSs[0]->emit_update_parent();
+    bool finish = false;
+    int counter = 0;
+    while((!finish) && (counter<10))
+    {
+        bool all_found = true;
+        for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end(); ++it)
+        {
+            std::shared_ptr<mmWaveBS> mmB = (*it);
+            if(mmB->get_hop_count()!=-1)
+                mmB->emit_update_parent();
+            else
+                all_found = false;
+        }
+        
+        if(all_found)
+            finish = true;
+        counter++;
     }
     
     
-  
-    std::cout << "Hello!" << std::endl;
+    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end(); ++it)
+    {
+        std::shared_ptr<mmWaveBS> mmB = (*it);
+        std::cout << "SBS " << mmB->getID() << " hop count = " << mmB->get_hop_count() << std::endl;
+    }
+    
+    std::this_thread::sleep_for( std::chrono::seconds(2) );
+    _painter.get()->Enable();
+    
+    
+    std::cout << "Done!" << std::endl;
     return 0;
 }

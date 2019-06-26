@@ -13,7 +13,7 @@ class mmWaveBS{
 public:
     /* Explicitly using the default constructor to
      * underline the fact that it does get called */
-    mmWaveBS(double x, double y, uint32_t id, double ptx, Status st=idle);
+    mmWaveBS(double x, double y, uint32_t id, double ptx, /*BS_type type,*/ Status st=idle);
     ~mmWaveBS();
     void Start();
 	
@@ -31,6 +31,8 @@ public:
     Signal<candidacy_msg const &> candidacy;
     Signal<cluster_head_msg const &> clusterHead;
     Signal<std::string const &> conflict;
+    Signal<update_parent_msg const &> update_parent;
+    
 
     void listen(std::string const &message);
 	void setColor(std::size_t color);
@@ -48,6 +50,11 @@ public:
     
     void set_IAB_parent(uint32_t i){m_IAB_parent=i;}
     int get_IAB_parent(){return m_IAB_parent;}
+    
+    void route_found(bool bb){m_found_Route = bb;}
+    bool is_route_found(){return m_found_Route;}
+    
+    void emit_update_parent();
     
 private:
     std::thread the_thread;
@@ -71,9 +78,10 @@ private:
     double m_Antenna_Gain;
     
     // Routing parameters
+    BS_type m_type;
     int m_hop_cnt = -1;
     uint32_t m_IAB_parent = -1;
-    
+    bool m_found_Route = false;
 };
 
 

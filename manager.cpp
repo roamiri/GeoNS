@@ -78,7 +78,7 @@ void Manager::listen_For_ClusterHead(const cluster_head_msg& message)
 		double dist2 = euclidean_dist2(x, y, mmB->getX(), mmB->getY());
 		if(dist2>0) // dist2=0 means the same node
 		{
-			if( dist2 <=  pow(out_bound, 2))
+			if(dist2 <=  pow(out_bound, 2))
 			{
 				if(dist2 <=  pow(in_bound, 2))
 				{
@@ -144,3 +144,21 @@ void Manager::makeCluster(uint32_t id)
 			break;
 		}
 }
+
+void Manager::listen_For_parent_update(const update_parent_msg& msg)
+{
+    uint32_t id = msg.id;
+    int hop_cnt = msg.hop_cnt;
+    std::cout << "Parent update from SBS= " << id << std::endl;
+    std::lock_guard<std::mutex> guard(m_mutex);
+    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+    {
+        std::shared_ptr<mmWaveBS> mmB = (*it);
+        if(mmB->get_IAB_parent()==id)
+        {
+            mmB->set_hop_count(hop_cnt+1);
+            mmB->route_found(true);
+        }
+    }
+}
+
