@@ -24,7 +24,7 @@ int main()
    std::shared_ptr<Painter> _painter = std::make_shared<Painter>(manager.m_vector_BSs);
   _painter.get()->Start();
   
-  int num_nodes = 10;
+  int num_nodes = 100;
   
     // Read a file from matlab to simulate poisson point process
 	double data[num_nodes][2];
@@ -54,7 +54,18 @@ int main()
 	{
 // 		if(data[i][0])
 		{
-			std::shared_ptr<mmWaveBS> BS = std::make_shared<mmWaveBS>(1000.0 *data[i][0], 1000.0 *data[i][1], _idGenerator->next(), def_P_tx);
+//             srand(time(NULL));
+//             double p = ((double)rand()/(double)(RAND_MAX));
+            bool prob = (rand() % 100) < 100*def_prob_Wired;
+            std::shared_ptr<mmWaveBS> BS;
+            double x = 1000.0 *data[i][0]; 
+            double y = 1000.0 *data[i][1];
+            
+            if(prob)
+                 BS = std::make_shared<mmWaveBS>(x,y, _idGenerator->next(),  def_P_tx, Backhaul::wired);
+            else
+                 BS = std::make_shared<mmWaveBS>(x,y, _idGenerator->next(),  def_P_tx, Backhaul::IAB);
+			
 			BS.get()->setColor(0);
 			manager.m_vector_BSs.push_back(BS);
 //             BS.get()->Start();
@@ -63,14 +74,15 @@ int main()
 	}
 	
 	// Fidning the parents of nodes
-	manager.m_vector_BSs[0]->setStatus(Status::clusterHead);
-    manager.m_vector_BSs[0]->set_hop_count(0);
+// 	manager.m_vector_BSs[0]->setStatus(Status::clusterHead);
+//     manager.m_vector_BSs[0]->set_hop_count(0);
     
     for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end();++it)
     {
         std::shared_ptr<mmWaveBS> mmB = (*it);
         uint32_t cid = mmB.get()->getID();
-        if(mmB.get()->getStatus()==Status::clusterHead)
+        
+        if(mmB.get()->get_backhaul_Type()==Backhaul::wired)
             continue;
         
         double x = mmB.get()->getX();

@@ -101,7 +101,7 @@ void Painter::update()
         // Text of number of hops to the wired node
         *m_doc << Text(Point(x, y+2), std::to_string(dd->get_hop_count()), Fill(Color(0,0,0)), Font(2.,"Verdana"));
         // Drawing the nodes
-		if(dd.get()->getStatus()==Status::clusterHead)
+		if(dd.get()->get_backhaul_Type()==Backhaul::wired)
 			*m_doc << Circle(Point(x, y), 2, Fill(Color(0,0,0)), Stroke(1, Color(RED,0,0)));
 		else
 			*m_doc << Circle(Point(x, y), 2, Fill(Color(red,green,blue)), Stroke(1, Color(red, green, blue)));
@@ -120,7 +120,7 @@ void Painter::update()
             double x2 = (0.1) * (m_nodes[parent]->getX()+x_shift);
             double y2 = (0.1) * (m_nodes[parent]->getY()+y_shift);
         
-        *m_doc << Line(Point(x1,y1), Point(x2,y2), Stroke(1, Color(0,0,BLUE)));
+        *m_doc << Line(Point(x1,y1), Point(x2,y2), Stroke(0.5, Color(0,0,BLUE)));
         }
     }
     m_doc->save();

@@ -9,6 +9,8 @@
 
 static double in_bound = 100.0;
 static double out_bound = 200.0;
+
+#define def_prob_Wired 0.3
 #define def_BW 4.e8 // Bandwidth = 400 MHz
 #define def_fc  28.e9 // fc = 28 GHz
 #define def_P_tx  30 // dBm
@@ -31,7 +33,7 @@ static double out_bound = 200.0;
 
 
 enum Status{idle, candiate, inBound, outBound, clusterHead};
-enum BS_type{wired, IAB};
+enum Backhaul{wired, IAB};
 
 static double dBm_to_watt(double pp)
 {
