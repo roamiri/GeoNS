@@ -86,10 +86,11 @@ void mmWaveBS::set_transmit_power(double ptx)
 
 double mmWaveBS::calculate_SNR_of_link(double x, double y)
 {
+    // SNR = S/N
     double dist = euclidean_dist(x, y, m_xx, m_yy);
-    double path_loss_db = def_beta + 10.* def_backhaul_alpha_los * log10(dist) + def_backhaul_zeta_los; //TODO implement zeta better with randn
-    double plg = m_TxP_dBm + def_G_max + def_G_max - path_loss_db;
-    double noise_dBm = -174 + 10*log10(def_BW) + def_NoiseFigure; // -174 dBm/Hz + 10log10(BW) + noise figure
+    double path_loss_db = def_beta + 10.* def_backhaul_alpha_los * log10(dist) + def_backhaul_zeta_los; //TODO implement zeta better with randn, PL = alpha + 10 beta log10(||distance||) + zeta, 
+    double plg = m_TxP_dBm + def_G_max + def_G_max - path_loss_db; // S = P_transmit * G_max * G_max / pathloss
+    double noise_dBm = -174 + 10*log10(def_BW) + def_NoiseFigure; // N = -174 dBm/Hz + 10log10(BW) + noise figure
     double snr = dBm_to_watt(plg)/dBm_to_watt(noise_dBm);
     return snr;
 }
@@ -101,6 +102,11 @@ double mmWaveBS::calculate_Rate_of_link(double x, double y)
     return rate;
 }
 
+double mmWaveBS::calculate_distance_of_link(double x, double y)
+{
+    double dist = euclidean_dist(x, y, m_xx, m_yy);
+    return dist;
+}
 
 void mmWaveBS::emit_update_parent()
 {

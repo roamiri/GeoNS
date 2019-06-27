@@ -94,11 +94,20 @@ int main()
             std::shared_ptr<mmWaveBS> mmB2 = (*it2);
             if(mmB2.get()->getID() != cid)
             { 
+                double dist = mmB->calculate_distance_of_link(mmB2->getX(), mmB2->getY());
                 double snr = mmB->calculate_SNR_of_link(mmB2->getX(), mmB2->getY());
                 // Rules
                 bool b_snr = snr>max_snr;
                 bool b_parent = mmB2.get()->get_IAB_parent()!=mmB.get()->getID();
+                bool b_wired = mmB2->get_backhaul_Type()==Backhaul::wired;
+                bool b_dist = dist<def_MAX_MMWAVE_RANGE;
 
+                if(b_wired && b_dist)
+                {
+                    parent = mmB2.get()->getID();
+                    break;
+                }
+                
                 if(b_snr && b_parent)
                 {
                     max_snr = snr;

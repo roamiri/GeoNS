@@ -47,6 +47,7 @@ public:
     void set_transmit_power(double ptx);
     double calculate_SNR_of_link(double x, double y);
     double calculate_Rate_of_link(double x, double y);
+    double calculate_distance_of_link(double x, double y);
     
     void set_hop_count(int i){m_hop_cnt=i;}
     int get_hop_count(){return m_hop_cnt;}

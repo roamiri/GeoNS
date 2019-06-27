@@ -10,7 +10,7 @@
 static double in_bound = 100.0;
 static double out_bound = 200.0;
 
-#define def_prob_Wired 0.3
+#define def_prob_Wired 0.1
 #define def_BW 4.e8 // Bandwidth = 400 MHz
 #define def_fc  28.e9 // fc = 28 GHz
 #define def_P_tx  30 // dBm
@@ -27,6 +27,7 @@ static double out_bound = 200.0;
 #define def_G_min -2 // dB side lobe gain
 #define def_teta_b 10 // degree beam-width
 #define def_NoiseFigure 10 // dB
+#define def_MAX_MMWAVE_RANGE 100 // maximum mmWave range = 200 meters
 
 #define RED 0xff // red color
 #define BLUE 0xff // BLUE color
