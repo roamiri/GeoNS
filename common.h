@@ -10,6 +10,9 @@
 static double in_bound = 100.0;
 static double out_bound = 200.0;
 
+#define lambda_MBS 5e-6
+#define lambda_SBS 1e-4
+
 #define def_prob_Wired 0.1
 #define def_BW 4.e8 // Bandwidth = 400 MHz
 #define def_fc  28.e9 // fc = 28 GHz
@@ -96,25 +99,34 @@ public:
 	bool cluster_head;
 };
 
-static int poisson ( double lambda )
+static std::random_device rd;
+static std::mt19937 gen(rd());
+
+static int poisson(int lambda)
 {
-  double u = drand48();
-  int k = 0;
-  double sum = exp(-lambda);
-
-  double sidste = sum;
-
-  while ( true )
-    {
-      if ( u < sum ) { return k; }
-      else 
-	{
-	  k++;
-	  sidste *= lambda/k;
-	  sum += sidste;
-	}
-    }
+    std::poisson_distribution<int> pd(lambda);
+    return pd(gen);
 }
+
+// static int poisson ( double lambda )
+// {
+//   double u = drand48();
+//   int k = 0;
+//   double sum = exp(-lambda);
+// 
+//   double sidste = sum;
+// 
+//   while ( true )
+//     {
+//       if ( u < sum ) { return k; }
+//       else 
+// 	{
+// 	  k++;
+// 	  sidste *= lambda/k;
+// 	  sum += sidste;
+// 	}
+//     }
+// }
 
 static std::size_t generateColor()
 {

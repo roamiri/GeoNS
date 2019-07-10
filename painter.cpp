@@ -85,8 +85,8 @@ void Painter::add_to_draw_queue(std::shared_ptr<draw_object> dd)
 void Painter::update()
 {
 	int size = m_nodes.size();
-    double x_shift = 500.;
-    double y_shift = 500.;
+    double x_shift = 0.;
+    double y_shift = 0.;
 	for(int i=0;i<size;i++)
 	{
 		std::shared_ptr<mmWaveBS> dd = m_nodes[i];

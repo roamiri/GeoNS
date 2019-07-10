@@ -8,6 +8,7 @@
 #include <string>
 #include <sstream>
 #include <fstream>
+#include <random>
 
 #include "manager.h"
 #include "mmwavebs.h"
@@ -23,10 +24,53 @@ int main()
   Manager manager;
    std::shared_ptr<Painter> _painter = std::make_shared<Painter>(manager.m_vector_BSs);
   _painter.get()->Start();
+  int num_nodes = -1;
   
-  int num_nodes = 100;
+#ifdef Generate_Poisson
+    // Generate data on a disk with radius r with poisson point process
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(0, 1);
+    
+    double r = 1000.;                  // radius of disk
+    double xx0=0.; double yy0=0.;   // centre of disk
+    double areaTotal = M_PI*r*r;    // area of disk
+    double lambda=50.;              //intensity (ie mean density) of the Poisson process
+    // Simulate Poisson point process
+    std::poisson_distribution<int> pd(areaTotal*lambda_SBS);
+    num_nodes=pd(gen); // Poisson number of points
+//     std::cout << numb_points << std::endl;
+    
+    double data[num_nodes][2];
+    srand(time(NULL));
+    
+    for(int i=0;i<num_nodes;i++)
+    {
+        double theta=2*M_PI*(dis(gen));   // angular coordinates
+        double rho=r*sqrt(dis(gen));      //radial coordinates
+        
+        data[i][0] = xx0 + rho * cos(theta);  // Convert from polar to Cartesian coordinates
+        data[i][1] = yy0 + rho * sin(theta);
+    }
+    
+//     {
+//         ofstream test;
+//         test.open("test_data.txt");
+//         for(int i=0;i<num_nodes;i++)
+//         {
+//             test << std::to_string(data[i][0]);
+//             test << " ";
+//             test << std::to_string(data[i][1]);
+//             test << " ";
+//             test << sqrt(pow(data[i][0],2) + pow(data[i][1],2));
+//             test << "\n";
+//         }
+//         test.close();
+//     }
   
+#else
     // Read a file from matlab to simulate poisson point process
+    num_nodes = 100;
 	double data[num_nodes][2];
 	std::fstream _file("../data/exptable_148.txt");
 	int i =0;
@@ -48,7 +92,7 @@ int main()
 		}
 		i++;
 	}
-  
+#endif
   //   Create the nodes
 	for(int i =0;i<num_nodes;i++)
 	{
@@ -58,8 +102,14 @@ int main()
 //             double p = ((double)rand()/(double)(RAND_MAX));
             bool prob = (rand() % 100) < 100*def_prob_Wired;
             std::shared_ptr<mmWaveBS> BS;
-            double x = 1000.0 *data[i][0]; 
-            double y = 1000.0 *data[i][1];
+            double x,y;
+#ifdef Generate_Poisson
+            x = data[i][0]; 
+            y = data[i][1];
+#else
+            x = 1000.0 *data[i][0]; 
+            y = 1000.0 *data[i][1];
+#endif
             
             if(prob)
                  BS = std::make_shared<mmWaveBS>(x,y, _idGenerator->next(),  def_P_tx, Backhaul::wired);

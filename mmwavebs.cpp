@@ -43,7 +43,7 @@ void mmWaveBS::ThreadMain()
     while(!stop_thread)
     {
         // Time interval to avoid overwhelming the thread!
-        srand(time(NULL));
+//         srand(time(NULL));
         double p = ((double)rand()/(double)(RAND_MAX));
         counter(p * 10.0);
         if(is_route_found())

@@ -11,11 +11,11 @@
 //
 // ---------------------------------------------------------------------------
 //  
-//  En punktprocess er defineret i k=1,2,3 dimensioner paa [0,ai]^k (*ikke s^2)
-//  med tilhoerende edge-correction window [lowi,uppi]^k  (*nyt)
-//  Relationen er altid lebesgue afstand (*indskraenkning) og relationen
-//  findes selvom type process ikke er defineret (*NYT)
-//  Processen kan vaere Strauss eller Geyer
+//  A dot process is defined in k = 1,2,3 dimensions of [0, ai] ^ k (* not s ^ 2))
+//  with associated edge correction window [lowi, uppi] ^ k (* new)
+//  The relationship is always lebesgue distance (* limitation) and the relationship
+//  found even if process type is not defined (* NEW)
+//  The process can be Strauss or Geyer
 //
 //  k: dimension af process {1,2,3} DEFAULT=3   
 //     initialiseres med initDim(k) eller readData(fil,k) (1)
@@ -33,7 +33,7 @@
 //      Desuden initialiseres gamma (og c for Geyer)
 //  
 //
-//  Tilknyttede funktioner:
+//  Related Features:
 //
 //  void random_number ( void );     
 //  void fixed_number ( void );         Optional: can be called with or without
@@ -115,13 +115,13 @@
 //
 //  Kommentar til mig selv:
 //
-//  *En af de store forskelle paa dette og tidligere programmer
-//  *er maaden hvorpaa s er inkorporeret: Den er angivet som global variabel
-//  *GRUND: countNeighbours koerer langsomt, og den er koert en gang allerede
-//  *i hvert Metropolis-step, saa den information lagres til senere brug
-//  *Trick for ikke at beregne s ved readData og poissonprocess:
-//  *   s og sw initialiseres til -1 fra start
-//      hvis makeMHstep bliver udfoert beregnes de automatisk
+//  *One of the great differences between this and previous programs
+//  *is the way in which it is incorporated: It is listed as a global variable
+//  *BASIC: countNeighbours are slowly moving and it is already running
+//  *in each Metropolis step, so that the information is stored for later use
+//  *Trick not to calculate s by readData and poisson process:
+//  *   s and sw are initialized to -1 from the start
+//      if makeMHstep is executed, they are calculated automatically
 //      ellers beregnes de foerst naar der spoerges: whatis_s(_window)
 //      Bemaek, ved transformation saettes s og sw til -1 igen
 //
