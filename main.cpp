@@ -32,8 +32,8 @@ int main()
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis(0, 1);
     
-    double r = 1000.;                  // radius of disk
-    double xx0=0.; double yy0=0.;   // centre of disk
+    double r = sqrt(1/M_PI)*1000.;                  // radius of disk
+    double xx0=r; double yy0=r;   // centre of disk
     double areaTotal = M_PI*r*r;    // area of disk
     double lambda=50.;              //intensity (ie mean density) of the Poisson process
     // Simulate Poisson point process
@@ -96,32 +96,27 @@ int main()
   //   Create the nodes
 	for(int i =0;i<num_nodes;i++)
 	{
-// 		if(data[i][0])
-		{
-//             srand(time(NULL));
-//             double p = ((double)rand()/(double)(RAND_MAX));
-            bool prob = (rand() % 100) < 100*def_prob_Wired;
-            std::shared_ptr<mmWaveBS> BS;
-            double x,y;
+        bool prob = (rand() % 100) < 100*def_prob_Wired;
+        std::shared_ptr<mmWaveBS> BS;
+        double x,y;
 #ifdef Generate_Poisson
-            x = data[i][0]; 
-            y = data[i][1];
+        x = data[i][0]; 
+        y = data[i][1];
 #else
-            x = 1000.0 *data[i][0]; 
-            y = 1000.0 *data[i][1];
+        x = 1000.0 *data[i][0]; 
+        y = 1000.0 *data[i][1];
 #endif
-            
-            if(prob)
-                 BS = std::make_shared<mmWaveBS>(x,y, _idGenerator->next(),  def_P_tx, Backhaul::wired);
-            else
-                 BS = std::make_shared<mmWaveBS>(x,y, _idGenerator->next(),  def_P_tx, Backhaul::IAB);
-			
-			BS.get()->setColor(0);
-			manager.m_vector_BSs.push_back(BS);
+        
+        if(prob)
+                BS = std::make_shared<mmWaveBS>(x,y, _idGenerator->next(),  def_P_tx, Backhaul::wired);
+        else
+                BS = std::make_shared<mmWaveBS>(x,y, _idGenerator->next(),  def_P_tx, Backhaul::IAB);
+        
+        BS.get()->setColor(0);
+        manager.m_vector_BSs.push_back(BS);
 //             BS.get()->Start();
-			BS.get()->update_parent.connect_member(&manager, &Manager::listen_For_parent_update);
-		}
-	}
+        BS.get()->update_parent.connect_member(&manager, &Manager::listen_For_parent_update);
+    }
 	
 	// Fidning the parents of nodes
 // 	manager.m_vector_BSs[0]->setStatus(Status::clusterHead);
@@ -193,10 +188,14 @@ int main()
     }
     
     
+    int hop_vec[10] = {0};
     for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end(); ++it)
     {
         std::shared_ptr<mmWaveBS> mmB = (*it);
-        std::cout << "SBS " << mmB->getID() << " hop count = " << mmB->get_hop_count() << std::endl;
+        int hcnt = mmB->get_hop_count();
+        if(hcnt != -1)
+            hop_vec[hcnt]++;
+//         std::cout << "SBS " << mmB->getID() << " hop count = " << mmB->get_hop_count() << std::endl;
     }
     
     std::this_thread::sleep_for( std::chrono::seconds(2) );

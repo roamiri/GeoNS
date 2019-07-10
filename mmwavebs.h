@@ -14,13 +14,18 @@ public:
     /* Explicitly using the default constructor to
      * underline the fact that it does get called */
     mmWaveBS(double x, double y, uint32_t id, double ptx, Backhaul tt=IAB, Status st=idle);
+    mmWaveBS(uint32_t id, double ptx);
     ~mmWaveBS();
     void Start();
 	
+    void reset();
     void setClusterID(int id) {cluster_id = id;}
     uint32_t getClusterID() {return cluster_id;}
     
     uint32_t getID(){return m_id;}
+    
+    void setX(double x){m_xx=x;}
+    void setY(double y){m_yy=y;}
     
     double getX(){return m_xx;}
     double getY(){return m_yy;}
@@ -29,7 +34,7 @@ public:
     void setStatus(Status st){m_status = st;}
     
     Backhaul get_backhaul_Type(){return m_bkhl;}
-    void set_backhaul_Type(Backhaul st){m_bkhl = st;}
+    void set_backhaul_Type(Backhaul st);
     
     Signal<candidacy_msg const &> candidacy;
     Signal<cluster_head_msg const &> clusterHead;

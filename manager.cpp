@@ -149,7 +149,7 @@ void Manager::listen_For_parent_update(const update_parent_msg& msg)
 {
     uint32_t id = msg.id;
     int hop_cnt = msg.hop_cnt;
-    std::cout << "Parent update from SBS= " << id << std::endl;
+//     std::cout << "Parent update from SBS= " << id << std::endl;
     std::lock_guard<std::mutex> guard(m_mutex);
     for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
     {

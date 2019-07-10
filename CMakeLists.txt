@@ -8,7 +8,7 @@ add_definitions(-DGenerate_Poisson=TRUE)
 set(SRC mmwavebs.cpp manager.cpp mmwavebs.cpp painter.cpp)
 set(HDR mmwavebs.h idgenerator.h common.h Signal.h ppunfix5.h manager.h painter.h)
 
-add_executable(${PROJECT_NAME} main.cpp ${SRC} ${HDR})
+add_executable(${PROJECT_NAME} cdf_hop_cnt.cpp ${SRC} ${HDR})
 
 target_link_libraries(${PROJECT_NAME} -lpthread)
 

@@ -10,6 +10,21 @@ mmWaveBS::mmWaveBS(double x, double y, uint32_t id, double ptx, Backhaul tt, Sta
         set_hop_count(0);
 }
 
+mmWaveBS::mmWaveBS(uint32_t id, double ptx)
+: the_thread()
+{
+    m_id = id; 
+    m_TxP = ptx;
+    set_transmit_power(ptx);
+}
+
+void mmWaveBS::reset()
+{
+    set_hop_count(-1);
+    set_IAB_parent(-1);
+}
+
+
 mmWaveBS::~mmWaveBS()
 {
 	stop_thread = true;
@@ -112,4 +127,11 @@ void mmWaveBS::emit_update_parent()
 {
     update_parent_msg msg(m_id, m_hop_cnt);
     update_parent.emit(msg);
+}
+
+void mmWaveBS::set_backhaul_Type(Backhaul st)
+{
+    m_bkhl = st;
+    if (st==Backhaul::wired)
+        set_hop_count(0);
 }
