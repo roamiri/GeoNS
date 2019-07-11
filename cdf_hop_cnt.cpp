@@ -190,7 +190,7 @@ int main(int argc, char** argv)
     std::string name = "CDF_Hop.txt";
     save1DArrayasText(CDF_Hop_vec, 10, name);
     plotter* plot = new plotter();
-    plot->plot1DArray(boostVtoStdV(CDF_Hop_vec), std::string("CDF_Hop.jpg"), std::string("WF"));
+    plot->plot1DArray(boostVtoStdV(CDF_Hop_vec), std::string("CDF_Hop.jpg"), std::string("WF"), std::string("Number of hops"), std::string("CDF"));
     
     
 //     std::cout << "Total hops = " << CDF_Hop_vec << ", number fails = " << Total_fail << std::endl;

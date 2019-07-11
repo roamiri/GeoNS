@@ -40,7 +40,7 @@ public:
     ~plotter(){}
     
     
-    void plot1DArray(std::vector<double> arr, std::string name, std::string legend, bool grid=true)
+    void plot1DArray(std::vector<double> arr, std::string name, std::string legend, std::string xlabel, std::string ylabel, bool grid=true)
     {
         plt::plot(arr, "r--");
             // Set the size of output image to 1200x780 pixels
@@ -56,6 +56,8 @@ public:
         plt::legend();
         if(grid)
             plt::grid(true);
+        plt::xlabel(xlabel);
+        plt::ylabel(ylabel);
         // Save the image (file format is determined by the extension)
         plt::save(name);
         
