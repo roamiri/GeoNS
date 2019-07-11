@@ -6,6 +6,9 @@
 #include "time.h"
 #include <math.h>
 #include <random>
+#include <fstream>
+#include <boost/numeric/ublas/vector.hpp>
+#include <boost/numeric/ublas/io.hpp>
 
 static double in_bound = 100.0;
 static double out_bound = 200.0;
@@ -137,5 +140,32 @@ static std::size_t generateColor()
 	
 	std::size_t color = (std::size_t) (clid);
 	return color;
-}   
+}
+
+static void save1DArrayasText(boost::numeric::ublas::vector<double> array, int size, std::string name)
+{
+    std::ofstream test;
+    test.open(name);
+    test << array;
+    test << "\n";
+    test.close();
+//     for(int i=0;i<size;i++)
+//     {
+//         test << i;//std::to_string(i);
+//         test << " ";
+//         test << array;//std::to_string(array[i]);
+//         test << "\n";
+//     }
+}
+
+static std::vector<double> boostVtoStdV(boost::numeric::ublas::vector<double> v)
+{
+    size_t size = v.size();
+    std::vector<double> out(size, 0.);
+    for(int i=0; i<size; ++i)
+        out[i]=v[i];
+    
+    return out;
+}
+
 #endif // COMMON_H

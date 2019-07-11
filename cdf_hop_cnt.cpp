@@ -9,13 +9,17 @@
 #include <sstream>
 #include <fstream>
 #include <random>
+#include <boost/numeric/ublas/vector.hpp>
+#include <boost/numeric/ublas/io.hpp>
 
 #include "manager.h"
 #include "mmwavebs.h"
 #include "idgenerator.h"
 #include "painter.h"
 #include "ppunfix5.h"
+#include "plotter.h"
 
+// using namespace boost::numeric::ublas;
 
 int main(int argc, char** argv)
 {
@@ -39,7 +43,9 @@ int main(int argc, char** argv)
     
     int Total_iter = 10;
     int Total_fail = 0;
-    int CDF_Hop_vec[10] = {0};
+    
+//     int CDF_Hop_vec[10] = {0};
+    boost::numeric::ublas::vector<int> CDF_Hop_vec(10);
     for(int iter=0;iter<Total_iter;iter++)
     {
         // Generate data on a disk with radius r with poisson point process    
@@ -151,11 +157,11 @@ int main(int argc, char** argv)
     //         std::cout << "SBS " << mmB->getID() << " hop count = " << mmB->get_hop_count() << std::endl;
         }
         
-        int total_hops = 0;
+//         int total_hops = 0;
         for(int i=0;i<10;i++)
         {
-            total_hops+=i*hop_vec[i];
-            CDF_Hop_vec[i]+=hop_vec[i];
+//             total_hops+=i*hop_vec[i];
+            CDF_Hop_vec(i)+=hop_vec[i];
         }
         Total_fail+= failed;
     //     std::cout << "Total hops = " << total_hops << ", number fails = " << failed << std::endl;
@@ -167,7 +173,20 @@ int main(int argc, char** argv)
         }
     }
     
-    std::cout << "Total hops = " << CDF_Hop_vec << ", number fails = " << Total_fail << std::endl;
+    
+    CDF_Hop_vec =  (1/Total_iter)*CDF_Hop_vec;
+    for(int i= 1; i< CDF_Hop_vec.size(); ++i)
+    {
+        CDF_Hop_vec[i]+=CDF_Hop_vec[i-1];
+    }
+    
+    std::string name = "CDF_Hop.txt";
+    save1DArrayasText(CDF_Hop_vec, 10, name);
+    plotter* plot = new plotter();
+    plot->plot1DArray(boostVtoStdV(CDF_Hop_vec), std::string("CDF_Hop.jpg"));
+    
+    
+//     std::cout << "Total hops = " << CDF_Hop_vec << ", number fails = " << Total_fail << std::endl;
     
     return 0;
 }
