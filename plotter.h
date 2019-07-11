@@ -40,10 +40,25 @@ public:
     ~plotter(){}
     
     
-    void plot1DArray(std::vector<double> arr, std::string name)
+    void plot1DArray(std::vector<double> arr, std::string name, std::string legend, bool grid=true)
     {
-        plt::plot(arr);
+        plt::plot(arr, "r--");
+            // Set the size of output image to 1200x780 pixels
+        plt::figure_size(1200, 780);
+        // Plot line from given x and y data. Color is selected automatically.
+        // Plot a line whose name will show up as "log(x)" in the legend.
+        plt::named_plot(legend,arr);
+        // Set x-axis to interval [0,1000000]
+        plt::xlim(0, 10);
+        // Add graph title
+//         plt::title("CDF");
+        // Enable legend.
+        plt::legend();
+        if(grid)
+            plt::grid(true);
+        // Save the image (file format is determined by the extension)
         plt::save(name);
+        
     }
     
 

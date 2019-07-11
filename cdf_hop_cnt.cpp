@@ -42,7 +42,7 @@ int main(int argc, char** argv)
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis(0, 1);
     
-    int Total_iter = 10000;
+    int Total_iter = 1000;
     int Total_fail = 0;
     
 //     int CDF_Hop_vec[10] = {0};
@@ -190,7 +190,7 @@ int main(int argc, char** argv)
     std::string name = "CDF_Hop.txt";
     save1DArrayasText(CDF_Hop_vec, 10, name);
     plotter* plot = new plotter();
-    plot->plot1DArray(boostVtoStdV(CDF_Hop_vec), std::string("CDF_Hop.jpg"));
+    plot->plot1DArray(boostVtoStdV(CDF_Hop_vec), std::string("CDF_Hop.jpg"), std::string("WF"));
     
     
 //     std::cout << "Total hops = " << CDF_Hop_vec << ", number fails = " << Total_fail << std::endl;
