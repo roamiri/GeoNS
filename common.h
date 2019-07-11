@@ -168,4 +168,16 @@ static std::vector<double> boostVtoStdV(boost::numeric::ublas::vector<double> v)
     return out;
 }
 
+#define PBSTR "||||||||||||||||||||||||||||||||||||||||||||||||||||||||||||"
+#define PBWIDTH 60
+
+static void printProgress (double percentage)
+{
+    int val = (int) (percentage * 100);
+    int lpad = (int) (percentage * PBWIDTH);
+    int rpad = PBWIDTH - lpad;
+    printf ("\r%3d%% [%.*s%*s]", val, lpad, PBSTR, rpad, "");
+    fflush (stdout);
+}
+
 #endif // COMMON_H

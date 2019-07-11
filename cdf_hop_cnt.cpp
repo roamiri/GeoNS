@@ -11,6 +11,7 @@
 #include <random>
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/io.hpp>
+#include <boost/progress.hpp>
 
 #include "manager.h"
 #include "mmwavebs.h"
@@ -41,11 +42,13 @@ int main(int argc, char** argv)
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis(0, 1);
     
-    int Total_iter = 10;
+    int Total_iter = 10000;
     int Total_fail = 0;
     
 //     int CDF_Hop_vec[10] = {0};
-    boost::numeric::ublas::vector<int> CDF_Hop_vec(10);
+    boost::numeric::ublas::vector<double> CDF_Hop_vec(10);
+    
+    boost::progress_display show_progress(Total_iter);
     for(int iter=0;iter<Total_iter;iter++)
     {
         // Generate data on a disk with radius r with poisson point process    
@@ -171,15 +174,19 @@ int main(int argc, char** argv)
             std::shared_ptr<mmWaveBS> mmB = (*it);
             mmB->reset();
         }
+        
+        ++show_progress;
     }
     
     
-    CDF_Hop_vec =  (1/Total_iter)*CDF_Hop_vec;
+    CDF_Hop_vec =  (1./Total_iter)*CDF_Hop_vec;
     for(int i= 1; i< CDF_Hop_vec.size(); ++i)
     {
         CDF_Hop_vec[i]+=CDF_Hop_vec[i-1];
     }
-    
+    double tt = (double)Total_fail/Total_iter;
+    CDF_Hop_vec = (1./(num_nodes-tt)) * CDF_Hop_vec;
+    std::cout << CDF_Hop_vec << std::endl;
     std::string name = "CDF_Hop.txt";
     save1DArrayasText(CDF_Hop_vec, 10, name);
     plotter* plot = new plotter();
