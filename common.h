@@ -17,7 +17,7 @@ static double out_bound = 200.0;
 #define lambda_SBS 1e-4
 
 #define def_prob_Wired 0.1
-#define def_BW 4.e8 // Bandwidth = 400 MHz
+#define def_BW 4.e8 // Bandwidth = 400 MHz  // Reference: Distributed Path Selection by Polese
 #define def_fc  28.e9 // fc = 28 GHz
 #define def_P_tx  30 // dBm
 #define def_access_alpha_los 2.0 //  References is "Tractable Model for Rate in Self-Backhauled Millimeter Wave Cellular Networks" by S. Singh, et. al. IEEE JSAC. 2015

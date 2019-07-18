@@ -1,4 +1,5 @@
 #include "mmwavebs.h"
+#include <random>
 
 mmWaveBS::mmWaveBS(double x, double y, uint32_t id, double ptx, Backhaul tt, Status st)
 : the_thread()
@@ -102,10 +103,14 @@ void mmWaveBS::set_transmit_power(double ptx)
 double mmWaveBS::calculate_SNR_of_link(double x, double y)
 {
     // SNR = S/N
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::normal_distribution<> dis(0., sqrt(def_backhaul_zeta_los));
+    
     double dist = euclidean_dist(x, y, m_xx, m_yy);
-    double path_loss_db = def_beta + 10.* def_backhaul_alpha_los * log10(dist) + def_backhaul_zeta_los; //TODO implement zeta better with randn, PL = alpha + 10 beta log10(||distance||) + zeta, 
+    double path_loss_db = def_beta + 10.* def_backhaul_alpha_los * log10(dist) + dis(gen); //TODO implement zeta better with randn, PL = alpha + 10 beta log10(||distance||) + zeta, 
     double plg = m_TxP_dBm + def_G_max + def_G_max - path_loss_db; // S = P_transmit * G_max * G_max / pathloss
-    double noise_dBm = -174 + 10*log10(def_BW) + def_NoiseFigure; // N = -174 dBm/Hz + 10log10(BW) + noise figure
+    double noise_dBm = -174 + 10*log10(def_BW) + def_NoiseFigure; // N = -174 dBm/Hz + 10log10(BW) + noise figure //TODO def_BW should be derives based on resource allocation
     double snr = dBm_to_watt(plg)/dBm_to_watt(noise_dBm);
     return snr;
 }
