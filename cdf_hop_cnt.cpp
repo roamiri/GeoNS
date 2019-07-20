@@ -169,8 +169,9 @@ int main(int argc, char** argv)
                 BS = std::make_shared<mmWaveBS>(_idGenerator->next(),  def_P_tx);
                 BS.get()->setColor(0);
                 double theta = i*delta_teta;
-                double x = xx0 + r * cos(theta);  // Convert from polar to Cartesian coordinates
-                double y = yy0 + r * sin(theta);
+                double r2 = r/2.;
+                double x = xx0 + r2 * cos(theta);  // Convert from polar to Cartesian coordinates
+                double y = yy0 + r2 * sin(theta);
                 BS->setX(x);
                 BS->setY(y);
                 BS->set_backhaul_Type(Backhaul::wired);
