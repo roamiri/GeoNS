@@ -12,6 +12,6 @@ set(HDR mmwavebs.h idgenerator.h common.h Signal.h ppunfix5.h manager.h painter.
 
 add_executable(${PROJECT_NAME} cdf_hop_cnt.cpp ${SRC} ${HDR})
 
-target_link_libraries(${PROJECT_NAME} -lpthread -lpython2.7)
+target_link_libraries(${PROJECT_NAME} -lpthread -lpython2.7 -lboost_program_options)
 
 install(TARGETS ${PROJECT_NAME} RUNTIME DESTINATION bin)

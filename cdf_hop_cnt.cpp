@@ -12,6 +12,7 @@
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/progress.hpp>
+#include <boost/program_options.hpp>
 
 #include "manager.h"
 #include "mmwavebs.h"
@@ -22,8 +23,44 @@
 
 // using namespace boost::numeric::ublas;
 
+namespace po = boost::program_options;
+using namespace std;
+
 int main(int argc, char** argv)
 {
+    //Fixed wired Base stations
+    bool fixed = false;
+    // Declare the supported options.
+    po::options_description desc("Allowed options");
+    desc.add_options()
+        ("help", "Input  1 for fixed locations of the fiber base stations or 0 for variable")
+        ("fixed", po::value<int>(), "Set wired BS implementation type (fixed or variable)")
+    ;
+
+    po::variables_map vm;
+    po::store(po::parse_command_line(argc, argv, desc), vm);
+    po::notify(vm);    
+
+    if (vm.count("help")) 
+    {
+        std::cout << desc << "\n";
+        return 1;
+    }
+
+    if (vm.count("fixed")) 
+    {
+        cout << "Fixed wired Base Stations is set to "  << vm["fixed"].as<int>() << ".\n";
+        int dd = vm["fixed"].as<int>();
+        if(dd==1)
+            fixed = true;
+        else
+            fixed = false;
+        
+    } else {
+        cerr << "Input Arg Error: set the type of wired base station implementation.\n";
+        return 1;
+    }
+    
     IDGenerator* _idGenerator = IDGenerator::instance();
     Manager manager;
     
@@ -177,7 +214,6 @@ int main(int argc, char** argv)
         
         ++show_progress;
     }
-    
     
     CDF_Hop_vec =  (1./Total_iter)*CDF_Hop_vec;
     for(int i= 1; i< CDF_Hop_vec.size(); ++i)
