@@ -30,11 +30,13 @@ int main(int argc, char** argv)
 {
     //Fixed wired Base stations
     bool fixed = false;
+    int fixed_count = -1;
     // Declare the supported options.
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help", "Input  1 for fixed locations of the fiber base stations or 0 for variable")
         ("fixed", po::value<int>(), "Set wired BS implementation type (fixed or variable)")
+        ("count", po::value<int>(), "Number of fixed wired base stations")
     ;
 
     po::variables_map vm;
@@ -60,6 +62,10 @@ int main(int argc, char** argv)
         cerr << "Input Arg Error: set the type of wired base station implementation.\n";
         return 1;
     }
+    if(vm.count("count"))
+        fixed_count = vm["count"].as<int>();
+    else
+        fixed_count = 4;
     
     IDGenerator* _idGenerator = IDGenerator::instance();
     Manager manager;
@@ -79,6 +85,9 @@ int main(int argc, char** argv)
     std::mt19937 gen(rd());
     std::uniform_real_distribution<> dis(0, 1);
     
+    std::mt19937 gen1(rd());
+    std::uniform_real_distribution<> dis1(0, 1);
+    
     int Total_iter = 1000;
     int Total_fail = 0;
     
@@ -92,31 +101,82 @@ int main(int argc, char** argv)
         double r = sqrt(1/M_PI)*1000.;                  // radius of disk
         double xx0=r; double yy0=r;   // centre of disk
         
-        double data[num_nodes][2];
-        
-        for(int i=0;i<num_nodes;i++)
-        {
-            double theta=2*M_PI*(dis(gen));   // angular coordinates
-            double rho=r*sqrt(dis(gen));      //radial coordinates
-            
-            data[i][0] = xx0 + rho * cos(theta);  // Convert from polar to Cartesian coordinates
-            data[i][1] = yy0 + rho * sin(theta);
-        }
-         
-        int cnt = 0;
+//         double data[num_nodes][2];
+//         
+//         for(int i=0;i<num_nodes;i++)
+//         {
+//             double theta=2*M_PI*(dis(gen));   // angular coordinates
+//             double rho=r*sqrt(dis(gen));      // radial coordinates
+//             
+//             data[i][0] = xx0 + rho * cos(theta);  // Convert from polar to Cartesian coordinates
+//             data[i][1] = yy0 + rho * sin(theta);
+//         }
+//          
+//         int cnt = 0;
         for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end();++it)
         {
             std::shared_ptr<mmWaveBS> mmB = (*it);
-            mmB->setX(data[cnt][0]);
-            mmB->setY(data[cnt][1]);
             
-            bool prob = (rand() % 100) < 100*def_prob_Wired;
-            if(prob)
-                mmB->set_backhaul_Type(Backhaul::wired);
-            else
+            if(fixed)
+            {
+                double theta=2*M_PI*(dis1(gen1));   // angular coordinates
+                double rho=r*sqrt(dis1(gen1));      // radial coordinates
+                
+                double x = xx0 + rho * cos(theta);  // Convert from polar to Cartesian coordinates
+                double y = yy0 + rho * sin(theta);
+                mmB->setX(x);
+                mmB->setY(y);
                 mmB->set_backhaul_Type(Backhaul::IAB);
-            
-            cnt++;
+            }
+            else
+            {
+                bool prob = (rand() % 100) < 100*def_prob_Wired;
+                if(prob)
+                {
+                    double theta=2*M_PI*(dis(gen));   // angular coordinates
+                    double rho=r*sqrt(dis(gen));      // radial coordinates
+                    
+                    double x = xx0 + rho * cos(theta);  // Convert from polar to Cartesian coordinates
+                    double y = yy0 + rho * sin(theta);
+                    mmB->setX(x);
+                    mmB->setY(y);
+                    mmB->set_backhaul_Type(Backhaul::wired);
+                }
+                else
+                {
+                    double theta=2*M_PI*(dis1(gen1));   // angular coordinates
+                    double rho=r*sqrt(dis1(gen1));      // radial coordinates
+                    
+                    double x = xx0 + rho * cos(theta);  // Convert from polar to Cartesian coordinates
+                    double y = yy0 + rho * sin(theta);
+                    mmB->setX(x);
+                    mmB->setY(y);
+                    mmB->set_backhaul_Type(Backhaul::IAB);
+                }
+                
+            }   
+                    
+        }
+        
+
+        // Adding Fixed Wired BSs
+        if(fixed)
+        {
+            double delta_teta = 2*M_PI/fixed_count;
+            for(int i =0;i<fixed_count;i++)
+            {
+                std::shared_ptr<mmWaveBS> BS;
+                BS = std::make_shared<mmWaveBS>(_idGenerator->next(),  def_P_tx);
+                BS.get()->setColor(0);
+                double theta = i*delta_teta;
+                double x = xx0 + r * cos(theta);  // Convert from polar to Cartesian coordinates
+                double y = yy0 + r * sin(theta);
+                BS->setX(x);
+                BS->setY(y);
+                BS->set_backhaul_Type(Backhaul::wired);
+                manager.m_vector_BSs.push_back(BS);
+                BS.get()->update_parent.connect_member(&manager, &Manager::listen_For_parent_update);
+            }
         }
         
         for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end();++it)
