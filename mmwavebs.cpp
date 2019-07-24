@@ -22,7 +22,7 @@ mmWaveBS::mmWaveBS(uint32_t id, double ptx)
 void mmWaveBS::reset()
 {
     set_hop_count(-1);
-    set_IAB_parent(-1);
+    set_IAB_parent(def_Nothing);
 }
 
 

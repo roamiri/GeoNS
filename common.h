@@ -13,6 +13,8 @@
 static double in_bound = 100.0;
 static double out_bound = 200.0;
 
+#define def_Nothing 4e3  // for initializing uint32_t 
+
 #define lambda_MBS 5e-6
 #define lambda_SBS 1e-4
 
@@ -41,6 +43,7 @@ static double out_bound = 200.0;
 
 enum Status{idle, candiate, inBound, outBound, clusterHead};
 enum Backhaul{wired, IAB};
+enum Path_Policy{HQF, WF}; //HQF = High Quality First, WF = Wired First,
 
 static double dBm_to_watt(double pp)
 {

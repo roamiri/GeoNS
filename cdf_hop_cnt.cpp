@@ -37,6 +37,7 @@ int main(int argc, char** argv)
         ("help", "Input  1 for fixed locations of the fiber base stations or 0 for variable")
         ("fixed", po::value<int>(), "Set wired BS implementation type (fixed or variable)")
         ("count", po::value<int>(), "Number of fixed wired base stations")
+        ("policy", po::value<int>(), "Path Selection Policy, options = HQF, WF")
     ;
 
     po::variables_map vm;
@@ -70,8 +71,23 @@ int main(int argc, char** argv)
     IDGenerator* _idGenerator = IDGenerator::instance();
     Manager manager;
     
+    
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<> dis(0, 1);
+    
+    std::mt19937 gen_IAB(rd());
+    std::uniform_real_distribution<> dis1(0, 1);
+    
+    // Generate data on a disk with radius r with poisson point process    
+    double r = sqrt(1/M_PI)*1000.; // radius of disk
+    double xx0=r; double yy0=r;    // centre of disk
+        
     //   Create the nodes
-    int num_nodes = 100; // Poisson number of points
+    std::poisson_distribution<int> pd(1e6*lambda_SBS);
+    int num_nodes=pd(gen_IAB); // Poisson number of points
+    std::cout << "Number of IAB nodes = " << num_nodes << std::endl;
+//     int num_nodes = 100; // Poisson number of points
 	for(int i =0;i<num_nodes;i++)
 	{
         std::shared_ptr<mmWaveBS> BS;
@@ -81,14 +97,7 @@ int main(int argc, char** argv)
         BS.get()->update_parent.connect_member(&manager, &Manager::listen_For_parent_update);
     }
     
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(0, 1);
-    
-    std::mt19937 gen1(rd());
-    std::uniform_real_distribution<> dis1(0, 1);
-    
-    int Total_iter = 1000;
+    int Total_iter = 10;
     int Total_fail = 0;
     
 //     int CDF_Hop_vec[10] = {0};
@@ -96,11 +105,7 @@ int main(int argc, char** argv)
     
     boost::progress_display show_progress(Total_iter);
     for(int iter=0;iter<Total_iter;iter++)
-    {
-        // Generate data on a disk with radius r with poisson point process    
-        double r = sqrt(1/M_PI)*1000.;                  // radius of disk
-        double xx0=r; double yy0=r;   // centre of disk
-        
+    {        
 //         double data[num_nodes][2];
 //         
 //         for(int i=0;i<num_nodes;i++)
@@ -119,8 +124,8 @@ int main(int argc, char** argv)
             
             if(fixed)
             {
-                double theta=2*M_PI*(dis1(gen1));   // angular coordinates
-                double rho=r*sqrt(dis1(gen1));      // radial coordinates
+                double theta=2*M_PI*(dis1(gen_IAB));   // angular coordinates
+                double rho=r*sqrt(dis1(gen_IAB));      // radial coordinates
                 
                 double x = xx0 + rho * cos(theta);  // Convert from polar to Cartesian coordinates
                 double y = yy0 + rho * sin(theta);
@@ -144,8 +149,8 @@ int main(int argc, char** argv)
                 }
                 else
                 {
-                    double theta=2*M_PI*(dis1(gen1));   // angular coordinates
-                    double rho=r*sqrt(dis1(gen1));      // radial coordinates
+                    double theta=2*M_PI*(dis1(gen_IAB));   // angular coordinates
+                    double rho=r*sqrt(dis1(gen_IAB));      // radial coordinates
                     
                     double x = xx0 + rho * cos(theta);  // Convert from polar to Cartesian coordinates
                     double y = yy0 + rho * sin(theta);
@@ -191,7 +196,7 @@ int main(int argc, char** argv)
             double x = mmB.get()->getX();
             double y = mmB.get()->getY();
             double max_snr = -1.0;
-            uint32_t parent = -1;
+            uint32_t parent = def_Nothing;
             for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it2=manager.m_vector_BSs.begin(); it2!=manager.m_vector_BSs.end();++it2)
             {
                 std::shared_ptr<mmWaveBS> mmB2 = (*it2);
@@ -282,12 +287,12 @@ int main(int argc, char** argv)
         CDF_Hop_vec[i]+=CDF_Hop_vec[i-1];
     }
     double tt = (double)Total_fail/Total_iter;
-    CDF_Hop_vec = (1./(num_nodes-tt)) * CDF_Hop_vec;
+    CDF_Hop_vec = (1./(num_nodes)) * CDF_Hop_vec;
     std::cout << CDF_Hop_vec << std::endl;
     std::string name = "CDF_Hop.txt";
     save1DArrayasText(CDF_Hop_vec, 10, name);
     plotter* plot = new plotter();
-    plot->plot1DArray(boostVtoStdV(CDF_Hop_vec), std::string("CDF_Hop.jpg"), std::string("WF"), std::string("Number of hops"), std::string("CDF"));
+    plot->plot1DArray(boostVtoStdV(CDF_Hop_vec), std::string("CDF_Hop.jpg"), std::string("Wired First"), std::string("Number of hops"), std::string("CDF"));
     
     
 //     std::cout << "Total hops = " << CDF_Hop_vec << ", number fails = " << Total_fail << std::endl;

@@ -71,7 +71,7 @@ private:
     void ThreadMain();
     
 	uint32_t m_id;
-    uint32_t cluster_id = -1;
+    uint32_t cluster_id = def_Nothing;
     double m_xx;
     double m_yy;
 	Status m_status;
@@ -89,7 +89,7 @@ private:
     // Routing parameters
     Backhaul m_bkhl;
     int m_hop_cnt = -1;
-    uint32_t m_IAB_parent = -1;
+    uint32_t m_IAB_parent = def_Nothing;
     bool m_found_Route = false;
 };
 
