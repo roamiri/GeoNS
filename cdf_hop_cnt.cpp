@@ -31,6 +31,7 @@ int main(int argc, char** argv)
     //Fixed wired Base stations
     bool fixed = false;
     int fixed_count = -1;
+    Path_Policy policy = Path_Policy::WF;
     // Declare the supported options.
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -67,6 +68,21 @@ int main(int argc, char** argv)
         fixed_count = vm["count"].as<int>();
     else
         fixed_count = 4;
+    
+    if(vm.count("policy"))
+    {
+        int pp = vm["policy"].as<int>();
+        switch(pp)
+        {
+            case(0):
+                policy = Path_Policy::HQF;
+                break;
+            case(1):
+                policy = Path_Policy::WF;
+                break;
+        }
+    }
+        
     
     IDGenerator* _idGenerator = IDGenerator::instance();
     Manager manager;
@@ -185,70 +201,20 @@ int main(int argc, char** argv)
             }
         }
         
-        for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end();++it)
+        
+        // Path Selection
+        switch(policy)
         {
-            std::shared_ptr<mmWaveBS> mmB = (*it);
-            uint32_t cid = mmB.get()->getID();
+            case(Path_Policy::HQF):
+                manager.path_selection_HQF();
+                break;
             
-            if(mmB.get()->get_backhaul_Type()==Backhaul::wired)
-                continue;
-            
-            double x = mmB.get()->getX();
-            double y = mmB.get()->getY();
-            double max_snr = -1.0;
-            uint32_t parent = def_Nothing;
-            for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it2=manager.m_vector_BSs.begin(); it2!=manager.m_vector_BSs.end();++it2)
-            {
-                std::shared_ptr<mmWaveBS> mmB2 = (*it2);
-                if(mmB2.get()->getID() != cid)
-                { 
-                    double dist = mmB->calculate_distance_of_link(mmB2->getX(), mmB2->getY());
-                    double snr = mmB->calculate_SNR_of_link(mmB2->getX(), mmB2->getY());
-                    // Rules
-                    bool b_snr = snr>max_snr;
-                    bool b_parent = mmB2.get()->get_IAB_parent()!=mmB.get()->getID();
-                    bool b_wired = mmB2->get_backhaul_Type()==Backhaul::wired;
-                    bool b_dist = dist<def_MAX_MMWAVE_RANGE;
-
-                    if(b_wired && b_dist)
-                    {
-                        parent = mmB2.get()->getID();
-                        break;
-                    }
-                    
-                    if(b_snr && b_parent)
-                    {
-                        max_snr = snr;
-                        parent = mmB2.get()->getID();
-                    }
-    //                 double rate = mmB->calculate_Rate_of_link(mmB2->getX(), mmB2->getY());
-    //                 std::cout << "SBS= "<< mmB.get()->getID() << "SBS= "<< mmB2.get()->getID() << ", dist = " <<euclidean_dist(x,y, mmB2->getX(), mmB2->getY()) <<std::endl;
-                }
-            }
-            mmB->set_IAB_parent(parent);
-//         std::cout << "SBS= "<< mmB.get()->getID() << " parent= "<< parent << std::endl;
+            case(Path_Policy::WF):
+                manager.path_selection_WF();
+                break;
         }
     
-        // set hop count of the nodes
-        //     manager.m_vector_BSs[0]->emit_update_parent();
-        bool finish = false;
-        int counter = 0;
-        while((!finish) && (counter<10))
-        {
-            bool all_found = true;
-            for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end(); ++it)
-            {
-                std::shared_ptr<mmWaveBS> mmB = (*it);
-                if(mmB->get_hop_count()!=-1)
-                    mmB->emit_update_parent();
-                else
-                    all_found = false;
-            }
-            
-            if(all_found)
-                finish = true;
-            counter++;
-        }
+        manager.set_hop_counts();
         
         int hop_vec[10] = {0};
         int failed = 0;

@@ -162,3 +162,115 @@ void Manager::listen_For_parent_update(const update_parent_msg& msg)
     }
 }
 
+void Manager::path_selection_WF()
+{
+    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+        {
+            std::shared_ptr<mmWaveBS> mmB = (*it);
+            uint32_t cid = mmB.get()->getID();
+            
+            if(mmB.get()->get_backhaul_Type()==Backhaul::wired)
+                continue;
+            
+            double x = mmB.get()->getX();
+            double y = mmB.get()->getY();
+            double max_snr = -1.0;
+            uint32_t parent = def_Nothing;
+            for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it2=m_vector_BSs.begin(); it2!=m_vector_BSs.end();++it2)
+            {
+                std::shared_ptr<mmWaveBS> mmB2 = (*it2);
+                if(mmB2.get()->getID() != cid)
+                { 
+                    double dist = mmB->calculate_distance_of_link(mmB2->getX(), mmB2->getY());
+                    double snr = mmB->calculate_SNR_of_link(mmB2->getX(), mmB2->getY());
+                    // Rules
+                    bool b_snr = snr>max_snr;
+                    bool b_parent = mmB2.get()->get_IAB_parent()!=mmB.get()->getID();
+                    bool b_wired = mmB2->get_backhaul_Type()==Backhaul::wired;
+                    bool b_dist = dist<def_MAX_MMWAVE_RANGE;
+
+                    if(b_wired && b_dist)
+                    {
+                        parent = mmB2.get()->getID();
+                        break;
+                    }
+                    
+                    if(b_snr && b_parent && b_dist)
+                    {
+                        max_snr = snr;
+                        parent = mmB2.get()->getID();
+                    }
+    //                 double rate = mmB->calculate_Rate_of_link(mmB2->getX(), mmB2->getY());
+    //                 std::cout << "SBS= "<< mmB.get()->getID() << "SBS= "<< mmB2.get()->getID() << ", dist = " <<euclidean_dist(x,y, mmB2->getX(), mmB2->getY()) <<std::endl;
+                }
+            }
+            mmB->set_IAB_parent(parent);
+//         std::cout << "SBS= "<< mmB.get()->getID() << " parent= "<< parent << std::endl;
+        }
+}
+
+void Manager::path_selection_HQF()
+{
+    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+        {
+            std::shared_ptr<mmWaveBS> mmB = (*it);
+            uint32_t cid = mmB.get()->getID();
+            
+            if(mmB.get()->get_backhaul_Type()==Backhaul::wired)
+                continue;
+            
+            double x = mmB.get()->getX();
+            double y = mmB.get()->getY();
+            double max_snr = -1.0;
+            uint32_t parent = def_Nothing;
+            for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it2=m_vector_BSs.begin(); it2!=m_vector_BSs.end();++it2)
+            {
+                std::shared_ptr<mmWaveBS> mmB2 = (*it2);
+                if(mmB2.get()->getID() != cid)
+                { 
+                    double dist = mmB->calculate_distance_of_link(mmB2->getX(), mmB2->getY());
+                    double snr = mmB->calculate_SNR_of_link(mmB2->getX(), mmB2->getY());
+                    // Rules
+                    bool b_snr = snr>max_snr;
+                    bool b_parent = mmB2.get()->get_IAB_parent()!=mmB.get()->getID();
+                    bool b_wired = mmB2->get_backhaul_Type()==Backhaul::wired;
+                    bool b_dist = dist<def_MAX_MMWAVE_RANGE;
+                    
+                    if(b_snr && b_parent && b_dist)
+                    {
+                        max_snr = snr;
+                        parent = mmB2.get()->getID();
+                    }
+    //                 double rate = mmB->calculate_Rate_of_link(mmB2->getX(), mmB2->getY());
+    //                 std::cout << "SBS= "<< mmB.get()->getID() << "SBS= "<< mmB2.get()->getID() << ", dist = " <<euclidean_dist(x,y, mmB2->getX(), mmB2->getY()) <<std::endl;
+                }
+            }
+            mmB->set_IAB_parent(parent);
+//         std::cout << "SBS= "<< mmB.get()->getID() << " parent= "<< parent << std::endl;
+        }
+}
+
+
+
+void Manager::set_hop_counts()
+{
+    // set hop count of the nodes
+    bool finish = false;
+    int counter = 0;
+    while((!finish) && (counter<10))
+    {
+        bool all_found = true;
+        for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
+        {
+            std::shared_ptr<mmWaveBS> mmB = (*it);
+            if(mmB->get_hop_count()!=-1)
+                mmB->emit_update_parent();
+            else
+                all_found = false;
+        }
+        
+        if(all_found)
+            finish = true;
+        counter++;
+    }
+}

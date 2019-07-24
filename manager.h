@@ -24,6 +24,10 @@ class Manager
     void listen_For_parent_update(update_parent_msg const &message);
 	void joinCluster(uint32_t id, Status st, uint32_t cluster_id, std::size_t color);
 	void makeCluster(uint32_t id);
+    
+    void path_selection_WF();
+    void path_selection_HQF();
+    void set_hop_counts();
 	
 	std::vector<std::shared_ptr<mmWaveBS>> m_vector_BSs;
 		
