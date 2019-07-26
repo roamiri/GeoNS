@@ -115,10 +115,11 @@ void Painter::update()
         double x1 = (0.1) * (mmB->getX()+x_shift);
         double y1 = (0.1) * (mmB->getY()+y_shift);
         uint32_t parent = mmB->get_IAB_parent();
-        if(parent!=-1)
+        //TODO correct this search!!!
+        if(parent!=def_Nothing)
         {
-            double x2 = (0.1) * (m_nodes[parent]->getX()+x_shift);
-            double y2 = (0.1) * (m_nodes[parent]->getY()+y_shift);
+            double x2 = (0.1) * (m_nodes[parent-1]->getX()+x_shift);
+            double y2 = (0.1) * (m_nodes[parent-1]->getY()+y_shift);
         
         *m_doc << Line(Point(x1,y1), Point(x2,y2), Stroke(0.5, Color(0,0,BLUE)));
         }

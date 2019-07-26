@@ -9,13 +9,14 @@
 
 #include "mmwavebs.h"
 #include "common.h"
+// #include "idgenerator.h"
 // #include "painter.h"
 
 class Manager
 {
     public:
         
-	Manager();
+    Manager();
 	~Manager();
 	
 	void listen_For_Candidacy(candidacy_msg const &message);
@@ -25,17 +26,36 @@ class Manager
 	void joinCluster(uint32_t id, Status st, uint32_t cluster_id, std::size_t color);
 	void makeCluster(uint32_t id);
     
+    void set_center(double x, double y, double r);
+    void generate_nodes();
+    void generate_fixed_nodes(int count);
+    void update_locations(bool fixed);
     void path_selection_WF();
     void path_selection_HQF();
     void set_hop_counts();
+    
+    int get_IAB_count();
+    int get_wired_count();
 	
 	std::vector<std::shared_ptr<mmWaveBS>> m_vector_BSs;
+//     static std::shared_ptr<IDGenerator> m_idGenerator;
 		
 private:
 	std::mutex m_mutex;
+    
+    double center_x;
+    double center_y;
+    double radius;
+    
+    std::random_device rd;
+    std::mt19937 gen_wired;
+    std::mt19937 gen_IAB;
+    
 // 	std::shared_ptr<Painter> m_painter;
 // 	bool stop_thread = false;
 // 	std::thread m_draw_thread;
 };
+
+// std::shared_ptr<IDGenerator> Manager::m_idGenerator(IDGenerator::instance());
 
 #endif // MANAGER_H

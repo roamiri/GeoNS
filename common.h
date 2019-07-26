@@ -10,6 +10,7 @@
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/io.hpp>
 
+
 static double in_bound = 100.0;
 static double out_bound = 200.0;
 
@@ -44,6 +45,9 @@ static double out_bound = 200.0;
 enum Status{idle, candiate, inBound, outBound, clusterHead};
 enum Backhaul{wired, IAB};
 enum Path_Policy{HQF, WF}; //HQF = High Quality First, WF = Wired First,
+    
+static uint32_t m_nextId;
+static uint32_t get_nextID() {m_nextId++; return m_nextId;}
 
 static double dBm_to_watt(double pp)
 {
@@ -105,8 +109,8 @@ public:
 	bool cluster_head;
 };
 
-static std::random_device rd;
-static std::mt19937 gen(rd());
+static std::random_device rdd;
+static std::mt19937 gen(rdd());
 
 static int poisson(int lambda)
 {

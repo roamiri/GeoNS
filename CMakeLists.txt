@@ -7,8 +7,8 @@ add_definitions(-DGenerate_Poisson=TRUE)
 
 include_directories("/usr/include/python2.7")
 
-set(SRC mmwavebs.cpp manager.cpp mmwavebs.cpp painter.cpp)
-set(HDR mmwavebs.h idgenerator.h common.h Signal.h ppunfix5.h manager.h painter.h plotter.h)
+set(SRC mmwavebs.cpp manager.cpp painter.cpp)
+set(HDR mmwavebs.h common.h Signal.h ppunfix5.h manager.h painter.h plotter.h)
 
 add_executable(${PROJECT_NAME} cdf_hop_cnt.cpp ${SRC} ${HDR})
 

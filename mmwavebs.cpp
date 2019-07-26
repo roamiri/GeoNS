@@ -131,6 +131,8 @@ double mmWaveBS::calculate_distance_of_link(double x, double y)
 void mmWaveBS::emit_update_parent()
 {
     update_parent_msg msg(m_id, m_hop_cnt);
+//     if(m_hop_cnt==-1)
+//         std::cout << "here";
     update_parent.emit(msg);
 }
 

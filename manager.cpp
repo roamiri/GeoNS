@@ -19,11 +19,13 @@
 #include <math.h>
 #include <limits>
 #include <random>
+#include "common.h"
 
 Manager::Manager()
-// :m_draw_thread()
 {
 // 	m_painter = p;
+    gen_wired = std::mt19937(rd());
+    gen_IAB = std::mt19937(rd());  //TODO is it independent from the above?
     std::cout << "Manager started!\n";
 }
 
@@ -33,6 +35,109 @@ Manager::~Manager()
 // 	if(m_draw_thread.joinable()) m_draw_thread.join();
 	std::cout << "Deconstruct " << __FILE__ << std::endl;
 }
+
+void Manager::set_center(double x, double y, double r)
+{
+    center_x = x;
+    center_y = y;
+    radius = r;
+}
+
+
+void Manager::generate_nodes()
+{
+       
+    //   Create the nodes
+    std::poisson_distribution<int> pd(1e6*lambda_SBS);
+    int num_nodes=pd(gen_IAB); // Poisson number of points
+    std::cout << "Number of IAB nodes = " << num_nodes << std::endl;
+//     int num_nodes = 100; // Poisson number of points
+	for(int i =0;i<num_nodes;i++)
+	{
+        std::shared_ptr<mmWaveBS> BS;
+        BS = std::make_shared<mmWaveBS>(get_nextID(),  def_P_tx);
+        BS.get()->setColor(0);
+        BS->set_backhaul_Type(Backhaul::IAB);
+        m_vector_BSs.push_back(BS);
+        BS.get()->update_parent.connect_member(this, &Manager::listen_For_parent_update);
+    }
+}
+
+void Manager::generate_fixed_nodes(int count)
+{
+    // Adding Fixed Wired BSs
+    double delta_teta = 2*M_PI/count;
+    for(int i =0;i<count;i++)
+    {
+        std::shared_ptr<mmWaveBS> BS;
+        BS = std::make_shared<mmWaveBS>(get_nextID(),  def_P_tx);
+        BS.get()->setColor(0);
+        double theta = i*delta_teta;
+        double r2 = radius/2.;
+        double x = center_x + r2 * cos(theta);  // Convert from polar to Cartesian coordinates
+        double y = center_y + r2 * sin(theta);
+        BS->setX(x);
+        BS->setY(y);
+        BS->set_backhaul_Type(Backhaul::wired);
+        m_vector_BSs.push_back(BS);
+        BS.get()->update_parent.connect_member(this, &Manager::listen_For_parent_update);
+    }
+}
+
+
+void Manager::update_locations(bool fixed)
+{
+    std::uniform_real_distribution<> dis(0, 1);
+    std::uniform_real_distribution<> dis1(0, 1);
+    
+    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+    {
+        std::shared_ptr<mmWaveBS> mmB = (*it);
+        if(mmB->get_backhaul_Type()==Backhaul::wired)
+            continue;
+        if(fixed)
+        {
+            double theta=2*M_PI*(dis1(gen_IAB));   // angular coordinates
+            double rho=radius*sqrt(dis1(gen_IAB));      // radial coordinates
+            
+            double x = center_x + rho * cos(theta);  // Convert from polar to Cartesian coordinates
+            double y = center_y + rho * sin(theta);
+            mmB->setX(x);
+            mmB->setY(y);
+            mmB->set_backhaul_Type(Backhaul::IAB);
+        }
+        else
+        {
+            bool prob = (rand() % 100) < 100*def_prob_Wired;
+            if(prob)
+            {
+                double theta=2*M_PI*(dis(gen_wired));   // angular coordinates
+                double rho=radius*sqrt(dis(gen_wired));      // radial coordinates
+                
+                double x = center_x + rho * cos(theta);  // Convert from polar to Cartesian coordinates
+                double y = center_y + rho * sin(theta);
+                mmB->setX(x);
+                mmB->setY(y);
+                mmB->set_backhaul_Type(Backhaul::wired);
+            }
+            else
+            {
+                double theta=2*M_PI*(dis1(gen_IAB));   // angular coordinates
+                double rho=radius*sqrt(dis1(gen_IAB));      // radial coordinates
+                
+                double x = center_x + rho * cos(theta);  // Convert from polar to Cartesian coordinates
+                double y = center_y + rho * sin(theta);
+                mmB->setX(x);
+                mmB->setY(y);
+                mmB->set_backhaul_Type(Backhaul::IAB);
+            }
+            
+        }   
+                
+    }
+}
+
+
 
 void Manager::listen_For_Candidacy(const candidacy_msg& message)
 {
@@ -264,7 +369,10 @@ void Manager::set_hop_counts()
         {
             std::shared_ptr<mmWaveBS> mmB = (*it);
             if(mmB->get_hop_count()!=-1)
+            {
+//                 std::cout << mmB->get_hop_count() << std::endl;
                 mmB->emit_update_parent();
+            }
             else
                 all_found = false;
         }
@@ -274,3 +382,27 @@ void Manager::set_hop_counts()
         counter++;
     }
 }
+
+int Manager::get_IAB_count()
+{
+    int cc = 0;
+    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
+    {
+        std::shared_ptr<mmWaveBS> mmB = (*it);
+        if(mmB->get_backhaul_Type()==Backhaul::IAB)
+            cc++;
+    }
+    return cc;
+}
+
+int Manager::get_wired_count()
+{
+    int cc = 0;
+    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
+    {
+        std::shared_ptr<mmWaveBS> mmB = (*it);
+        if(mmB->get_backhaul_Type()==Backhaul::wired)
+            cc++;
+    }
+    return cc;
+};

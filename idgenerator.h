@@ -5,8 +5,9 @@
 
 class IDGenerator {
    public:
+       
 	static IDGenerator * instance ();
-      uint32_t next () { return _id++; }
+    uint32_t next () { return _id++; }
 
    private:
       IDGenerator () : _id(0) {}
@@ -16,11 +17,14 @@ class IDGenerator {
 
 IDGenerator* IDGenerator::only_copy = 0;
 
-IDGenerator* IDGenerator::instance () 
+IDGenerator* IDGenerator::instance ()
 {
    if (!only_copy) {
       only_copy = new IDGenerator();
    }
    return only_copy;
 }
+
+IDGenerator* _idGenerator = IDGenerator::instance();
+
 #endif // IDGENERATOR_H

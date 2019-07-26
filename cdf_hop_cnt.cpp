@@ -16,10 +16,10 @@
 
 #include "manager.h"
 #include "mmwavebs.h"
-#include "idgenerator.h"
 #include "painter.h"
 #include "ppunfix5.h"
 #include "plotter.h"
+// #include "idgenerator.h"
 
 // using namespace boost::numeric::ublas;
 
@@ -83,37 +83,24 @@ int main(int argc, char** argv)
         }
     }
         
+//     std::shared_ptr<IDGenerator> _idGenerator = ;
     
-    IDGenerator* _idGenerator = IDGenerator::instance();
     Manager manager;
+    m_nextId = 0; //TODO fix the id generator 
     
-    
-    std::random_device rd;
-    std::mt19937 gen(rd());
-    std::uniform_real_distribution<> dis(0, 1);
-    
-    std::mt19937 gen_IAB(rd());
-    std::uniform_real_distribution<> dis1(0, 1);
+    std::shared_ptr<Painter> _painter = std::make_shared<Painter>(manager.m_vector_BSs);
+    _painter->Start();
     
     // Generate data on a disk with radius r with poisson point process    
     double r = sqrt(1/M_PI)*1000.; // radius of disk
     double xx0=r; double yy0=r;    // centre of disk
-        
-    //   Create the nodes
-    std::poisson_distribution<int> pd(1e6*lambda_SBS);
-    int num_nodes=pd(gen_IAB); // Poisson number of points
-    std::cout << "Number of IAB nodes = " << num_nodes << std::endl;
-//     int num_nodes = 100; // Poisson number of points
-	for(int i =0;i<num_nodes;i++)
-	{
-        std::shared_ptr<mmWaveBS> BS;
-        BS = std::make_shared<mmWaveBS>(_idGenerator->next(),  def_P_tx);
-        BS.get()->setColor(0);
-        manager.m_vector_BSs.push_back(BS);
-        BS.get()->update_parent.connect_member(&manager, &Manager::listen_For_parent_update);
-    }
+    manager.set_center(xx0, yy0, r);
     
-    int Total_iter = 10;
+    manager.generate_nodes();
+    if(fixed)
+        manager.generate_fixed_nodes(fixed_count);
+    
+    int Total_iter = 1;
     int Total_fail = 0;
     
 //     int CDF_Hop_vec[10] = {0};
@@ -134,87 +121,25 @@ int main(int argc, char** argv)
 //         }
 //          
 //         int cnt = 0;
-        for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end();++it)
-        {
-            std::shared_ptr<mmWaveBS> mmB = (*it);
-            
-            if(fixed)
-            {
-                double theta=2*M_PI*(dis1(gen_IAB));   // angular coordinates
-                double rho=r*sqrt(dis1(gen_IAB));      // radial coordinates
-                
-                double x = xx0 + rho * cos(theta);  // Convert from polar to Cartesian coordinates
-                double y = yy0 + rho * sin(theta);
-                mmB->setX(x);
-                mmB->setY(y);
-                mmB->set_backhaul_Type(Backhaul::IAB);
-            }
-            else
-            {
-                bool prob = (rand() % 100) < 100*def_prob_Wired;
-                if(prob)
-                {
-                    double theta=2*M_PI*(dis(gen));   // angular coordinates
-                    double rho=r*sqrt(dis(gen));      // radial coordinates
-                    
-                    double x = xx0 + rho * cos(theta);  // Convert from polar to Cartesian coordinates
-                    double y = yy0 + rho * sin(theta);
-                    mmB->setX(x);
-                    mmB->setY(y);
-                    mmB->set_backhaul_Type(Backhaul::wired);
-                }
-                else
-                {
-                    double theta=2*M_PI*(dis1(gen_IAB));   // angular coordinates
-                    double rho=r*sqrt(dis1(gen_IAB));      // radial coordinates
-                    
-                    double x = xx0 + rho * cos(theta);  // Convert from polar to Cartesian coordinates
-                    double y = yy0 + rho * sin(theta);
-                    mmB->setX(x);
-                    mmB->setY(y);
-                    mmB->set_backhaul_Type(Backhaul::IAB);
-                }
-                
-            }   
-                    
-        }
-        
-
-        // Adding Fixed Wired BSs
-        if(fixed)
-        {
-            double delta_teta = 2*M_PI/fixed_count;
-            for(int i =0;i<fixed_count;i++)
-            {
-                std::shared_ptr<mmWaveBS> BS;
-                BS = std::make_shared<mmWaveBS>(_idGenerator->next(),  def_P_tx);
-                BS.get()->setColor(0);
-                double theta = i*delta_teta;
-                double r2 = r/2.;
-                double x = xx0 + r2 * cos(theta);  // Convert from polar to Cartesian coordinates
-                double y = yy0 + r2 * sin(theta);
-                BS->setX(x);
-                BS->setY(y);
-                BS->set_backhaul_Type(Backhaul::wired);
-                manager.m_vector_BSs.push_back(BS);
-                BS.get()->update_parent.connect_member(&manager, &Manager::listen_For_parent_update);
-            }
-        }
-        
+       manager.update_locations(fixed);
         
         // Path Selection
         switch(policy)
         {
             case(Path_Policy::HQF):
                 manager.path_selection_HQF();
+                std::cout << "Selecting Parents with HQF." << std::endl;
                 break;
             
             case(Path_Policy::WF):
                 manager.path_selection_WF();
+                std::cout << "Selecting Parents with WF." << std::endl;
                 break;
         }
+        
     
         manager.set_hop_counts();
+        _painter->Enable();
         
         int hop_vec[10] = {0};
         int failed = 0;
@@ -238,27 +163,37 @@ int main(int argc, char** argv)
         Total_fail+= failed;
     //     std::cout << "Total hops = " << total_hops << ", number fails = " << failed << std::endl;
         
-        for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end(); ++it)
-        {
-            std::shared_ptr<mmWaveBS> mmB = (*it);
-            mmB->reset();
-        }
+//         for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end(); ++it)
+//         {
+//             std::shared_ptr<mmWaveBS> mmB = (*it);
+//             if(mmB->get_backhaul_Type()==Backhaul::IAB)
+//                 mmB->reset();
+//         }
         
         ++show_progress;
     }
     
+    CDF_Hop_vec(0)=0;
     CDF_Hop_vec =  (1./Total_iter)*CDF_Hop_vec;
     for(int i= 1; i< CDF_Hop_vec.size(); ++i)
     {
         CDF_Hop_vec[i]+=CDF_Hop_vec[i-1];
     }
     double tt = (double)Total_fail/Total_iter;
+//     std::cout << CDF_Hop_vec << std::endl;
+    int num_nodes = manager.get_IAB_count();
     CDF_Hop_vec = (1./(num_nodes)) * CDF_Hop_vec;
     std::cout << CDF_Hop_vec << std::endl;
     std::string name = "CDF_Hop.txt";
     save1DArrayasText(CDF_Hop_vec, 10, name);
     plotter* plot = new plotter();
-    plot->plot1DArray(boostVtoStdV(CDF_Hop_vec), std::string("CDF_Hop.jpg"), std::string("Wired First"), std::string("Number of hops"), std::string("CDF"));
+    std::string plot_name;
+    if(policy==Path_Policy::HQF)
+        plot_name = "High Quality First";
+    else if(policy==Path_Policy::WF)
+        plot_name = "Wired First";
+    
+    plot->plot1DArray(boostVtoStdV(CDF_Hop_vec), std::string("CDF_Hop.jpg"), plot_name, std::string("Number of hops"), std::string("CDF"));
     
     
 //     std::cout << "Total hops = " << CDF_Hop_vec << ", number fails = " << Total_fail << std::endl;
