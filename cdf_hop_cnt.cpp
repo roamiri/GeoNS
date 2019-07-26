@@ -34,15 +34,21 @@ int main(int argc, char** argv)
     Path_Policy policy = Path_Policy::WF;
     double wired_density = def_prob_Wired;
     bool debg = false;
+    int Total_iter = 100;
+    bool bPlot = true;
+    
     // Declare the supported options.
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help", "Input  1 for fixed locations of the fiber base stations or 0 for variable")
+        ("iter", po::value<int>(), "Number of iterations")
         ("fixed", po::value<int>(), "Set wired BS implementation type (fixed or variable)")
         ("count", po::value<int>(), "Number of fixed wired base stations")
         ("dens", po::value<double>(), "Wired nodes density")
         ("policy", po::value<int>(), "Path Selection Policy, options = HQF, WF")
         ("verbose", po::value<bool>(), "verbose")
+        ("plot", po::value<bool>(), "Plot the CDF of the policy")
+        ("file_name", po::value<string>(), "file name")
     ;
 
     po::variables_map vm;
@@ -54,6 +60,9 @@ int main(int argc, char** argv)
         std::cout << desc << "\n";
         return 1;
     }
+    
+    if(vm.count("iter"))
+        Total_iter = vm["iter"].as<int>();
 
     if (vm.count("fixed")) 
     {
@@ -94,6 +103,13 @@ int main(int argc, char** argv)
     if(vm.count("verbose"))
         debg = vm["verbose"].as<bool>();
         
+    if(vm.count("plot"))
+        bPlot = vm["plot"].as<bool>();
+    
+    std::string plot_name;
+    if(vm.count("file_name"))
+        plot_name = vm["file_name"].as<string>();
+    
 //     std::shared_ptr<IDGenerator> _idGenerator = ;
     
     Manager manager;
@@ -111,7 +127,7 @@ int main(int argc, char** argv)
     if(fixed)
         manager.generate_fixed_nodes(fixed_count);
     
-    int Total_iter = 100;
+    
     int Total_fail = 0;
     
 //     int CDF_Hop_vec[10] = {0};
@@ -191,17 +207,21 @@ int main(int argc, char** argv)
     int num_nodes = manager.get_IAB_count();
     CDF_Hop_vec = (1./(num_nodes)) * CDF_Hop_vec;
     std::cout << CDF_Hop_vec << std::endl;
-    std::string name = "CDF_Hop.txt";
+    std::string name = plot_name;
+    name = name + ".txt";
     save1DArrayasText(CDF_Hop_vec, 10, name);
-    plotter* plot = new plotter();
-    std::string plot_name;
-    if(policy==Path_Policy::HQF)
-        plot_name = "High Quality First";
-    else if(policy==Path_Policy::WF)
-        plot_name = "Wired First";
     
-    plot->plot1DArray(boostVtoStdV(CDF_Hop_vec), std::string("CDF_Hop.jpg"), plot_name, std::string("Number of hops"), std::string("CDF"));
-    
+    if(bPlot)
+    {
+        plotter* plot = new plotter();
+        std::string fig_name;
+        if(policy==Path_Policy::HQF)
+            fig_name = "High Quality First";
+        else if(policy==Path_Policy::WF)
+            fig_name = "Wired First";
+        
+        plot->plot1DArray(boostVtoStdV(CDF_Hop_vec), plot_name, fig_name, std::string("Number of hops"), std::string("CDF"));
+    }
     
 //     std::cout << "Total hops = " << CDF_Hop_vec << ", number fails = " << Total_fail << std::endl;
     
