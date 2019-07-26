@@ -32,13 +32,17 @@ int main(int argc, char** argv)
     bool fixed = false;
     int fixed_count = -1;
     Path_Policy policy = Path_Policy::WF;
+    double wired_density = def_prob_Wired;
+    bool debg = false;
     // Declare the supported options.
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help", "Input  1 for fixed locations of the fiber base stations or 0 for variable")
         ("fixed", po::value<int>(), "Set wired BS implementation type (fixed or variable)")
         ("count", po::value<int>(), "Number of fixed wired base stations")
+        ("dens", po::value<double>(), "Wired nodes density")
         ("policy", po::value<int>(), "Path Selection Policy, options = HQF, WF")
+        ("verbose", po::value<bool>(), "verbose")
     ;
 
     po::variables_map vm;
@@ -64,11 +68,15 @@ int main(int argc, char** argv)
         cerr << "Input Arg Error: set the type of wired base station implementation.\n";
         return 1;
     }
+    
     if(vm.count("count"))
         fixed_count = vm["count"].as<int>();
     else
         fixed_count = 4;
     
+    if(vm.count("dens"))
+        wired_density = vm["dens"].as<double>();
+        
     if(vm.count("policy"))
     {
         int pp = vm["policy"].as<int>();
@@ -82,6 +90,9 @@ int main(int argc, char** argv)
                 break;
         }
     }
+    
+    if(vm.count("verbose"))
+        debg = vm["verbose"].as<bool>();
         
 //     std::shared_ptr<IDGenerator> _idGenerator = ;
     
@@ -92,7 +103,7 @@ int main(int argc, char** argv)
     _painter->Start();
     
     // Generate data on a disk with radius r with poisson point process    
-    double r = sqrt(1/M_PI)*1000.; // radius of disk
+    double r = sqrt(1/M_PI)*sqrt(def_Area); // radius of disk
     double xx0=r; double yy0=r;    // centre of disk
     manager.set_center(xx0, yy0, r);
     
@@ -100,7 +111,7 @@ int main(int argc, char** argv)
     if(fixed)
         manager.generate_fixed_nodes(fixed_count);
     
-    int Total_iter = 1;
+    int Total_iter = 100;
     int Total_fail = 0;
     
 //     int CDF_Hop_vec[10] = {0};
@@ -108,38 +119,32 @@ int main(int argc, char** argv)
     
     boost::progress_display show_progress(Total_iter);
     for(int iter=0;iter<Total_iter;iter++)
-    {        
-//         double data[num_nodes][2];
-//         
-//         for(int i=0;i<num_nodes;i++)
-//         {
-//             double theta=2*M_PI*(dis(gen));   // angular coordinates
-//             double rho=r*sqrt(dis(gen));      // radial coordinates
-//             
-//             data[i][0] = xx0 + rho * cos(theta);  // Convert from polar to Cartesian coordinates
-//             data[i][1] = yy0 + rho * sin(theta);
-//         }
-//          
-//         int cnt = 0;
-       manager.update_locations(fixed);
-        
+    {
+       if(fixed)
+           manager.update_locations();
+       else
+           manager.update_locations(wired_density);
+       
+       if(debg){ 
+            std::cout << "Number of Wired nodes = " << manager.get_wired_count() << std::endl;
+            std::cout << "Number of IAB nodes = " << manager.get_IAB_count() << std::endl;
+       }
         // Path Selection
         switch(policy)
         {
             case(Path_Policy::HQF):
                 manager.path_selection_HQF();
-                std::cout << "Selecting Parents with HQF." << std::endl;
+                if(debg) std::cout << "Selecting Parents with HQF." << std::endl;
                 break;
             
             case(Path_Policy::WF):
                 manager.path_selection_WF();
-                std::cout << "Selecting Parents with WF." << std::endl;
+                if(debg) std::cout << "Selecting Parents with WF." << std::endl;
                 break;
         }
         
-    
         manager.set_hop_counts();
-        _painter->Enable();
+//         _painter->Enable();
         
         int hop_vec[10] = {0};
         int failed = 0;
@@ -163,12 +168,14 @@ int main(int argc, char** argv)
         Total_fail+= failed;
     //     std::cout << "Total hops = " << total_hops << ", number fails = " << failed << std::endl;
         
-//         for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end(); ++it)
-//         {
-//             std::shared_ptr<mmWaveBS> mmB = (*it);
-//             if(mmB->get_backhaul_Type()==Backhaul::IAB)
-//                 mmB->reset();
-//         }
+        for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end(); ++it)
+        {
+            std::shared_ptr<mmWaveBS> mmB = (*it);
+            if(mmB->get_backhaul_Type()==Backhaul::IAB && fixed)
+                mmB->reset();
+            else
+                mmB->reset();
+        }
         
         ++show_progress;
     }

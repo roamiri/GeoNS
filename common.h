@@ -41,6 +41,8 @@ static double out_bound = 200.0;
 #define RED 0xff // red color
 #define BLUE 0xff // BLUE color
 
+#define def_Area 1.e6 // 1 Km2 as te area
+#define def_min_dis 10 // 10 meter minimum distance between the nodes
 
 enum Status{idle, candiate, inBound, outBound, clusterHead};
 enum Backhaul{wired, IAB};

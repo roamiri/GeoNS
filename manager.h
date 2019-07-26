@@ -29,7 +29,8 @@ class Manager
     void set_center(double x, double y, double r);
     void generate_nodes();
     void generate_fixed_nodes(int count);
-    void update_locations(bool fixed);
+    void update_locations();
+    void update_locations(double wired_density);
     void path_selection_WF();
     void path_selection_HQF();
     void set_hop_counts();

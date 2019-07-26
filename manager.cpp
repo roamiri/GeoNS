@@ -50,7 +50,6 @@ void Manager::generate_nodes()
     //   Create the nodes
     std::poisson_distribution<int> pd(1e6*lambda_SBS);
     int num_nodes=pd(gen_IAB); // Poisson number of points
-    std::cout << "Number of IAB nodes = " << num_nodes << std::endl;
 //     int num_nodes = 100; // Poisson number of points
 	for(int i =0;i<num_nodes;i++)
 	{
@@ -84,8 +83,10 @@ void Manager::generate_fixed_nodes(int count)
     }
 }
 
-
-void Manager::update_locations(bool fixed)
+/*
+ * For scenario of fixed wired nodes
+ */
+void Manager::update_locations()
 {
     std::uniform_real_distribution<> dis(0, 1);
     std::uniform_real_distribution<> dis1(0, 1);
@@ -95,10 +96,44 @@ void Manager::update_locations(bool fixed)
         std::shared_ptr<mmWaveBS> mmB = (*it);
         if(mmB->get_backhaul_Type()==Backhaul::wired)
             continue;
-        if(fixed)
+        
+        double theta=2*M_PI*(dis1(gen_IAB));   // angular coordinates
+        double rho=radius*sqrt(dis1(gen_IAB));      // radial coordinates
+        
+        double x = center_x + rho * cos(theta);  // Convert from polar to Cartesian coordinates
+        double y = center_y + rho * sin(theta);
+        mmB->setX(x);
+        mmB->setY(y);        
+    }
+}
+
+/*
+ * For scenario of variable location wired nodes
+ */
+void Manager::update_locations(double wired_density)
+{
+    std::uniform_real_distribution<> dis(0, 1);
+    
+    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+    {
+        std::shared_ptr<mmWaveBS> mmB = (*it);
+        bool prob = (rand() % 100) < 100*wired_density;
+        if(prob)
         {
-            double theta=2*M_PI*(dis1(gen_IAB));   // angular coordinates
-            double rho=radius*sqrt(dis1(gen_IAB));      // radial coordinates
+            //TODO for now IAB and wired have the same distro but different density
+            double theta=2*M_PI*(dis(gen_IAB));   // angular coordinates
+            double rho=radius*sqrt(dis(gen_IAB));      // radial coordinates
+            
+            double x = center_x + rho * cos(theta);  // Convert from polar to Cartesian coordinates
+            double y = center_y + rho * sin(theta);
+            mmB->setX(x);
+            mmB->setY(y);
+            mmB->set_backhaul_Type(Backhaul::wired);
+        }
+        else
+        {
+            double theta=2*M_PI*(dis(gen_IAB));   // angular coordinates
+            double rho=radius*sqrt(dis(gen_IAB));      // radial coordinates
             
             double x = center_x + rho * cos(theta);  // Convert from polar to Cartesian coordinates
             double y = center_y + rho * sin(theta);
@@ -106,37 +141,8 @@ void Manager::update_locations(bool fixed)
             mmB->setY(y);
             mmB->set_backhaul_Type(Backhaul::IAB);
         }
-        else
-        {
-            bool prob = (rand() % 100) < 100*def_prob_Wired;
-            if(prob)
-            {
-                double theta=2*M_PI*(dis(gen_wired));   // angular coordinates
-                double rho=radius*sqrt(dis(gen_wired));      // radial coordinates
-                
-                double x = center_x + rho * cos(theta);  // Convert from polar to Cartesian coordinates
-                double y = center_y + rho * sin(theta);
-                mmB->setX(x);
-                mmB->setY(y);
-                mmB->set_backhaul_Type(Backhaul::wired);
-            }
-            else
-            {
-                double theta=2*M_PI*(dis1(gen_IAB));   // angular coordinates
-                double rho=radius*sqrt(dis1(gen_IAB));      // radial coordinates
-                
-                double x = center_x + rho * cos(theta);  // Convert from polar to Cartesian coordinates
-                double y = center_y + rho * sin(theta);
-                mmB->setX(x);
-                mmB->setY(y);
-                mmB->set_backhaul_Type(Backhaul::IAB);
-            }
-            
-        }   
-                
     }
 }
-
 
 
 void Manager::listen_For_Candidacy(const candidacy_msg& message)
