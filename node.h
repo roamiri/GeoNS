@@ -1,21 +1,25 @@
-/*
- * Copyright 2019 roohollah <email>
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *     http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+
 
 #ifndef NODE_H
 #define NODE_H
+
+// just for output
+#include <iostream>
+
+// to store queries results
+#include <vector>
+
+#include <boost/foreach.hpp>
+#include <boost/geometry.hpp>
+#include <boost/geometry/geometries/point.hpp>
+#include <boost/geometry/geometries/box.hpp>
+#include <boost/geometry/index/rtree.hpp>
+
+namespace bg = boost::geometry;
+namespace bgi = boost::geometry::index;
+
+typedef bg::model::point<float, 2, bg::cs::cartesian> point;
+typedef bg::model::box<point> box;
 
 /**
  * @todo write docs
@@ -26,12 +30,22 @@ public:
     /**
      * Default constructor
      */
-    node();
-
+    node(point p1, point p2, uint32_t i);
+    
     /**
      * Destructor
      */
     ~node();
+    
+    int get_id(){return m_id;}
+    
+private:
+    point m_p1;
+    point m_p2;
+    box m_box;
+    uint32_t m_id;
+
+
 
 };
 
