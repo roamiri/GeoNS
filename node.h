@@ -13,7 +13,6 @@
 #include <boost/geometry.hpp>
 #include <boost/geometry/geometries/point.hpp>
 #include <boost/geometry/geometries/box.hpp>
-#include <boost/geometry/index/rtree.hpp>
 
 namespace bg = boost::geometry;
 namespace bgi = boost::geometry::index;
@@ -30,7 +29,7 @@ public:
     /**
      * Default constructor
      */
-    node(point p1, point p2, uint32_t i);
+    node(float x, float y, float width, float height, uint32_t id);
     
     /**
      * Destructor
@@ -38,10 +37,15 @@ public:
     ~node();
     
     int get_id(){return m_id;}
+    point get_loc(){return m_location;}
+    box get_box(){return m_box;}
     
 private:
-    point m_p1;
-    point m_p2;
+    float m_width;
+    float m_height;
+    point m_location;
+    point m_pmin;  // lower left point
+    point m_pmax;  // upper right point
     box m_box;
     uint32_t m_id;
 

@@ -4,7 +4,7 @@
 mmWaveBS::mmWaveBS(double x, double y, uint32_t id, double ptx, Backhaul tt, Status st)
 : the_thread()
 {
-	m_xx =x; m_yy =y; m_id =id; m_bkhl= tt; m_status = st;
+	m_xx =x; m_yy =y; /*m_id =id;*/ m_bkhl= tt; m_status = st;
     m_TxP_dBm = ptx;
     set_transmit_power(ptx);
     if(tt == Backhaul::wired)

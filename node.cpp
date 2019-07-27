@@ -1,12 +1,19 @@
 
 
 #include "node.h"
-node::node(point p1, point p2, uint32_t i)
+node::node(float x, float y, float width, float height, uint32_t id)
 {
-    m_p1=p1;
-    m_p2=p2;
-    m_box = box(p1,p2);
-    m_id = i;
+    m_width = width;
+    m_height = height;
+    float w = width/2.;
+    float h = height/2.;
+    m_location = point(x,y);
+    m_pmin = point(x-w, y-h);
+    m_pmax = point(x+w, y+h);
+    m_box = box(m_pmin, m_pmax);
+    m_id = id;
+    
+    
 }
 
 

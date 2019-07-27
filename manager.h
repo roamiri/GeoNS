@@ -7,10 +7,16 @@
 #include <memory>
 #include <mutex>
 
+#include <boost/geometry/index/rtree.hpp>
+
 #include "mmwavebs.h"
 #include "common.h"
+#include "node.h"
+
 // #include "idgenerator.h"
 // #include "painter.h"
+
+typedef std::pair<box, std::shared_ptr<node>> value;
 
 class Manager
 {
@@ -41,7 +47,11 @@ class Manager
 	std::vector<std::shared_ptr<mmWaveBS>> m_vector_BSs;
 //     static std::shared_ptr<IDGenerator> m_idGenerator;
 		
+    
 private:
+    // create the rtree using default constructor
+    bgi::rtree< value, bgi::quadratic<16> > m_tree;
+    
 	std::mutex m_mutex;
     
     double center_x;

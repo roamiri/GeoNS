@@ -9,7 +9,9 @@
 #include <sys/prctl.h>
 #include "common.h"
 
-class mmWaveBS{
+
+class mmWaveBS 
+{
 public:
     /* Explicitly using the default constructor to
      * underline the fact that it does get called */
