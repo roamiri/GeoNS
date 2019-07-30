@@ -8,15 +8,15 @@
 #include <vector>
 #include <sys/prctl.h>
 #include "common.h"
+#include "node.h"
 
-
-class mmWaveBS 
+class mmWaveBS : public node
 {
 public:
     /* Explicitly using the default constructor to
      * underline the fact that it does get called */
     mmWaveBS(double x, double y, uint32_t id, double ptx, Backhaul tt=IAB, Status st=idle);
-    mmWaveBS(uint32_t id, double ptx);
+//     mmWaveBS(uint32_t id, double ptx);
     ~mmWaveBS();
     void Start();
 	
@@ -24,13 +24,13 @@ public:
     void setClusterID(int id) {cluster_id = id;}
     uint32_t getClusterID() {return cluster_id;}
     
-    uint32_t getID(){return m_id;}
+//     uint32_t getID(){return m_id;}
     
-    void setX(double x){m_xx=x;}
-    void setY(double y){m_yy=y;}
-    
-    double getX(){return m_xx;}
-    double getY(){return m_yy;}
+//     void setX(double x){m_xx=x;}
+//     void setY(double y){m_yy=y;}
+//     
+//     double getX(){return m_xx;}
+//     double getY(){return m_yy;}
     
     Status getStatus(){return m_status;}
     void setStatus(Status st){m_status = st;}
@@ -75,10 +75,10 @@ private:
 	bool stop_thread = false;
     void ThreadMain();
     
-	uint32_t m_id;
+// 	uint32_t m_id;
     uint32_t cluster_id = def_Nothing;
-    double m_xx;
-    double m_yy;
+//     double m_xx;
+//     double m_yy;
 	Status m_status;
 	
 	timer_t T;

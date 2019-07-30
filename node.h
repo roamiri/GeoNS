@@ -36,11 +36,23 @@ public:
      */
     ~node();
     
-    int get_id(){return m_id;}
+    //TODO chanage the virtual function, now just to get the downcast working
+    virtual void setID(uint32_t id){m_id=id;}
+    uint32_t getID(){return m_id;}
+    /**
+     * Returns a geometry point of the location.
+     */
     point get_loc(){return m_location;}
     box get_box(){return m_box;}
     
+    void set_loc(float x, float y);
+    
+    float getX();
+    float getY();
+    
 private:
+    float m_xx;
+    float m_yy;
     float m_width;
     float m_height;
     point m_location;

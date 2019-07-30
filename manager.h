@@ -16,7 +16,7 @@
 // #include "idgenerator.h"
 // #include "painter.h"
 
-typedef std::pair<box, std::shared_ptr<node>> value;
+typedef std::pair<point, std::shared_ptr<node>> value;
 
 class Manager
 {
@@ -33,16 +33,19 @@ class Manager
 	void makeCluster(uint32_t id);
     
     void set_center(double x, double y, double r);
-    void generate_nodes();
+    void generate_nodes(bool fixed, double wired_density);
     void generate_fixed_nodes(int count);
     void update_locations();
-    void update_locations(double wired_density);
+    void update_locations(bool fixed, double wired_density);
     void path_selection_WF();
     void path_selection_HQF();
     void set_hop_counts();
     
     int get_IAB_count();
     int get_wired_count();
+    
+    void reset(bool fixed);
+    
 	
 	std::vector<std::shared_ptr<mmWaveBS>> m_vector_BSs;
 //     static std::shared_ptr<IDGenerator> m_idGenerator;
@@ -50,6 +53,7 @@ class Manager
     
 private:
     // create the rtree using default constructor
+    //TODO figure out the 16 number
     bgi::rtree< value, bgi::quadratic<16> > m_tree;
     
 	std::mutex m_mutex;

@@ -123,7 +123,6 @@ int main(int argc, char** argv)
     double xx0=r; double yy0=r;    // centre of disk
     manager.set_center(xx0, yy0, r);
     
-    manager.generate_nodes();
     if(fixed)
         manager.generate_fixed_nodes(fixed_count);
     
@@ -136,10 +135,8 @@ int main(int argc, char** argv)
     boost::progress_display show_progress(Total_iter);
     for(int iter=0;iter<Total_iter;iter++)
     {
-       if(fixed)
-           manager.update_locations();
-       else
-           manager.update_locations(wired_density);
+
+        manager.generate_nodes(fixed, wired_density);
        
        if(debg){ 
             std::cout << "Number of Wired nodes = " << manager.get_wired_count() << std::endl;
@@ -160,7 +157,7 @@ int main(int argc, char** argv)
         }
         
         manager.set_hop_counts();
-//         _painter->Enable();
+        _painter->Enable();
         
         int hop_vec[10] = {0};
         int failed = 0;
@@ -184,14 +181,11 @@ int main(int argc, char** argv)
         Total_fail+= failed;
     //     std::cout << "Total hops = " << total_hops << ", number fails = " << failed << std::endl;
         
-        for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end(); ++it)
-        {
-            std::shared_ptr<mmWaveBS> mmB = (*it);
-            if(mmB->get_backhaul_Type()==Backhaul::IAB && fixed)
-                mmB->reset();
-            else
-                mmB->reset();
-        }
+        //TODO 
+           manager.update_locations(fixed, wired_density);
+        
+        // TODO reset
+        manager.reset(fixed);
         
         ++show_progress;
     }
