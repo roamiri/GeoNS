@@ -36,7 +36,7 @@ static double out_bound = 200.0;
 #define def_G_min -2 // dB side lobe gain
 #define def_teta_b 10 // degree beam-width
 #define def_NoiseFigure 10 // dB
-#define def_MAX_MMWAVE_RANGE 100 // maximum mmWave range = 200 meters
+#define def_MAX_MMWAVE_RANGE 200 // maximum mmWave range = 200 meters
 
 #define RED 0xff // red color
 #define BLUE 0xff // BLUE color
@@ -46,7 +46,7 @@ static double out_bound = 200.0;
 
 enum Status{idle, candiate, inBound, outBound, clusterHead};
 enum Backhaul{wired, IAB};
-enum Path_Policy{HQF, WF}; //HQF = High Quality First, WF = Wired First,
+enum Path_Policy{HQF, WF, PA}; //HQF = High Quality First, WF = Wired First, PA = Position Aware
     
 static uint32_t m_nextId;
 static uint32_t get_nextID() {m_nextId++; return m_nextId;}

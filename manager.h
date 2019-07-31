@@ -39,6 +39,8 @@ class Manager
     void update_locations(bool fixed, double wired_density);
     void path_selection_WF();
     void path_selection_HQF();
+    void path_selection_PA();
+    
     void set_hop_counts();
     bool check_neighbors(double x, double y);
     int tree_size(double r);
@@ -47,6 +49,8 @@ class Manager
     int get_wired_count();
     
     void reset(bool fixed);
+    
+    point find_closest_wired(point loc);
     
 	
 	std::vector<std::shared_ptr<mmWaveBS>> m_vector_BSs;

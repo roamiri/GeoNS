@@ -393,21 +393,22 @@ void Manager::set_hop_counts()
         counter++;
     }
    
-//     m_painter->update(m_vector_BSs);
+    m_painter->update(m_vector_BSs);
 }
 
+/**
+ * Select path based on wired first policy
+ */
 void Manager::path_selection_WF()
 {
     for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
     {
         std::shared_ptr<mmWaveBS> mmB = (*it);
-        uint32_t cid = mmB.get()->getID();
         
         if(mmB.get()->get_backhaul_Type()==Backhaul::wired)
             continue;
         
-//             double x = mmB.get()->getX();
-//             double y = mmB.get()->getY();
+        uint32_t cid = mmB.get()->getID();
         double max_snr = -1.0;
         uint32_t parent = def_Nothing;
         
@@ -453,13 +454,11 @@ void Manager::path_selection_HQF()
     for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
     {
         std::shared_ptr<mmWaveBS> mmB = (*it);
-        uint32_t cid = mmB.get()->getID();
         
         if(mmB.get()->get_backhaul_Type()==Backhaul::wired)
             continue;
         
-//             double x = mmB.get()->getX();
-//             double y = mmB.get()->getY();
+        uint32_t cid = mmB.get()->getID();
         double max_snr = -1.0;
         uint32_t parent = def_Nothing;
         
@@ -491,10 +490,83 @@ void Manager::path_selection_HQF()
             }
         }
         mmB->set_IAB_parent(parent);
-//         std::cout << "SBS= "<< mmB.get()->getID() << " parent= "<< parent << std::endl;
     }
 }
 
+/**
+ * Select path based on position-aware policy
+ */
+void Manager::path_selection_PA()
+{
+    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+    {
+        std::shared_ptr<mmWaveBS> mmB = (*it);
+        if(mmB.get()->get_backhaul_Type()==Backhaul::wired)
+            continue;
+        
+        uint32_t cid = mmB.get()->getID();
+        double max_snr = -1.0;
+        uint32_t parent = def_Nothing;
+        
+        point closest_wired = find_closest_wired(mmB->get_loc());
+        double dist_wired = bg::distance(closest_wired, mmB->get_loc());
+        // search for nearest neighbours
+        std::vector<value> results;
+        point sought = mmB->get_loc();
+        m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < def_MAX_MMWAVE_RANGE;}),
+                    std::back_inserter(results));
+        
+        BOOST_FOREACH(value const&v, results)
+        {
+            std::shared_ptr<mmWaveBS> mmB2 = std::dynamic_pointer_cast<mmWaveBS>(v.second);
+            if(mmB2.get()->getID() != cid)
+            { 
+                double snr = mmB->calculate_SNR_of_link(mmB2.get()->getX(),mmB2.get()->getY());
+                // Rules
+                bool b_snr = snr>max_snr;
+                bool b_parent = mmB2.get()->get_IAB_parent()!=mmB.get()->getID();
+                bool b_dist = bg::distance(closest_wired, mmB2->get_loc()) <= dist_wired;
+                
+                if(b_snr && b_parent && b_dist)
+                {
+                    max_snr = snr;
+                    parent = mmB2.get()->getID();
+                }
+            }
+            
+        }
+        
+        mmB->set_IAB_parent(parent);
+    }
+}
+
+
+point Manager::find_closest_wired(point loc)
+{
+    point wired;// = loc;
+    double search_radius = 10; // 10 meter first search radius
+    int max = radius/search_radius;
+    
+    for(int i=1;i<max;i++)
+    {
+        search_radius=i*search_radius;
+        // search for nearest neighbours
+        std::vector<value> results;
+        m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, loc) < search_radius;}), std::back_inserter(results));
+        BOOST_FOREACH(value const&v, results)
+        {
+            std::shared_ptr<mmWaveBS> mmB2 = std::dynamic_pointer_cast<mmWaveBS>(v.second);
+            if(mmB2->get_backhaul_Type()==Backhaul::wired)
+            {
+                wired = mmB2->get_loc();
+                return wired;
+            }
+        }
+    }
+    
+    std::cerr << "No wired found!!" << std::endl;
+    return wired;
+}
 
 int Manager::get_IAB_count()
 {

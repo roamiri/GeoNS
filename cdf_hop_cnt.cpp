@@ -45,7 +45,7 @@ int main(int argc, char** argv)
         ("fixed", po::value<int>(), "Set wired BS implementation type (fixed or variable)")
         ("count", po::value<int>(), "Number of fixed wired base stations")
         ("dens", po::value<double>(), "Wired nodes density")
-        ("policy", po::value<int>(), "Path Selection Policy, options = HQF, WF")
+        ("policy", po::value<int>(), "Path Selection Policy, options = HQF, WF, PA")
         ("verbose", po::value<bool>(), "verbose")
         ("plot", po::value<bool>(), "Plot the CDF of the policy")
         ("file_name", po::value<string>(), "file name")
@@ -97,6 +97,9 @@ int main(int argc, char** argv)
             case(1):
                 policy = Path_Policy::WF;
                 break;
+            case(2):
+                policy = Path_Policy::PA;
+                break;
         }
     }
     
@@ -144,7 +147,7 @@ int main(int argc, char** argv)
             std::cout << "Number of Wired nodes = " << manager.get_wired_count() << std::endl;
             std::cout << "Number of IAB nodes = " << manager.get_IAB_count() << std::endl;
        }
-//         if(false){
+
         // Path Selection
         switch(policy)
         {
@@ -157,11 +160,15 @@ int main(int argc, char** argv)
                 manager.path_selection_WF();
                 if(b_verbose) std::cout << "Selecting Parents with WF." << std::endl;
                 break;
+                
+            case(Path_Policy::PA):
+                manager.path_selection_PA();
+                if(b_verbose) std::cout << "Selecting Parents with PA." << std::endl;
+                break;
         }
-//         }
         
         manager.set_hop_counts();
-//         _painter->Enable();
+
         int hop_vec[10] = {0};
         int failed = 0;
         for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end(); ++it)
