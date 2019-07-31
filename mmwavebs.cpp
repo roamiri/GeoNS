@@ -107,7 +107,7 @@ double mmWaveBS::calculate_SNR_of_link(double x, double y)
     std::mt19937 gen(rd());
     std::normal_distribution<> dis(0., sqrt(def_backhaul_zeta_los));
     
-    double dist = euclidean_dist(x, y, getX(), getY());
+    double dist = euclidean_dist(x, y, (double) getX(), (double) getY());
     double path_loss_db = def_beta + 10.* def_backhaul_alpha_los * log10(dist) + dis(gen); //TODO implement zeta better with randn, PL = alpha + 10 beta log10(||distance||) + zeta, 
     double plg = m_TxP_dBm + def_G_max + def_G_max - path_loss_db; // S = P_transmit * G_max * G_max / pathloss
     double noise_dBm = -174 + 10*log10(def_BW) + def_NoiseFigure; // N = -174 dBm/Hz + 10log10(BW) + noise figure //TODO def_BW should be derives based on resource allocation
@@ -130,7 +130,7 @@ double mmWaveBS::calculate_distance_of_link(double x, double y)
 
 void mmWaveBS::emit_update_parent()
 {
-    update_parent_msg msg(getID(), m_hop_cnt);
+    update_parent_msg msg(getID(), m_hop_cnt, getX(), getY());
 //     if(m_hop_cnt==-1)
 //         std::cout << "here";
     update_parent.emit(msg);

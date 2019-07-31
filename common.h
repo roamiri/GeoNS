@@ -77,7 +77,8 @@ struct update_parent_msg
 {
     uint32_t id;
     int hop_cnt;
-    update_parent_msg(uint32_t iidd, int hcnt){id=iidd; hop_cnt=hcnt;}
+    float xx; float yy;
+    update_parent_msg(uint32_t iidd, int hcnt, float x, float y){id=iidd; hop_cnt=hcnt; xx=x; yy=y;}
 };
 
 struct candidacy_msg

@@ -38,7 +38,7 @@ Manager::~Manager()
 // 	stop_thread = true;
 // 	if(m_draw_thread.joinable()) m_draw_thread.join();
     delete m_painter;
-	std::cout << "Deconstruct " << __FILE__ << std::endl;
+// 	std::cout << "Deconstruct " << __FILE__ << std::endl;
 }
 
 void Manager::set_center(double x, double y, double r)
@@ -109,7 +109,6 @@ void Manager::generate_nodes(bool fixed, int fixed_count, double wired_density)
             if(fixed)
             {
                 BS->set_backhaul_Type(Backhaul::IAB);
-                BS->set_hop_count(0);
             }
             else
             {
@@ -342,17 +341,59 @@ void Manager::listen_For_parent_update(const update_parent_msg& msg)
     //TODO update the for loop
     uint32_t id = msg.id;
     int hop_cnt = msg.hop_cnt;
-//     std::cout << "Parent update from SBS= " << id << std::endl;
+    point sought = point(msg.xx, msg.yy);
+    
+    std::vector<value> results;
+    m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < 2*def_MAX_MMWAVE_RANGE;}), std::back_inserter(results));
+
     std::lock_guard<std::mutex> guard(m_mutex);
-    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+    BOOST_FOREACH(value const&v, results)
     {
-        std::shared_ptr<mmWaveBS> mmB = (*it);
+        std::shared_ptr<mmWaveBS> mmB = std::dynamic_pointer_cast<mmWaveBS>(v.second);
         if(mmB->get_IAB_parent()==id)
         {
             mmB->set_hop_count(hop_cnt+1);
             mmB->route_found(true);
         }
     }
+//     for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+//     {
+//         std::shared_ptr<mmWaveBS> mmB = (*it);
+//         if(mmB->get_IAB_parent()==id)
+//         {
+//             mmB->set_hop_count(hop_cnt+1);
+//             mmB->route_found(true);
+//         }
+//     }
+}
+
+
+void Manager::set_hop_counts()
+{
+    // set hop count of the nodes
+    bool finish = false;
+    int counter = 0;
+    while((!finish) && (counter<10))
+    {
+        bool all_found = true;
+        for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
+        {
+            std::shared_ptr<mmWaveBS> mmB = (*it);
+            if(mmB->get_hop_count()!=-1)
+            {
+//                 std::cout << mmB->get_hop_count() << ",";
+                mmB->emit_update_parent();
+            }
+            else
+                all_found = false;
+        }
+        
+        if(all_found)
+            finish = true;
+        counter++;
+    }
+   
+//     m_painter->update(m_vector_BSs);
 }
 
 void Manager::path_selection_WF()
@@ -430,22 +471,22 @@ void Manager::path_selection_HQF()
         
         BOOST_FOREACH(value const&v, results)
         {
-            std::shared_ptr<mmWaveBS> mmB2 = std::dynamic_pointer_cast<mmWaveBS>(v.second);
-            if(mmB2.get()->getID() != cid)
-            { 
-//                     double dist = mmB->calculate_distance_of_link(mmB2->getX(), mmB2->getY());
-                double x = mmB2->getX(); double y = mmB2->getY();
-                double snr = mmB->calculate_SNR_of_link(x,y);
-                // Rules
-                bool b_snr = snr>max_snr;
-                bool b_parent = mmB2.get()->get_IAB_parent()!=mmB.get()->getID();
-//                     bool b_wired = mmB2->get_backhaul_Type()==Backhaul::wired;
-//                     bool b_dist = dist<def_MAX_MMWAVE_RANGE;
-                
-                if(b_snr && b_parent)
-                {
-                    max_snr = snr;
-                    parent = mmB2.get()->getID();
+            std::shared_ptr<mmWaveBS> mmB2 = NULL;
+            mmB2 = std::dynamic_pointer_cast<mmWaveBS>(v.second);
+            if(mmB2)
+            {
+                if(mmB2.get()->getID() != cid)
+                { 
+                    double snr = mmB->calculate_SNR_of_link(mmB2.get()->getX(),mmB2.get()->getY());
+//                     // Rules
+                    bool b_snr = snr>max_snr;
+                    bool b_parent = mmB2.get()->get_IAB_parent()!=mmB.get()->getID();
+                    
+                    if(b_snr && b_parent)
+                    {
+                        max_snr = snr;
+                        parent = mmB2.get()->getID();
+                    }
                 }
             }
         }
@@ -454,35 +495,6 @@ void Manager::path_selection_HQF()
     }
 }
 
-
-
-void Manager::set_hop_counts()
-{
-    // set hop count of the nodes
-    bool finish = false;
-    int counter = 0;
-    while((!finish) && (counter<10))
-    {
-        bool all_found = true;
-        for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
-        {
-            std::shared_ptr<mmWaveBS> mmB = (*it);
-            if(mmB->get_hop_count()!=-1)
-            {
-//                 std::cout << mmB->get_hop_count() << ",";
-                mmB->emit_update_parent();
-            }
-            else
-                all_found = false;
-        }
-        
-        if(all_found)
-            finish = true;
-        counter++;
-    }
-   
-    m_painter->update(m_vector_BSs);
-}
 
 int Manager::get_IAB_count()
 {

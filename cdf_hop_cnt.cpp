@@ -33,7 +33,7 @@ int main(int argc, char** argv)
     int fixed_count = -1;
     Path_Policy policy = Path_Policy::WF;
     double wired_density = def_prob_Wired;
-    bool debg = false;
+    bool b_verbose = false;
     int Total_iter = 100;
     bool bPlot = true;
     
@@ -101,7 +101,7 @@ int main(int argc, char** argv)
     }
     
     if(vm.count("verbose"))
-        debg = vm["verbose"].as<bool>();
+        b_verbose = vm["verbose"].as<bool>();
         
     if(vm.count("plot"))
         bPlot = vm["plot"].as<bool>();
@@ -132,33 +132,36 @@ int main(int argc, char** argv)
     boost::numeric::ublas::vector<double> CDF_Hop_vec(10);
     for(int i=0;i<10;i++) CDF_Hop_vec(i)=0;
     
+    int dm = manager.get_wired_count() + manager.get_IAB_count(); 
+    std::cout << "Number of nodes = " << dm << std::endl;
     
     boost::progress_display show_progress(Total_iter);
     for(int iter=0;iter<Total_iter;iter++)
     {
 
        
-       if(debg){ 
+       if(b_verbose){ 
             std::cout << "Number of Wired nodes = " << manager.get_wired_count() << std::endl;
             std::cout << "Number of IAB nodes = " << manager.get_IAB_count() << std::endl;
        }
+//         if(false){
         // Path Selection
         switch(policy)
         {
             case(Path_Policy::HQF):
                 manager.path_selection_HQF();
-                if(debg) std::cout << "Selecting Parents with HQF." << std::endl;
+                if(b_verbose) std::cout << "Selecting Parents with HQF." << std::endl;
                 break;
             
             case(Path_Policy::WF):
                 manager.path_selection_WF();
-                if(debg) std::cout << "Selecting Parents with WF." << std::endl;
+                if(b_verbose) std::cout << "Selecting Parents with WF." << std::endl;
                 break;
         }
+//         }
         
         manager.set_hop_counts();
 //         _painter->Enable();
-        
         int hop_vec[10] = {0};
         int failed = 0;
         for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end(); ++it)
@@ -172,31 +175,30 @@ int main(int argc, char** argv)
     //         std::cout << "SBS " << mmB->getID() << " hop count = " << mmB->get_hop_count() << std::endl;
         }
         
+        
 //         int total_hops = 0;
         for(int i=0;i<10;i++)
         {
-//             total_hops+=i*hop_vec[i];
             CDF_Hop_vec(i)+=hop_vec[i];
         }
         Total_fail+= failed;
-    //     std::cout << "Total hops = " << total_hops << ", number fails = " << failed << std::endl;
         
         //TODO 
         manager.update_locations(fixed, wired_density);
         
-//         std::cout << "tree size = " << manager.tree_size(1000) << std::endl;
         ++show_progress;
-//         std::cout << CDF_Hop_vec << std::endl;
     }
+    
+//     std::cout << CDF_Hop_vec << std::endl;
     CDF_Hop_vec(0)=0;
     CDF_Hop_vec =  (1./Total_iter)*CDF_Hop_vec;
+//     std::cout << CDF_Hop_vec << std::endl;
     for(int i= 1; i< CDF_Hop_vec.size(); ++i)
     {
         CDF_Hop_vec[i]+=CDF_Hop_vec[i-1];
     }
-//     double tt = (double)Total_fail/Total_iter;
-//     std::cout << CDF_Hop_vec << std::endl;
-    int num_nodes = manager.get_IAB_count();
+//     std::cout << "Failed = " << ((double)Total_fail/Total_iter) << std::endl;
+    double num_nodes = CDF_Hop_vec[CDF_Hop_vec.size()-1] + ((double)Total_fail/Total_iter);
     CDF_Hop_vec = (1./(num_nodes)) * CDF_Hop_vec;
     std::cout << CDF_Hop_vec << std::endl;
     std::string name = plot_name;
@@ -215,7 +217,7 @@ int main(int argc, char** argv)
         plot->plot1DArray(boostVtoStdV(CDF_Hop_vec), plot_name, fig_name, std::string("Number of hops"), std::string("CDF"));
     }
     
-//     std::cout << "Total hops = " << CDF_Hop_vec << ", number fails = " << Total_fail << std::endl;
+    std::cout << "Get out of my Audio, Adios!!"<< std::endl;
     
     return 0;
 }

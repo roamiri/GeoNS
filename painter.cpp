@@ -46,7 +46,7 @@ Painter::~Painter()
 	m_stopThread = true;
 // 	if(m_draw_thread.joinable())
 // 		m_draw_thread.join();
-	std::cout << "Deconstruct " << __FILE__ << std::endl;
+// 	std::cout << "Deconstruct " << __FILE__ << std::endl;
 }
 
 void Painter::Start(/*std::vector<std::shared_ptr<mmWaveBS>>const &v*/)
