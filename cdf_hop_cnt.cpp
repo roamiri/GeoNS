@@ -17,7 +17,7 @@
 #include "manager.h"
 #include "mmwavebs.h"
 #include "painter.h"
-#include "ppunfix5.h"
+// #include "ppunfix5.h"
 #include "plotter.h"
 // #include "idgenerator.h"
 
@@ -106,7 +106,7 @@ int main(int argc, char** argv)
     if(vm.count("plot"))
         bPlot = vm["plot"].as<bool>();
     
-    std::string plot_name;
+    std::string plot_name = "Hop_Count";
     if(vm.count("file_name"))
         plot_name = vm["file_name"].as<string>();
     
@@ -115,28 +115,28 @@ int main(int argc, char** argv)
     Manager manager;
     m_nextId = 0; //TODO fix the id generator 
     
+//     std::shared_ptr<Painter> _painter = std::make_shared<Painter>(manager.m_vector_BSs);
+//     _painter.get()->Start();
+    
     // Generate data on a disk with radius r with poisson point process    
     double r = sqrt(1/M_PI)*sqrt(def_Area); // radius of disk
     double xx0=r; double yy0=r;    // centre of disk
     manager.set_center(xx0, yy0, r);
     
-    manager.generate_nodes();
-    if(fixed)
-        manager.generate_fixed_nodes(fixed_count);
+    manager.generate_nodes(fixed, fixed_count, wired_density);
     
     
     int Total_fail = 0;
     
 //     int CDF_Hop_vec[10] = {0};
     boost::numeric::ublas::vector<double> CDF_Hop_vec(10);
+    for(int i=0;i<10;i++) CDF_Hop_vec(i)=0;
+    
     
     boost::progress_display show_progress(Total_iter);
     for(int iter=0;iter<Total_iter;iter++)
     {
-       if(fixed)
-           manager.update_locations();
-       else
-           manager.update_locations(wired_density);
+
        
        if(debg){ 
             std::cout << "Number of Wired nodes = " << manager.get_wired_count() << std::endl;
@@ -181,25 +181,20 @@ int main(int argc, char** argv)
         Total_fail+= failed;
     //     std::cout << "Total hops = " << total_hops << ", number fails = " << failed << std::endl;
         
-        for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end(); ++it)
-        {
-            std::shared_ptr<mmWaveBS> mmB = (*it);
-            if(mmB->get_backhaul_Type()==Backhaul::IAB && fixed)
-                mmB->reset();
-            else
-                mmB->reset();
-        }
+        //TODO 
+        manager.update_locations(fixed, wired_density);
         
+//         std::cout << "tree size = " << manager.tree_size(1000) << std::endl;
         ++show_progress;
+//         std::cout << CDF_Hop_vec << std::endl;
     }
-    
     CDF_Hop_vec(0)=0;
     CDF_Hop_vec =  (1./Total_iter)*CDF_Hop_vec;
     for(int i= 1; i< CDF_Hop_vec.size(); ++i)
     {
         CDF_Hop_vec[i]+=CDF_Hop_vec[i-1];
     }
-    double tt = (double)Total_fail/Total_iter;
+//     double tt = (double)Total_fail/Total_iter;
 //     std::cout << CDF_Hop_vec << std::endl;
     int num_nodes = manager.get_IAB_count();
     CDF_Hop_vec = (1./(num_nodes)) * CDF_Hop_vec;

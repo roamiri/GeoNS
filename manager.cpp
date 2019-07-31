@@ -23,7 +23,7 @@
 
 Manager::Manager()
 {
-// 	m_painter = p;
+	m_painter = new Painter();
     gen_wired = std::mt19937(rd());
     gen_IAB = std::mt19937(rd());  //TODO is it independent from the above?
     
@@ -48,22 +48,81 @@ void Manager::set_center(double x, double y, double r)
     radius = r;
 }
 
-
-void Manager::generate_nodes()
+bool Manager::check_neighbors(double x, double y)
 {
-       
+    bool ans = true;
+    
+    // search for nearest neighbours
+    std::vector<value> results;
+    float xx = (float) x;
+    float yy = (float) y;
+    point sought(xx,yy);
+    m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < def_min_dis;}),
+                std::back_inserter(results));
+    if(results.size()>0) ans = false;
+    
+    return ans;
+}
+
+
+int Manager::tree_size(double r)
+{
+    std::vector<value> results;
+    float xx = (float) center_x;
+    float yy = (float) center_y;
+    point sought(xx,yy);
+    m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < r;}),
+                std::back_inserter(results));
+    
+    return results.size();
+}
+
+
+void Manager::generate_nodes(bool fixed, int fixed_count, double wired_density)
+{
+    if(fixed) generate_fixed_nodes(fixed_count);
+    
     //   Create the nodes
+    std::uniform_real_distribution<> dis(0, 1);
     std::poisson_distribution<int> pd(1e6*lambda_SBS);
     int num_nodes=pd(gen_IAB); // Poisson number of points
-//     int num_nodes = 100; // Poisson number of points
-	for(int i =0;i<num_nodes;i++)
-	{
-        std::shared_ptr<mmWaveBS> BS;
-        BS = std::make_shared<mmWaveBS>(get_nextID(),  def_P_tx);
-        BS.get()->setColor(0);
-        BS->set_backhaul_Type(Backhaul::IAB);
-        m_vector_BSs.push_back(BS);
-        BS.get()->update_parent.connect_member(this, &Manager::listen_For_parent_update);
+    //     int num_nodes = 100; // Poisson number of points
+    
+    for(int i =0;i<num_nodes;i++)
+    {
+        double theta=2*M_PI*(dis(gen_IAB));   // angular coordinates
+        double rho=radius*sqrt(dis(gen_IAB));      // radial coordinates
+        
+        double x = center_x + rho * cos(theta);  // Convert from polar to Cartesian coordinates
+        double y = center_y + rho * sin(theta);
+        
+        bool vicinity = check_neighbors(x,y);
+        
+        if(vicinity)
+        {
+            std::shared_ptr<mmWaveBS> BS;
+            BS = std::make_shared<mmWaveBS>(x,y, get_nextID(),  def_P_tx);
+            BS.get()->setColor(0);
+            m_tree.insert(std::make_pair(BS->get_loc(), BS));
+            m_vector_BSs.push_back(BS);
+            BS.get()->update_parent.connect_member(this, &Manager::listen_For_parent_update);
+            if(fixed)
+            {
+                BS->set_backhaul_Type(Backhaul::IAB);
+                BS->set_hop_count(0);
+            }
+            else
+            {
+                bool prob = (rand() % 100) < 100*wired_density;
+                if(prob)
+                {
+                    BS->set_backhaul_Type(Backhaul::wired);
+                    BS->set_hop_count(0);
+                }
+                else
+                    BS->set_backhaul_Type(Backhaul::IAB);
+            }
+        }
     }
 }
 
@@ -74,79 +133,96 @@ void Manager::generate_fixed_nodes(int count)
     for(int i =0;i<count;i++)
     {
         std::shared_ptr<mmWaveBS> BS;
-        BS = std::make_shared<mmWaveBS>(get_nextID(),  def_P_tx);
-        BS.get()->setColor(0);
         double theta = i*delta_teta;
         double r2 = radius/2.;
         double x = center_x + r2 * cos(theta);  // Convert from polar to Cartesian coordinates
         double y = center_y + r2 * sin(theta);
-        BS->setX(x);
-        BS->setY(y);
+        BS = std::make_shared<mmWaveBS>(x, y, get_nextID(),  def_P_tx);
+        BS.get()->setColor(0);
         BS->set_backhaul_Type(Backhaul::wired);
+        BS->set_hop_count(0);
+        m_tree.insert(std::make_pair(BS->get_loc(), BS));
         m_vector_BSs.push_back(BS);
         BS.get()->update_parent.connect_member(this, &Manager::listen_For_parent_update);
     }
 }
 
-/*
+
+/**
  * For scenario of fixed wired nodes
  */
-void Manager::update_locations()
-{
-    std::uniform_real_distribution<> dis(0, 1);
-    std::uniform_real_distribution<> dis1(0, 1);
-    
-    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
-    {
-        std::shared_ptr<mmWaveBS> mmB = (*it);
-        if(mmB->get_backhaul_Type()==Backhaul::wired)
-            continue;
-        
-        double theta=2*M_PI*(dis1(gen_IAB));   // angular coordinates
-        double rho=radius*sqrt(dis1(gen_IAB));      // radial coordinates
-        
-        double x = center_x + rho * cos(theta);  // Convert from polar to Cartesian coordinates
-        double y = center_y + rho * sin(theta);
-        mmB->setX(x);
-        mmB->setY(y);        
-    }
-}
+// void Manager::update_locations()
+// {
+//     std::uniform_real_distribution<> dis(0, 1);
+//     
+//     for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+//     {
+//         std::shared_ptr<mmWaveBS> mmB = (*it);
+//         if(mmB->get_backhaul_Type()==Backhaul::wired)
+//             continue;
+//         
+//         
+//         //TODO it might not work!
+//         m_tree.remove(std::make_pair(mmB->get_loc(), mmB));
+// //         std::cout << "Tree size = " << tree_size(1000) << std::endl;
+//         double theta=2*M_PI*(dis(gen_IAB));   // angular coordinates
+//         double rho=radius*sqrt(dis(gen_IAB));      // radial coordinates
+//         
+//         double x = center_x + rho * cos(theta);  // Convert from polar to Cartesian coordinates
+//         double y = center_y + rho * sin(theta);
+//         mmB->set_loc((float)x,(float)y);
+//         
+//         m_tree.insert(std::make_pair(mmB->get_loc(), mmB));
+// //         std::cout << "Tree size = " << tree_size(1000) << std::endl;
+//     }
+// }
 
 /*
  * For scenario of variable location wired nodes
  */
-void Manager::update_locations(double wired_density)
+void Manager::update_locations(bool fixed, double wired_density)
 {
     std::uniform_real_distribution<> dis(0, 1);
     
     for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
     {
         std::shared_ptr<mmWaveBS> mmB = (*it);
+        
+        if(mmB->get_backhaul_Type()==Backhaul::wired && fixed)
+            continue;        
+//         std::cout << "Tree size = " << tree_size(1000) << std::endl;
+        //TODO it might not work!
+        m_tree.remove(std::make_pair(mmB->get_loc(), mmB));
+//         std::cout << "Tree size = " << tree_size(1000) << std::endl;
+        
+        //TODO for now IAB and wired have the same distro but different density
+        double theta=2*M_PI*(dis(gen_IAB));   // angular coordinates
+        double rho=radius*sqrt(dis(gen_IAB));      // radial coordinates
+        
+        double x = center_x + rho * cos(theta);  // Convert from polar to Cartesian coordinates
+        double y = center_y + rho * sin(theta);
+        
+        mmB->set_loc((float)x, (float)y);
+        mmB->reset(); // sets hop count = -1 and no parent
         bool prob = (rand() % 100) < 100*wired_density;
-        if(prob)
-        {
-            //TODO for now IAB and wired have the same distro but different density
-            double theta=2*M_PI*(dis(gen_IAB));   // angular coordinates
-            double rho=radius*sqrt(dis(gen_IAB));      // radial coordinates
-            
-            double x = center_x + rho * cos(theta);  // Convert from polar to Cartesian coordinates
-            double y = center_y + rho * sin(theta);
-            mmB->setX(x);
-            mmB->setY(y);
-            mmB->set_backhaul_Type(Backhaul::wired);
-        }
-        else
-        {
-            double theta=2*M_PI*(dis(gen_IAB));   // angular coordinates
-            double rho=radius*sqrt(dis(gen_IAB));      // radial coordinates
-            
-            double x = center_x + rho * cos(theta);  // Convert from polar to Cartesian coordinates
-            double y = center_y + rho * sin(theta);
-            mmB->setX(x);
-            mmB->setY(y);
+        if(fixed)
             mmB->set_backhaul_Type(Backhaul::IAB);
+        else{ 
+            if(prob)
+            {
+                mmB->set_backhaul_Type(Backhaul::wired);
+                mmB->set_hop_count(0);
+            }
+            else
+            {
+                mmB->set_backhaul_Type(Backhaul::IAB);
+            }
         }
+        
+        m_tree.insert(std::make_pair(mmB->get_loc(), mmB));
+//         std::cout << "Tree size = " << tree_size(1000) << std::endl;
     }
+    
 }
 
 
@@ -263,6 +339,7 @@ void Manager::makeCluster(uint32_t id)
 
 void Manager::listen_For_parent_update(const update_parent_msg& msg)
 {
+    //TODO update the for loop
     uint32_t id = msg.id;
     int hop_cnt = msg.hop_cnt;
 //     std::cout << "Parent update from SBS= " << id << std::endl;
@@ -281,89 +358,100 @@ void Manager::listen_For_parent_update(const update_parent_msg& msg)
 void Manager::path_selection_WF()
 {
     for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+    {
+        std::shared_ptr<mmWaveBS> mmB = (*it);
+        uint32_t cid = mmB.get()->getID();
+        
+        if(mmB.get()->get_backhaul_Type()==Backhaul::wired)
+            continue;
+        
+//             double x = mmB.get()->getX();
+//             double y = mmB.get()->getY();
+        double max_snr = -1.0;
+        uint32_t parent = def_Nothing;
+        
+        // search for nearest neighbours
+        std::vector<value> results;
+        point sought = mmB->get_loc();
+        m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < def_MAX_MMWAVE_RANGE;}),
+                    std::back_inserter(results));
+        
+        BOOST_FOREACH(value const&v, results)
         {
-            std::shared_ptr<mmWaveBS> mmB = (*it);
-            uint32_t cid = mmB.get()->getID();
-            
-            if(mmB.get()->get_backhaul_Type()==Backhaul::wired)
-                continue;
-            
-            double x = mmB.get()->getX();
-            double y = mmB.get()->getY();
-            double max_snr = -1.0;
-            uint32_t parent = def_Nothing;
-            for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it2=m_vector_BSs.begin(); it2!=m_vector_BSs.end();++it2)
-            {
-                std::shared_ptr<mmWaveBS> mmB2 = (*it2);
-                if(mmB2.get()->getID() != cid)
-                { 
-                    double dist = mmB->calculate_distance_of_link(mmB2->getX(), mmB2->getY());
-                    double snr = mmB->calculate_SNR_of_link(mmB2->getX(), mmB2->getY());
-                    // Rules
-                    bool b_snr = snr>max_snr;
-                    bool b_parent = mmB2.get()->get_IAB_parent()!=mmB.get()->getID();
-                    bool b_wired = mmB2->get_backhaul_Type()==Backhaul::wired;
-                    bool b_dist = dist<def_MAX_MMWAVE_RANGE;
+            std::shared_ptr<mmWaveBS> mmB2 = std::dynamic_pointer_cast<mmWaveBS>(v.second);
+            if(mmB2.get()->getID() != cid)
+            { 
+//                     double dist = mmB->calculate_distance_of_link(mmB2->getX(), mmB2->getY());
+                double snr = mmB->calculate_SNR_of_link(mmB2->getX(), mmB2->getY());
+                // Rules
+                bool b_snr = snr>max_snr;
+                bool b_parent = mmB2.get()->get_IAB_parent()!=mmB.get()->getID();
+                bool b_wired = mmB2->get_backhaul_Type()==Backhaul::wired;
+//                     bool b_dist = dist<def_MAX_MMWAVE_RANGE;
 
-                    if(b_wired && b_dist)
-                    {
-                        parent = mmB2.get()->getID();
-                        break;
-                    }
-                    
-                    if(b_snr && b_parent && b_dist)
-                    {
-                        max_snr = snr;
-                        parent = mmB2.get()->getID();
-                    }
-    //                 double rate = mmB->calculate_Rate_of_link(mmB2->getX(), mmB2->getY());
-    //                 std::cout << "SBS= "<< mmB.get()->getID() << "SBS= "<< mmB2.get()->getID() << ", dist = " <<euclidean_dist(x,y, mmB2->getX(), mmB2->getY()) <<std::endl;
+                if(b_wired)
+                {
+                    parent = mmB2.get()->getID();
+                    break;
+                }
+                
+                if(b_snr && b_parent)
+                {
+                    max_snr = snr;
+                    parent = mmB2.get()->getID();
                 }
             }
-            mmB->set_IAB_parent(parent);
-//         std::cout << "SBS= "<< mmB.get()->getID() << " parent= "<< parent << std::endl;
         }
+        mmB->set_IAB_parent(parent);
+//         std::cout << "SBS= "<< mmB.get()->getID() << " parent= "<< parent << std::endl;
+    }
 }
 
 void Manager::path_selection_HQF()
 {
     for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+    {
+        std::shared_ptr<mmWaveBS> mmB = (*it);
+        uint32_t cid = mmB.get()->getID();
+        
+        if(mmB.get()->get_backhaul_Type()==Backhaul::wired)
+            continue;
+        
+//             double x = mmB.get()->getX();
+//             double y = mmB.get()->getY();
+        double max_snr = -1.0;
+        uint32_t parent = def_Nothing;
+        
+        // search for nearest neighbours
+        std::vector<value> results;
+        point sought = mmB->get_loc();
+        m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < def_MAX_MMWAVE_RANGE;}),
+                    std::back_inserter(results));
+        
+        BOOST_FOREACH(value const&v, results)
         {
-            std::shared_ptr<mmWaveBS> mmB = (*it);
-            uint32_t cid = mmB.get()->getID();
-            
-            if(mmB.get()->get_backhaul_Type()==Backhaul::wired)
-                continue;
-            
-            double x = mmB.get()->getX();
-            double y = mmB.get()->getY();
-            double max_snr = -1.0;
-            uint32_t parent = def_Nothing;
-            for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it2=m_vector_BSs.begin(); it2!=m_vector_BSs.end();++it2)
-            {
-                std::shared_ptr<mmWaveBS> mmB2 = (*it2);
-                if(mmB2.get()->getID() != cid)
-                { 
-                    double dist = mmB->calculate_distance_of_link(mmB2->getX(), mmB2->getY());
-                    double snr = mmB->calculate_SNR_of_link(mmB2->getX(), mmB2->getY());
-                    // Rules
-                    bool b_snr = snr>max_snr;
-                    bool b_parent = mmB2.get()->get_IAB_parent()!=mmB.get()->getID();
-                    bool b_wired = mmB2->get_backhaul_Type()==Backhaul::wired;
-                    bool b_dist = dist<def_MAX_MMWAVE_RANGE;
-                    
-                    if(b_snr && b_parent && b_dist)
-                    {
-                        max_snr = snr;
-                        parent = mmB2.get()->getID();
-                    }
-    //                 double rate = mmB->calculate_Rate_of_link(mmB2->getX(), mmB2->getY());
-    //                 std::cout << "SBS= "<< mmB.get()->getID() << "SBS= "<< mmB2.get()->getID() << ", dist = " <<euclidean_dist(x,y, mmB2->getX(), mmB2->getY()) <<std::endl;
+            std::shared_ptr<mmWaveBS> mmB2 = std::dynamic_pointer_cast<mmWaveBS>(v.second);
+            if(mmB2.get()->getID() != cid)
+            { 
+//                     double dist = mmB->calculate_distance_of_link(mmB2->getX(), mmB2->getY());
+                double x = mmB2->getX(); double y = mmB2->getY();
+                double snr = mmB->calculate_SNR_of_link(x,y);
+                // Rules
+                bool b_snr = snr>max_snr;
+                bool b_parent = mmB2.get()->get_IAB_parent()!=mmB.get()->getID();
+//                     bool b_wired = mmB2->get_backhaul_Type()==Backhaul::wired;
+//                     bool b_dist = dist<def_MAX_MMWAVE_RANGE;
+                
+                if(b_snr && b_parent)
+                {
+                    max_snr = snr;
+                    parent = mmB2.get()->getID();
                 }
             }
-            mmB->set_IAB_parent(parent);
-//         std::cout << "SBS= "<< mmB.get()->getID() << " parent= "<< parent << std::endl;
         }
+        mmB->set_IAB_parent(parent);
+//         std::cout << "SBS= "<< mmB.get()->getID() << " parent= "<< parent << std::endl;
+    }
 }
 
 
@@ -381,7 +469,7 @@ void Manager::set_hop_counts()
             std::shared_ptr<mmWaveBS> mmB = (*it);
             if(mmB->get_hop_count()!=-1)
             {
-//                 std::cout << mmB->get_hop_count() << std::endl;
+//                 std::cout << mmB->get_hop_count() << ",";
                 mmB->emit_update_parent();
             }
             else
@@ -392,7 +480,8 @@ void Manager::set_hop_counts()
             finish = true;
         counter++;
     }
-    m_painter->update(m_vector_BSs);
+   
+//     m_painter->update(m_vector_BSs);
 }
 
 int Manager::get_IAB_count()
@@ -418,3 +507,15 @@ int Manager::get_wired_count()
     }
     return cc;
 };
+
+void Manager::reset(bool fixed)
+{
+    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
+    {
+        std::shared_ptr<mmWaveBS> mmB = (*it);
+        if(mmB->get_backhaul_Type()==Backhaul::IAB && fixed)
+            mmB->reset();
+        else
+            mmB->reset();
+    }
+}

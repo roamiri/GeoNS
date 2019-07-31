@@ -32,7 +32,8 @@
 using namespace svg;
 
 Painter::Painter(/*std::vector<std::shared_ptr<mmWaveBS>>const &v*/)
-//:m_draw_thread()
+//:m_draw_thread(),
+//m_nodes(v)
 {
 // 	m_nodes = &nodes;
 	m_dimesnions = new svg::Dimensions(100, 100);
@@ -63,7 +64,7 @@ void Painter::ThreadMain(std::vector<std::shared_ptr<mmWaveBS>>const &v)
 		std::this_thread::sleep_for( std::chrono::seconds(1) );
 		if(m_draw)
 		{
-			update(v);
+// 			update();
 			m_draw = false;
 		}
 	}
@@ -115,16 +116,15 @@ void Painter::update(std::vector<std::shared_ptr<mmWaveBS>>const &v)
     {
         // Drawing paths
         std::shared_ptr<mmWaveBS> mmB = v[i];
-        double x1 = (0.1) * (mmB.get()->getX()+x_shift);
-        double y1 = (0.1) * (mmB.get()->getY()+y_shift);
-        uint32_t parent = mmB.get()->get_IAB_parent();
+        double x1 = (0.1) * (mmB->getX()+x_shift);
+        double y1 = (0.1) * (mmB->getY()+y_shift);
+        uint32_t parent = mmB->get_IAB_parent();
         //TODO correct this search!!!
         if(parent!=def_Nothing)
         {
-            double x2 = (0.1) * (v[parent-1].get()->getX()+x_shift);
-            double y2 = (0.1) * (v[parent-1].get()->getY()+y_shift);
-        
-        *m_doc << Line(Point(x1,y1), Point(x2,y2), Stroke(0.5, Color(0,0,BLUE)));
+            double x2 = (0.1) * (v[parent-1]->getX()+x_shift);
+            double y2 = (0.1) * (v[parent-1]->getY()+y_shift);
+            *m_doc << Line(Point(x1,y1), Point(x2,y2), Stroke(0.5, Color(0,0,BLUE)));
         }
     }
     m_doc->save();

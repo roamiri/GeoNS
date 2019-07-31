@@ -2,22 +2,22 @@
 #include <random>
 
 mmWaveBS::mmWaveBS(double x, double y, uint32_t id, double ptx, Backhaul tt, Status st)
-: the_thread()
+: the_thread(), node((float)x,(float)y,1.,1.,id)
 {
-	m_xx =x; m_yy =y; m_id =id; m_bkhl= tt; m_status = st;
+	m_bkhl= tt; m_status = st;
     m_TxP_dBm = ptx;
     set_transmit_power(ptx);
     if(tt == Backhaul::wired)
         set_hop_count(0);
 }
 
-mmWaveBS::mmWaveBS(uint32_t id, double ptx)
-: the_thread()
-{
-    m_id = id; 
-    m_TxP = ptx;
-    set_transmit_power(ptx);
-}
+// mmWaveBS::mmWaveBS(uint32_t id, double ptx)
+// : the_thread()
+// {
+//     setID(id); 
+//     m_TxP = ptx;
+//     set_transmit_power(ptx);
+// }
 
 void mmWaveBS::reset()
 {
@@ -41,7 +41,7 @@ void mmWaveBS::Start()
     the_thread = std::thread(&mmWaveBS::ThreadMain,this);
     
     char thread_name [20];
-    sprintf(thread_name, "SBS_%d",m_id);
+    sprintf(thread_name, "SBS_%d",getID());
     prctl(PR_SET_NAME,thread_name,0,0,0);
     
     char thread_name_buffer[20];
@@ -90,7 +90,7 @@ void mmWaveBS::setColor(std::size_t color)
 
 void mmWaveBS::declare_as_cluster_head()
 {
-	cluster_head_msg message(m_xx, m_yy, m_id, m_color);
+	cluster_head_msg message(getX(), getY(), getID(), m_color);
 	clusterHead.emit(message);
 }
 
@@ -107,7 +107,7 @@ double mmWaveBS::calculate_SNR_of_link(double x, double y)
     std::mt19937 gen(rd());
     std::normal_distribution<> dis(0., sqrt(def_backhaul_zeta_los));
     
-    double dist = euclidean_dist(x, y, m_xx, m_yy);
+    double dist = euclidean_dist(x, y, getX(), getY());
     double path_loss_db = def_beta + 10.* def_backhaul_alpha_los * log10(dist) + dis(gen); //TODO implement zeta better with randn, PL = alpha + 10 beta log10(||distance||) + zeta, 
     double plg = m_TxP_dBm + def_G_max + def_G_max - path_loss_db; // S = P_transmit * G_max * G_max / pathloss
     double noise_dBm = -174 + 10*log10(def_BW) + def_NoiseFigure; // N = -174 dBm/Hz + 10log10(BW) + noise figure //TODO def_BW should be derives based on resource allocation
@@ -124,13 +124,13 @@ double mmWaveBS::calculate_Rate_of_link(double x, double y)
 
 double mmWaveBS::calculate_distance_of_link(double x, double y)
 {
-    double dist = euclidean_dist(x, y, m_xx, m_yy);
+    double dist = euclidean_dist(x, y, getX(), getY());
     return dist;
 }
 
 void mmWaveBS::emit_update_parent()
 {
-    update_parent_msg msg(m_id, m_hop_cnt);
+    update_parent_msg msg(getID(), m_hop_cnt);
 //     if(m_hop_cnt==-1)
 //         std::cout << "here";
     update_parent.emit(msg);
@@ -139,6 +139,6 @@ void mmWaveBS::emit_update_parent()
 void mmWaveBS::set_backhaul_Type(Backhaul st)
 {
     m_bkhl = st;
-    if (st==Backhaul::wired)
-        set_hop_count(0);
+//     if (st==Backhaul::wired)
+//         set_hop_count(0);
 }
