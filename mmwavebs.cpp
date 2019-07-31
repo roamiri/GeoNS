@@ -139,6 +139,6 @@ void mmWaveBS::emit_update_parent()
 void mmWaveBS::set_backhaul_Type(Backhaul st)
 {
     m_bkhl = st;
-    if (st==Backhaul::wired)
-        set_hop_count(0);
+//     if (st==Backhaul::wired)
+//         set_hop_count(0);
 }

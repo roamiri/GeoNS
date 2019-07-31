@@ -73,8 +73,10 @@ int Manager::tree_size(double r)
 }
 
 
-void Manager::generate_nodes(bool fixed, double wired_density)
+void Manager::generate_nodes(bool fixed, int fixed_count, double wired_density)
 {
+    if(fixed) generate_fixed_nodes(fixed_count);
+    
     //   Create the nodes
     std::uniform_real_distribution<> dis(0, 1);
     std::poisson_distribution<int> pd(1e6*lambda_SBS);
@@ -100,12 +102,18 @@ void Manager::generate_nodes(bool fixed, double wired_density)
             m_vector_BSs.push_back(BS);
             BS.get()->update_parent.connect_member(this, &Manager::listen_For_parent_update);
             if(fixed)
+            {
                 BS->set_backhaul_Type(Backhaul::IAB);
+                BS->set_hop_count(0);
+            }
             else
             {
                 bool prob = (rand() % 100) < 100*wired_density;
                 if(prob)
+                {
                     BS->set_backhaul_Type(Backhaul::wired);
+                    BS->set_hop_count(0);
+                }
                 else
                     BS->set_backhaul_Type(Backhaul::IAB);
             }
@@ -127,6 +135,7 @@ void Manager::generate_fixed_nodes(int count)
         BS = std::make_shared<mmWaveBS>(x, y, get_nextID(),  def_P_tx);
         BS.get()->setColor(0);
         BS->set_backhaul_Type(Backhaul::wired);
+        BS->set_hop_count(0);
         m_tree.insert(std::make_pair(BS->get_loc(), BS));
         m_vector_BSs.push_back(BS);
         BS.get()->update_parent.connect_member(this, &Manager::listen_For_parent_update);
@@ -137,31 +146,31 @@ void Manager::generate_fixed_nodes(int count)
 /**
  * For scenario of fixed wired nodes
  */
-void Manager::update_locations()
-{
-    std::uniform_real_distribution<> dis(0, 1);
-    
-    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
-    {
-        std::shared_ptr<mmWaveBS> mmB = (*it);
-        if(mmB->get_backhaul_Type()==Backhaul::wired)
-            continue;
-        
-        
-        //TODO it might not work!
-        m_tree.remove(std::make_pair(mmB->get_loc(), mmB));
-//         std::cout << "Tree size = " << tree_size(1000) << std::endl;
-        double theta=2*M_PI*(dis(gen_IAB));   // angular coordinates
-        double rho=radius*sqrt(dis(gen_IAB));      // radial coordinates
-        
-        double x = center_x + rho * cos(theta);  // Convert from polar to Cartesian coordinates
-        double y = center_y + rho * sin(theta);
-        mmB->set_loc((float)x,(float)y);
-        
-        m_tree.insert(std::make_pair(mmB->get_loc(), mmB));
-//         std::cout << "Tree size = " << tree_size(1000) << std::endl;
-    }
-}
+// void Manager::update_locations()
+// {
+//     std::uniform_real_distribution<> dis(0, 1);
+//     
+//     for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+//     {
+//         std::shared_ptr<mmWaveBS> mmB = (*it);
+//         if(mmB->get_backhaul_Type()==Backhaul::wired)
+//             continue;
+//         
+//         
+//         //TODO it might not work!
+//         m_tree.remove(std::make_pair(mmB->get_loc(), mmB));
+// //         std::cout << "Tree size = " << tree_size(1000) << std::endl;
+//         double theta=2*M_PI*(dis(gen_IAB));   // angular coordinates
+//         double rho=radius*sqrt(dis(gen_IAB));      // radial coordinates
+//         
+//         double x = center_x + rho * cos(theta);  // Convert from polar to Cartesian coordinates
+//         double y = center_y + rho * sin(theta);
+//         mmB->set_loc((float)x,(float)y);
+//         
+//         m_tree.insert(std::make_pair(mmB->get_loc(), mmB));
+// //         std::cout << "Tree size = " << tree_size(1000) << std::endl;
+//     }
+// }
 
 /*
  * For scenario of variable location wired nodes
@@ -173,9 +182,9 @@ void Manager::update_locations(bool fixed, double wired_density)
     for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
     {
         std::shared_ptr<mmWaveBS> mmB = (*it);
-        if(mmB->get_backhaul_Type()==Backhaul::wired && fixed)
-            continue;
         
+        if(mmB->get_backhaul_Type()==Backhaul::wired && fixed)
+            continue;        
 //         std::cout << "Tree size = " << tree_size(1000) << std::endl;
         //TODO it might not work!
         m_tree.remove(std::make_pair(mmB->get_loc(), mmB));
@@ -187,13 +196,23 @@ void Manager::update_locations(bool fixed, double wired_density)
         
         double x = center_x + rho * cos(theta);  // Convert from polar to Cartesian coordinates
         double y = center_y + rho * sin(theta);
-        mmB->set_loc((float)x, (float)y);
         
+        mmB->set_loc((float)x, (float)y);
+        mmB->reset(); // sets hop count = -1 and no parent
         bool prob = (rand() % 100) < 100*wired_density;
-        if(prob)
-            mmB->set_backhaul_Type(Backhaul::wired);
-        else
+        if(fixed)
             mmB->set_backhaul_Type(Backhaul::IAB);
+        else{ 
+            if(prob)
+            {
+                mmB->set_backhaul_Type(Backhaul::wired);
+                mmB->set_hop_count(0);
+            }
+            else
+            {
+                mmB->set_backhaul_Type(Backhaul::IAB);
+            }
+        }
         
         m_tree.insert(std::make_pair(mmB->get_loc(), mmB));
 //         std::cout << "Tree size = " << tree_size(1000) << std::endl;
@@ -457,7 +476,7 @@ void Manager::set_hop_counts()
         counter++;
     }
     
-    m_painter->update(m_vector_BSs);
+//     m_painter->update(m_vector_BSs);
 }
 
 int Manager::get_IAB_count()

@@ -123,8 +123,7 @@ int main(int argc, char** argv)
     double xx0=r; double yy0=r;    // centre of disk
     manager.set_center(xx0, yy0, r);
     
-    if(fixed)
-        manager.generate_fixed_nodes(fixed_count);
+    manager.generate_nodes(fixed, fixed_count, wired_density);
     
     
     int Total_fail = 0;
@@ -133,11 +132,11 @@ int main(int argc, char** argv)
     boost::numeric::ublas::vector<double> CDF_Hop_vec(10);
     for(int i=0;i<10;i++) CDF_Hop_vec(i)=0;
     
+    
     boost::progress_display show_progress(Total_iter);
     for(int iter=0;iter<Total_iter;iter++)
     {
 
-        manager.generate_nodes(fixed, wired_density);
        
        if(debg){ 
             std::cout << "Number of Wired nodes = " << manager.get_wired_count() << std::endl;
@@ -185,12 +184,10 @@ int main(int argc, char** argv)
         //TODO 
         manager.update_locations(fixed, wired_density);
         
-        // TODO reset
-        manager.reset(fixed);
-        
+//         std::cout << "tree size = " << manager.tree_size(1000) << std::endl;
         ++show_progress;
+//         std::cout << CDF_Hop_vec << std::endl;
     }
-    std::cout << CDF_Hop_vec << std::endl;
     CDF_Hop_vec(0)=0;
     CDF_Hop_vec =  (1./Total_iter)*CDF_Hop_vec;
     for(int i= 1; i< CDF_Hop_vec.size(); ++i)
