@@ -31,9 +31,9 @@
 
 using namespace svg;
 
-Painter::Painter(std::vector<std::shared_ptr<mmWaveBS>>const &nodes)
+Painter::Painter(std::vector<std::shared_ptr<mmWaveBS>>const &v)
 :m_draw_thread(),
-m_nodes(nodes)
+m_nodes(v)
 {
 // 	m_nodes = &nodes;
 	m_dimesnions = new svg::Dimensions(100, 100);

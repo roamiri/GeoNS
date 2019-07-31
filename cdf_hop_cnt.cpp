@@ -106,7 +106,7 @@ int main(int argc, char** argv)
     if(vm.count("plot"))
         bPlot = vm["plot"].as<bool>();
     
-    std::string plot_name;
+    std::string plot_name = "Hop_Count";
     if(vm.count("file_name"))
         plot_name = vm["file_name"].as<string>();
     
@@ -116,7 +116,7 @@ int main(int argc, char** argv)
     m_nextId = 0; //TODO fix the id generator 
     
     std::shared_ptr<Painter> _painter = std::make_shared<Painter>(manager.m_vector_BSs);
-    _painter->Start();
+    _painter.get()->Start();
     
     // Generate data on a disk with radius r with poisson point process    
     double r = sqrt(1/M_PI)*sqrt(def_Area); // radius of disk
@@ -131,6 +131,7 @@ int main(int argc, char** argv)
     
 //     int CDF_Hop_vec[10] = {0};
     boost::numeric::ublas::vector<double> CDF_Hop_vec(10);
+    for(int i=0;i<10;i++) CDF_Hop_vec(i)=0;
     
     boost::progress_display show_progress(Total_iter);
     for(int iter=0;iter<Total_iter;iter++)
@@ -182,21 +183,21 @@ int main(int argc, char** argv)
     //     std::cout << "Total hops = " << total_hops << ", number fails = " << failed << std::endl;
         
         //TODO 
-           manager.update_locations(fixed, wired_density);
+        manager.update_locations(fixed, wired_density);
         
         // TODO reset
         manager.reset(fixed);
         
         ++show_progress;
     }
-    
+    std::cout << CDF_Hop_vec << std::endl;
     CDF_Hop_vec(0)=0;
     CDF_Hop_vec =  (1./Total_iter)*CDF_Hop_vec;
     for(int i= 1; i< CDF_Hop_vec.size(); ++i)
     {
         CDF_Hop_vec[i]+=CDF_Hop_vec[i-1];
     }
-    double tt = (double)Total_fail/Total_iter;
+//     double tt = (double)Total_fail/Total_iter;
 //     std::cout << CDF_Hop_vec << std::endl;
     int num_nodes = manager.get_IAB_count();
     CDF_Hop_vec = (1./(num_nodes)) * CDF_Hop_vec;

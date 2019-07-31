@@ -39,7 +39,7 @@
 class Painter
 {
 public:
-    Painter(std::vector<std::shared_ptr<mmWaveBS>>const &nodes);
+    Painter(std::vector<std::shared_ptr<mmWaveBS>>const &v);
     ~Painter();
 	void Start();
 	
