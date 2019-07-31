@@ -57,7 +57,7 @@ void Painter::Start(/*std::vector<std::shared_ptr<mmWaveBS>>const &v*/)
     prctl(PR_SET_NAME,thread_name_buff,0,0,0);
 }
 
-void Painter::ThreadMain(std::vector<std::shared_ptr<mmWaveBS>>const &v)
+void Painter::ThreadMain(/*std::vector<std::shared_ptr<mmWaveBS>>const &v*/)
 {
 	while(!m_stopThread)
 	{

@@ -481,7 +481,7 @@ void Manager::set_hop_counts()
         counter++;
     }
    
-//     m_painter->update(m_vector_BSs);
+    m_painter->update(m_vector_BSs);
 }
 
 int Manager::get_IAB_count()
