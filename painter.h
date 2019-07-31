@@ -34,32 +34,35 @@
 #include "simple_svg.h"
 #include "common.h"
 #include <memory>
+#include <mutex>
 #include "mmwavebs.h"
 
 class Painter
 {
 public:
-    Painter(std::vector<std::shared_ptr<mmWaveBS>>const &nodes);
+    Painter(/*std::vector<std::shared_ptr<mmWaveBS>>const &v*/);
     ~Painter();
-	void Start();
+	void Start(/*std::vector<std::shared_ptr<mmWaveBS>>const &v*/);
 	
 	void Enable();
 	void add_to_draw_queue(std::shared_ptr<draw_object> dd);
 	
+	void update(std::vector<std::shared_ptr<mmWaveBS>>const &v);
 private:
 	
 	std::vector<std::shared_ptr<draw_object>> m_objects;
-	std::vector<std::shared_ptr<mmWaveBS>>const &m_nodes;
+// 	std::vector<std::shared_ptr<mmWaveBS>> m_nodes;
 	
 	bool m_draw = false;
 	svg::Document* m_doc;
 	svg::Dimensions* m_dimesnions;
 	
 	bool m_stopThread = false;
-	std::thread m_draw_thread;
+// 	std::thread m_draw_thread;
+    
+    std::mutex m_mutex;
 	
-	void ThreadMain();
-	void update();
+	void ThreadMain(std::vector<std::shared_ptr<mmWaveBS>>const &v);
 
 };
 

@@ -115,9 +115,6 @@ int main(int argc, char** argv)
     Manager manager;
     m_nextId = 0; //TODO fix the id generator 
     
-    std::shared_ptr<Painter> _painter = std::make_shared<Painter>(manager.m_vector_BSs);
-    _painter->Start();
-    
     // Generate data on a disk with radius r with poisson point process    
     double r = sqrt(1/M_PI)*sqrt(def_Area); // radius of disk
     double xx0=r; double yy0=r;    // centre of disk

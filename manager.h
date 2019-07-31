@@ -9,6 +9,7 @@
 
 #include "mmwavebs.h"
 #include "common.h"
+#include "painter.h"
 // #include "idgenerator.h"
 // #include "painter.h"
 
@@ -42,6 +43,7 @@ class Manager
 //     static std::shared_ptr<IDGenerator> m_idGenerator;
 		
 private:
+    Painter* m_painter;
 	std::mutex m_mutex;
     
     double center_x;
