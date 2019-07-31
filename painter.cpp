@@ -38,6 +38,7 @@ Painter::Painter(/*std::vector<std::shared_ptr<mmWaveBS>>const &v*/)
 // 	m_nodes = &nodes;
 	m_dimesnions = new svg::Dimensions(100, 100);
 	m_doc = new svg::Document("network.svg", svg::Layout(*m_dimesnions, svg::Layout::BottomLeft));
+//     Start(v);
 }
 
 Painter::~Painter()
@@ -48,7 +49,7 @@ Painter::~Painter()
 	std::cout << "Deconstruct " << __FILE__ << std::endl;
 }
 
-void Painter::Start()
+void Painter::Start(/*std::vector<std::shared_ptr<mmWaveBS>>const &v*/)
 {
 // 	m_draw_thread = std::thread(&Painter::ThreadMain, this);
 	char thread_name_buff [20];
@@ -56,7 +57,7 @@ void Painter::Start()
     prctl(PR_SET_NAME,thread_name_buff,0,0,0);
 }
 
-void Painter::ThreadMain()
+void Painter::ThreadMain(std::vector<std::shared_ptr<mmWaveBS>>const &v)
 {
 	while(!m_stopThread)
 	{
@@ -71,6 +72,7 @@ void Painter::ThreadMain()
 
 void Painter::Enable()
 {
+//     m_nodes = v;
 	m_draw = true;
 // 	std::cout << "ready to draw!" << std::endl;
 }
@@ -87,6 +89,7 @@ void Painter::update(std::vector<std::shared_ptr<mmWaveBS>>const &v)
 	int size = v.size();
     double x_shift = 0.;
     double y_shift = 0.;
+    std::lock_guard<std::mutex> guard(m_mutex);
 	for(int i=0;i<size;i++)
 	{
 		std::shared_ptr<mmWaveBS> dd = v[i];
@@ -108,6 +111,7 @@ void Painter::update(std::vector<std::shared_ptr<mmWaveBS>>const &v)
 		
 	}
 	
+// 	std::lock_guard<std::mutex> guard1(m_mutex);
 	for(int i=0;i<size;i++)
     {
         // Drawing paths
@@ -120,8 +124,7 @@ void Painter::update(std::vector<std::shared_ptr<mmWaveBS>>const &v)
         {
             double x2 = (0.1) * (v[parent-1]->getX()+x_shift);
             double y2 = (0.1) * (v[parent-1]->getY()+y_shift);
-        
-        *m_doc << Line(Point(x1,y1), Point(x2,y2), Stroke(0.5, Color(0,0,BLUE)));
+            *m_doc << Line(Point(x1,y1), Point(x2,y2), Stroke(0.5, Color(0,0,BLUE)));
         }
     }
     m_doc->save();

@@ -54,10 +54,11 @@ class Manager
 		
     
 private:
+
     // create the rtree using default constructor
     //TODO figure out the 16 number
     bgi::rtree< value, bgi::quadratic<16> > m_tree;
-    
+   
 	std::mutex m_mutex;
     Painter* m_painter;
     

@@ -26,6 +26,10 @@ Manager::Manager()
 	m_painter = new Painter();
     gen_wired = std::mt19937(rd());
     gen_IAB = std::mt19937(rd());  //TODO is it independent from the above?
+    
+    m_painter = new Painter();
+//     m_painter->Start();
+    
     std::cout << "Manager started!\n";
 }
 
@@ -33,6 +37,7 @@ Manager::~Manager()
 {
 // 	stop_thread = true;
 // 	if(m_draw_thread.joinable()) m_draw_thread.join();
+    delete m_painter;
 	std::cout << "Deconstruct " << __FILE__ << std::endl;
 }
 
@@ -475,7 +480,7 @@ void Manager::set_hop_counts()
             finish = true;
         counter++;
     }
-    
+   
 //     m_painter->update(m_vector_BSs);
 }
 
