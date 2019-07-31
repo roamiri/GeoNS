@@ -12,9 +12,9 @@
 #include "mmwavebs.h"
 #include "common.h"
 #include "node.h"
+#include "painter.h"
 
 // #include "idgenerator.h"
-// #include "painter.h"
 
 typedef std::pair<point, std::shared_ptr<node>> value;
 
@@ -40,6 +40,8 @@ class Manager
     void path_selection_WF();
     void path_selection_HQF();
     void set_hop_counts();
+    bool check_neighbors(double x, double y);
+    int tree_size(double r);
     
     int get_IAB_count();
     int get_wired_count();
@@ -57,6 +59,7 @@ private:
     bgi::rtree< value, bgi::quadratic<16> > m_tree;
     
 	std::mutex m_mutex;
+    Painter* m_painter;
     
     double center_x;
     double center_y;

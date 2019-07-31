@@ -39,27 +39,27 @@
 class Painter
 {
 public:
-    Painter(std::vector<std::shared_ptr<mmWaveBS>>const &v);
+    Painter(/*std::vector<std::shared_ptr<mmWaveBS>>const &v*/);
     ~Painter();
 	void Start();
 	
 	void Enable();
 	void add_to_draw_queue(std::shared_ptr<draw_object> dd);
 	
+	void update(std::vector<std::shared_ptr<mmWaveBS>>const &v);
 private:
 	
 	std::vector<std::shared_ptr<draw_object>> m_objects;
-	std::vector<std::shared_ptr<mmWaveBS>>const &m_nodes;
+// 	std::vector<std::shared_ptr<mmWaveBS>>const &m_nodes;
 	
 	bool m_draw = false;
 	svg::Document* m_doc;
 	svg::Dimensions* m_dimesnions;
 	
 	bool m_stopThread = false;
-	std::thread m_draw_thread;
+// 	std::thread m_draw_thread;
 	
 	void ThreadMain();
-	void update();
 
 };
 

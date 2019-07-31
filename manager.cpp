@@ -23,7 +23,7 @@
 
 Manager::Manager()
 {
-// 	m_painter = p;
+	m_painter = new Painter();
     gen_wired = std::mt19937(rd());
     gen_IAB = std::mt19937(rd());  //TODO is it independent from the above?
     std::cout << "Manager started!\n";
@@ -43,6 +43,35 @@ void Manager::set_center(double x, double y, double r)
     radius = r;
 }
 
+bool Manager::check_neighbors(double x, double y)
+{
+    bool ans = true;
+    
+    // search for nearest neighbours
+    std::vector<value> results;
+    float xx = (float) x;
+    float yy = (float) y;
+    point sought(xx,yy);
+    m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < def_min_dis;}),
+                std::back_inserter(results));
+    if(results.size()>0) ans = false;
+    
+    return ans;
+}
+
+
+int Manager::tree_size(double r)
+{
+    std::vector<value> results;
+    float xx = (float) center_x;
+    float yy = (float) center_y;
+    point sought(xx,yy);
+    m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < r;}),
+                std::back_inserter(results));
+    
+    return results.size();
+}
+
 
 void Manager::generate_nodes(bool fixed, double wired_density)
 {
@@ -60,21 +89,26 @@ void Manager::generate_nodes(bool fixed, double wired_density)
         double x = center_x + rho * cos(theta);  // Convert from polar to Cartesian coordinates
         double y = center_y + rho * sin(theta);
         
-        std::shared_ptr<mmWaveBS> BS;
-        BS = std::make_shared<mmWaveBS>(x,y, get_nextID(),  def_P_tx);
-        BS.get()->setColor(0);
-        m_tree.insert(std::make_pair(BS->get_loc(), BS));
-        m_vector_BSs.push_back(BS);
-        BS.get()->update_parent.connect_member(this, &Manager::listen_For_parent_update);
-        if(fixed)
-            BS->set_backhaul_Type(Backhaul::IAB);
-        else
+        bool vicinity = check_neighbors(x,y);
+        
+        if(vicinity)
         {
-            bool prob = (rand() % 100) < 100*wired_density;
-            if(prob)
-                BS->set_backhaul_Type(Backhaul::wired);
-            else
+            std::shared_ptr<mmWaveBS> BS;
+            BS = std::make_shared<mmWaveBS>(x,y, get_nextID(),  def_P_tx);
+            BS.get()->setColor(0);
+            m_tree.insert(std::make_pair(BS->get_loc(), BS));
+            m_vector_BSs.push_back(BS);
+            BS.get()->update_parent.connect_member(this, &Manager::listen_For_parent_update);
+            if(fixed)
                 BS->set_backhaul_Type(Backhaul::IAB);
+            else
+            {
+                bool prob = (rand() % 100) < 100*wired_density;
+                if(prob)
+                    BS->set_backhaul_Type(Backhaul::wired);
+                else
+                    BS->set_backhaul_Type(Backhaul::IAB);
+            }
         }
     }
 }
@@ -99,6 +133,7 @@ void Manager::generate_fixed_nodes(int count)
     }
 }
 
+
 /**
  * For scenario of fixed wired nodes
  */
@@ -112,9 +147,10 @@ void Manager::update_locations()
         if(mmB->get_backhaul_Type()==Backhaul::wired)
             continue;
         
+        
         //TODO it might not work!
         m_tree.remove(std::make_pair(mmB->get_loc(), mmB));
-        
+//         std::cout << "Tree size = " << tree_size(1000) << std::endl;
         double theta=2*M_PI*(dis(gen_IAB));   // angular coordinates
         double rho=radius*sqrt(dis(gen_IAB));      // radial coordinates
         
@@ -123,6 +159,7 @@ void Manager::update_locations()
         mmB->set_loc((float)x,(float)y);
         
         m_tree.insert(std::make_pair(mmB->get_loc(), mmB));
+//         std::cout << "Tree size = " << tree_size(1000) << std::endl;
     }
 }
 
@@ -139,8 +176,10 @@ void Manager::update_locations(bool fixed, double wired_density)
         if(mmB->get_backhaul_Type()==Backhaul::wired && fixed)
             continue;
         
+//         std::cout << "Tree size = " << tree_size(1000) << std::endl;
         //TODO it might not work!
         m_tree.remove(std::make_pair(mmB->get_loc(), mmB));
+//         std::cout << "Tree size = " << tree_size(1000) << std::endl;
         
         //TODO for now IAB and wired have the same distro but different density
         double theta=2*M_PI*(dis(gen_IAB));   // angular coordinates
@@ -157,6 +196,7 @@ void Manager::update_locations(bool fixed, double wired_density)
             mmB->set_backhaul_Type(Backhaul::IAB);
         
         m_tree.insert(std::make_pair(mmB->get_loc(), mmB));
+//         std::cout << "Tree size = " << tree_size(1000) << std::endl;
     }
     
 }
@@ -416,6 +456,8 @@ void Manager::set_hop_counts()
             finish = true;
         counter++;
     }
+    
+    m_painter->update(m_vector_BSs);
 }
 
 int Manager::get_IAB_count()

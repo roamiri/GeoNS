@@ -31,9 +31,9 @@
 
 using namespace svg;
 
-Painter::Painter(std::vector<std::shared_ptr<mmWaveBS>>const &v)
-:m_draw_thread(),
-m_nodes(v)
+Painter::Painter(/*std::vector<std::shared_ptr<mmWaveBS>>const &v*/)
+//:m_draw_thread(),
+//m_nodes(v)
 {
 // 	m_nodes = &nodes;
 	m_dimesnions = new svg::Dimensions(100, 100);
@@ -43,14 +43,14 @@ m_nodes(v)
 Painter::~Painter()
 {
 	m_stopThread = true;
-	if(m_draw_thread.joinable())
-		m_draw_thread.join();
+// 	if(m_draw_thread.joinable())
+// 		m_draw_thread.join();
 	std::cout << "Deconstruct " << __FILE__ << std::endl;
 }
 
 void Painter::Start()
 {
-	m_draw_thread = std::thread(&Painter::ThreadMain, this);
+// 	m_draw_thread = std::thread(&Painter::ThreadMain, this);
 	char thread_name_buff [20];
     sprintf(thread_name_buff, "Painter");
     prctl(PR_SET_NAME,thread_name_buff,0,0,0);
@@ -63,7 +63,7 @@ void Painter::ThreadMain()
 		std::this_thread::sleep_for( std::chrono::seconds(1) );
 		if(m_draw)
 		{
-			update();
+// 			update();
 			m_draw = false;
 		}
 	}
@@ -82,14 +82,14 @@ void Painter::add_to_draw_queue(std::shared_ptr<draw_object> dd)
 // 	std::cout << "new draw object" << m_objects.back()->x << ", " << m_objects.back()->y << std::endl;
 }
 
-void Painter::update()
+void Painter::update(std::vector<std::shared_ptr<mmWaveBS>>const &v)
 {
-	int size = m_nodes.size();
+	int size = v.size();
     double x_shift = 0.;
     double y_shift = 0.;
 	for(int i=0;i<size;i++)
 	{
-		std::shared_ptr<mmWaveBS> dd = m_nodes[i];
+		std::shared_ptr<mmWaveBS> dd = v[i];
 		double x = (0.1) * (dd.get()->getX() + x_shift);
 		double y = (0.1) * (dd.get()->getY() + y_shift);
 	
@@ -111,15 +111,15 @@ void Painter::update()
 	for(int i=0;i<size;i++)
     {
         // Drawing paths
-        std::shared_ptr<mmWaveBS> mmB = m_nodes[i];
+        std::shared_ptr<mmWaveBS> mmB = v[i];
         double x1 = (0.1) * (mmB->getX()+x_shift);
         double y1 = (0.1) * (mmB->getY()+y_shift);
         uint32_t parent = mmB->get_IAB_parent();
         //TODO correct this search!!!
         if(parent!=def_Nothing)
         {
-            double x2 = (0.1) * (m_nodes[parent-1]->getX()+x_shift);
-            double y2 = (0.1) * (m_nodes[parent-1]->getY()+y_shift);
+            double x2 = (0.1) * (v[parent-1]->getX()+x_shift);
+            double y2 = (0.1) * (v[parent-1]->getY()+y_shift);
         
         *m_doc << Line(Point(x1,y1), Point(x2,y2), Stroke(0.5, Color(0,0,BLUE)));
         }
