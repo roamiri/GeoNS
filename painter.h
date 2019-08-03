@@ -48,6 +48,7 @@ public:
 	void add_to_draw_queue(std::shared_ptr<draw_object> dd);
 	
 	void update(std::vector<bs_ptr>const &v);
+    void draw_node_ID(std::vector<bs_ptr>const &v);
 private:
 	
 	std::vector<std::shared_ptr<draw_object>> m_objects;

@@ -69,7 +69,7 @@ bool Manager::check_neighbors(double x, double y)
     float xx = (float) x;
     float yy = (float) y;
     point sought(xx,yy);
-    m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < def_min_dis;}),
+    m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < 50/*def_min_dis*/;}),
                 std::back_inserter(results));
     if(results.size()>0) ans = false;
     
@@ -539,7 +539,10 @@ void Manager::set_hop_counts()
 void Manager::draw_svg(bool b)
 {
     if(b)
+    {
+//         m_painter->draw_node_ID(m_vector_BSs);
         m_painter->update(m_vector_BSs);
+    }
 }
 
 /**
@@ -664,7 +667,7 @@ void Manager::path_selection_PA()
         double max_snr = -1.0;
         uint32_t parent = def_Nothing;
         
-        point closest_wired = find_closest_wired(mmB->get_loc());
+        point closest_wired = find_closest_wired(mmB->getID(), mmB->get_loc());
         double dist_wired = bg::distance(closest_wired, mmB->get_loc());
         // search for nearest neighbours
         std::vector<value> results;
@@ -698,7 +701,7 @@ void Manager::path_selection_PA()
 }
 
 
-point Manager::find_closest_wired(point loc)
+point Manager::find_closest_wired(uint32_t id, point loc)
 {
     //TODO check if the answer is not equal the input loc
     point wired;// = loc;
@@ -711,15 +714,30 @@ point Manager::find_closest_wired(point loc)
         // search for nearest neighbours
         std::vector<value> results;
         m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, loc) < search_radius;}), std::back_inserter(results));
+        double dis = 3*radius; uint32_t cid; bool b_found = false;
         BOOST_FOREACH(value const&v, results)
         {
             bs_ptr mmB2 = boost::dynamic_pointer_cast<mmWaveBS>(v.second);
-            if(mmB2->get_backhaul_Type()==Backhaul::wired)
+            if(mmB2->getID()!=id)
             {
-                wired = mmB2->get_loc();
-                return wired;
+                if(mmB2->get_backhaul_Type()==Backhaul::wired)
+                {
+                    if(bg::distance(loc, mmB2->get_loc()) < dis)
+                    {
+                        wired = mmB2->get_loc();
+                        dis = bg::distance(loc, mmB2->get_loc());
+                        cid = mmB2->getID(); 
+                        b_found = true;
+                    }
+                }
             }
         }
+        if(b_found)
+        {
+            std::cout << "closest wired id for " << id  << " is " << cid << std::endl;
+            return wired;
+        }
+        
     }
     
     std::cerr << "No wired found!!" << std::endl;

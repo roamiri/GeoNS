@@ -131,3 +131,31 @@ void Painter::update(std::vector<bs_ptr>const &v)
 }
 
 
+void Painter::draw_node_ID(std::vector<bs_ptr>const &v)
+{
+    int size = v.size();
+    double x_shift = 0.;
+    double y_shift = 0.;
+    std::lock_guard<std::mutex> guard(m_mutex);
+	for(int i=0;i<size;i++)
+	{
+		bs_ptr dd = v[i];
+		double x = (0.1) * (dd.get()->getX() + x_shift);
+		double y = (0.1) * (dd.get()->getY() + y_shift);
+	
+		std::size_t color = dd.get()->getColor();
+		std::size_t red = (color & 0xff0000) >> 16; 
+		std::size_t green =(color & 0x00ff00) >> 8; 
+		std::size_t blue = (color & 0x0000ff);
+// 		std::cout << "Status = " << dd.get()->getStatus() << std::endl;
+        // Text of number of hops to the wired node
+        *m_doc << Text(Point(x, y+2), std::to_string(dd->getID()), Fill(Color(0,0,0)), Font(2.,"Verdana"));
+        // Drawing the nodes
+		if(dd.get()->get_backhaul_Type()==Backhaul::wired)
+			*m_doc << Circle(Point(x, y), 2, Fill(Color(0,0,0)), Stroke(1, Color(RED,0,0)));
+		else
+			*m_doc << Circle(Point(x, y), 2, Fill(Color(red,green,blue)), Stroke(1, Color(red, green, blue)));
+		
+	}
+	m_doc->save();
+}

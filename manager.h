@@ -62,7 +62,7 @@ class Manager
     
     void reset_pointers();
     
-    point find_closest_wired(point loc);
+    point find_closest_wired(uint32_t id, point loc);
     
 	
 // 	std::vector<bs_ptr> m_vector_BSs;
