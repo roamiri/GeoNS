@@ -24,6 +24,8 @@
 #include <algorithm>
 #include <iterator>
 #include <bits/stdc++.h> 
+#include <fstream>
+#include <sstream>
 
 
 namespace bm = boost::math;
@@ -113,6 +115,71 @@ void Manager::generate_nodes(bool fixed, int fixed_count, double wired_density)
             bs_ptr BS;
             BS = boost::shared_ptr<mmWaveBS>(new mmWaveBS(x,y, get_nextID(),  def_P_tx));
             if(!BS) std::cerr << __FUNCTION__ << std::endl;
+            BS.get()->setColor(0);
+            m_tree.insert(std::make_pair(BS->get_loc(), BS)); //TODO maybe here!
+            m_vector_BSs.push_back(BS);
+//             BS.get()->update_parent.connect_member(this, &Manager::listen_For_parent_update);
+            if(fixed)
+            {
+                BS->set_backhaul_Type(Backhaul::IAB);
+            }
+            else
+            {
+                bool prob = (rand() % 100) < 100*wired_density;
+                if(prob)
+                {
+                    BS->set_backhaul_Type(Backhaul::wired);
+                    BS->set_hop_count(0);
+                }
+                else
+                    BS->set_backhaul_Type(Backhaul::IAB);
+            }
+        }
+    }
+}
+
+void Manager::load_nodes(std::string f_name, bool fixed, int fixed_count, double wired_density)
+{
+    int num_nodes =0;
+// 	double data[num_nodes][2];
+    std::vector<std::array<double,2>> vec_data;
+	std::fstream _file(f_name);
+
+	if(_file.fail())
+    {
+		std::cerr << "input data file does not exis!" << std::endl;
+    }
+    std::string line;
+	while(std::getline(_file, line) && num_nodes<200)
+	{
+		std::istringstream is(line);
+		double num;
+        std::array<double,2> arr;
+        is >> arr[0];
+        is>>arr[1];
+        vec_data.push_back(arr);
+        num_nodes++;
+	}
+	
+	
+	if(fixed) generate_fixed_nodes(fixed_count);
+    
+    //   Create the nodes
+    
+    num_nodes= vec_data.size(); // number of points
+    
+    for(int i =0;i<num_nodes;i++)
+    {
+        double x = center_x + 1.5*radius* vec_data[i][0];  // Convert from polar to Cartesian coordinates
+        double y = center_y + 1.5*radius* vec_data[i][1];
+        
+        bool vicinity = check_neighbors(x,y);
+        
+        if(vicinity)
+        {
+            bs_ptr BS;
+            BS = boost::shared_ptr<mmWaveBS>(new mmWaveBS(x,y, get_nextID(),  def_P_tx));
+            if(!BS) std::cerr << __FUNCTION__ << " at " << __LINE__ <<std::endl;
             BS.get()->setColor(0);
             m_tree.insert(std::make_pair(BS->get_loc(), BS)); //TODO maybe here!
             m_vector_BSs.push_back(BS);

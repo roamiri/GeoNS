@@ -50,8 +50,10 @@ int main(int argc, char** argv)
         ("policy", po::value<int>(), "Path Selection Policy, options = HQF, WF, PA, MLR")
         ("verbose", po::value<bool>(), "verbose")
         ("plot", po::value<bool>(), "Plot the CDF of the policy")
-        ("f", po::value<string>(), "file name")
-        ("svg", po::value<string>(), "file name")
+        ("if", po::value<string>(), "Input file name")
+        ("of", po::value<string>(), "Output file name")
+        ("svg", po::value<string>(), "Topology SVG file name")
+        
     ;
 
     po::variables_map vm;
@@ -116,8 +118,16 @@ int main(int argc, char** argv)
         bPlot = vm["plot"].as<bool>();
     
     std::string plot_name = "Hop_Count";
-    if(vm.count("f"))
-        plot_name = vm["f"].as<string>();
+    if(vm.count("of"))
+        plot_name = vm["of"].as<string>();
+    
+    std::string input;
+    bool b_input = false;
+    if(vm.count("if"))
+    {
+        input = vm["if"].as<string>();
+        b_input = true;
+    }
     
     if(vm.count("svg"))
     {
@@ -138,7 +148,10 @@ int main(int argc, char** argv)
     double xx0=r; double yy0=r;    // centre of disk
     manager.set_center(xx0, yy0, r);
     
-    manager.generate_nodes(fixed, fixed_count, wired_density);
+    if(b_input)
+        manager.load_nodes(input, fixed, fixed_count, wired_density);
+    else
+        manager.generate_nodes(fixed, fixed_count, wired_density);
     
     
     int Total_fail = 0;
@@ -155,7 +168,8 @@ int main(int argc, char** argv)
     {
 
        
-       if(b_verbose){ 
+       if(b_verbose)
+       { 
             std::cout << "Number of Wired nodes = " << manager.get_wired_count() << std::endl;
             std::cout << "Number of IAB nodes = " << manager.get_IAB_count() << std::endl;
        }
@@ -177,12 +191,12 @@ int main(int argc, char** argv)
                 manager.path_selection_PA();
                 if(b_verbose) std::cout << "Selecting Parents with PA." << std::endl;
                 break;
+                
             case(Path_Policy::MLR):
                 manager.path_selection_MLR();
                 if(b_verbose) std::cout << "Selecting Parents with MLR." << std::endl;
                 break;
         }
-        
         
         manager.spread_hop_count();
 //         manager.set_hop_counts();
