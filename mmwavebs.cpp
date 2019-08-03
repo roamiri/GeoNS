@@ -142,3 +142,59 @@ void mmWaveBS::set_backhaul_Type(Backhaul st)
 //     if (st==Backhaul::wired)
 //         set_hop_count(0);
 }
+
+void mmWaveBS::add_to_load_BS(boost::shared_ptr<mmWaveBS> bs/*uint32_t id, point p*/)
+{
+    bool found = false;//= m_load_BS.find(id)!=m_load_BS.end();
+    
+    for(std::vector<boost::shared_ptr<mmWaveBS>>::iterator it=m_load_BS.begin(); it!=m_load_BS.end();++it)
+    {
+        boost::shared_ptr<mmWaveBS> mmB = (*it);
+        if(mmB->getID()==bs->getID())
+        {found = true; break;}
+    }
+    
+    if(!found)
+    {
+        m_load_BS.push_back(bs);
+    }
+    
+}
+
+void mmWaveBS::remove_from_load_BS(uint32_t id)
+{
+//     bool found = m_load_BS.find(id)!=m_load_BS.end();
+//     
+//     if(found)
+//         m_load_BS.erase(id);
+//     else
+//         std::cout << "BS not found to be deleted!" << std::endl;
+}
+
+int mmWaveBS::get_load_BS_count()
+{
+    int s = m_load_BS.size(); 
+    return s;
+}
+
+void mmWaveBS::update_load_hops()
+{
+    int hop = get_hop_count()+1;
+    for(std::vector<boost::shared_ptr<mmWaveBS>>::iterator it=m_load_BS.begin(); it!=m_load_BS.end();++it)
+    {
+        boost::shared_ptr<mmWaveBS> mmB = (*it);
+//             std::cout << "Route is already found!!\n";
+        if(!mmB->is_route_found())
+        {
+            mmB->set_hop_count(hop);
+            mmB->route_found(true);
+        }
+//         mmB->update_load_hops(mmB->get_hop_count());
+    }
+}
+
+void mmWaveBS::reset_load()
+{
+    for(int i=0;i<m_load_BS.size();++i)
+        m_load_BS.pop_back();
+}

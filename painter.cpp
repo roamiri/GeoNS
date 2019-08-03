@@ -31,13 +31,13 @@
 
 using namespace svg;
 
-Painter::Painter(/*std::vector<std::shared_ptr<mmWaveBS>>const &v*/)
+Painter::Painter(std::string name)
 //:m_draw_thread(),
 //m_nodes(v)
 {
 // 	m_nodes = &nodes;
 	m_dimesnions = new svg::Dimensions(100, 100);
-	m_doc = new svg::Document("network.svg", svg::Layout(*m_dimesnions, svg::Layout::BottomLeft));
+	m_doc = new svg::Document(name, svg::Layout(*m_dimesnions, svg::Layout::BottomLeft));
 //     Start(v);
 }
 
@@ -49,7 +49,7 @@ Painter::~Painter()
 // 	std::cout << "Deconstruct " << __FILE__ << std::endl;
 }
 
-void Painter::Start(/*std::vector<std::shared_ptr<mmWaveBS>>const &v*/)
+void Painter::Start(/*std::vector<bs_ptr>const &v*/)
 {
 // 	m_draw_thread = std::thread(&Painter::ThreadMain, this);
 	char thread_name_buff [20];
@@ -57,7 +57,7 @@ void Painter::Start(/*std::vector<std::shared_ptr<mmWaveBS>>const &v*/)
     prctl(PR_SET_NAME,thread_name_buff,0,0,0);
 }
 
-void Painter::ThreadMain(/*std::vector<std::shared_ptr<mmWaveBS>>const &v*/)
+void Painter::ThreadMain(/*std::vector<bs_ptr>const &v*/)
 {
 	while(!m_stopThread)
 	{
@@ -84,7 +84,7 @@ void Painter::add_to_draw_queue(std::shared_ptr<draw_object> dd)
 // 	std::cout << "new draw object" << m_objects.back()->x << ", " << m_objects.back()->y << std::endl;
 }
 
-void Painter::update(std::vector<std::shared_ptr<mmWaveBS>>const &v)
+void Painter::update(std::vector<bs_ptr>const &v)
 {
 	int size = v.size();
     double x_shift = 0.;
@@ -92,7 +92,7 @@ void Painter::update(std::vector<std::shared_ptr<mmWaveBS>>const &v)
     std::lock_guard<std::mutex> guard(m_mutex);
 	for(int i=0;i<size;i++)
 	{
-		std::shared_ptr<mmWaveBS> dd = v[i];
+		bs_ptr dd = v[i];
 		double x = (0.1) * (dd.get()->getX() + x_shift);
 		double y = (0.1) * (dd.get()->getY() + y_shift);
 	
@@ -115,7 +115,7 @@ void Painter::update(std::vector<std::shared_ptr<mmWaveBS>>const &v)
 	for(int i=0;i<size;i++)
     {
         // Drawing paths
-        std::shared_ptr<mmWaveBS> mmB = v[i];
+        bs_ptr mmB = v[i];
         double x1 = (0.1) * (mmB->getX()+x_shift);
         double y1 = (0.1) * (mmB->getY()+y_shift);
         uint32_t parent = mmB->get_IAB_parent();

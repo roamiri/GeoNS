@@ -20,14 +20,20 @@
 #include <limits>
 #include <random>
 #include "common.h"
+#include "boost/math/special_functions/log1p.hpp"
+#include <algorithm>
+#include <iterator>
+#include <bits/stdc++.h> 
 
-Manager::Manager()
+
+namespace bm = boost::math;
+
+Manager::Manager(std::string svg_name)
 {
-	m_painter = new Painter();
     gen_wired = std::mt19937(rd());
     gen_IAB = std::mt19937(rd());  //TODO is it independent from the above?
     
-    m_painter = new Painter();
+    m_painter = new Painter(svg_name);
 //     m_painter->Start();
     
     std::cout << "Manager started!\n";
@@ -37,6 +43,10 @@ Manager::~Manager()
 {
 // 	stop_thread = true;
 // 	if(m_draw_thread.joinable()) m_draw_thread.join();
+//     for(int i=0;i<m_vector_BSs.size();++i)
+//         std::cout << i << "="<< m_vector_BSs[i].use_count() << ", ";
+//     std::cout << "\n";
+    
     delete m_painter;
 // 	std::cout << "Deconstruct " << __FILE__ << std::endl;
 }
@@ -100,12 +110,13 @@ void Manager::generate_nodes(bool fixed, int fixed_count, double wired_density)
         
         if(vicinity)
         {
-            std::shared_ptr<mmWaveBS> BS;
-            BS = std::make_shared<mmWaveBS>(x,y, get_nextID(),  def_P_tx);
+            bs_ptr BS;
+            BS = boost::shared_ptr<mmWaveBS>(new mmWaveBS(x,y, get_nextID(),  def_P_tx));
+            if(!BS) std::cerr << __FUNCTION__ << std::endl;
             BS.get()->setColor(0);
-            m_tree.insert(std::make_pair(BS->get_loc(), BS));
+            m_tree.insert(std::make_pair(BS->get_loc(), BS)); //TODO maybe here!
             m_vector_BSs.push_back(BS);
-            BS.get()->update_parent.connect_member(this, &Manager::listen_For_parent_update);
+//             BS.get()->update_parent.connect_member(this, &Manager::listen_For_parent_update);
             if(fixed)
             {
                 BS->set_backhaul_Type(Backhaul::IAB);
@@ -131,18 +142,18 @@ void Manager::generate_fixed_nodes(int count)
     double delta_teta = 2*M_PI/count;
     for(int i =0;i<count;i++)
     {
-        std::shared_ptr<mmWaveBS> BS;
+        bs_ptr BS;
         double theta = i*delta_teta;
         double r2 = radius/2.;
         double x = center_x + r2 * cos(theta);  // Convert from polar to Cartesian coordinates
         double y = center_y + r2 * sin(theta);
-        BS = std::make_shared<mmWaveBS>(x, y, get_nextID(),  def_P_tx);
+        BS = boost::shared_ptr<mmWaveBS>(new mmWaveBS(x, y, get_nextID(),  def_P_tx));
         BS.get()->setColor(0);
         BS->set_backhaul_Type(Backhaul::wired);
         BS->set_hop_count(0);
         m_tree.insert(std::make_pair(BS->get_loc(), BS));
         m_vector_BSs.push_back(BS);
-        BS.get()->update_parent.connect_member(this, &Manager::listen_For_parent_update);
+//         BS.get()->update_parent.connect_member(this, &Manager::listen_For_parent_update);
     }
 }
 
@@ -154,9 +165,9 @@ void Manager::generate_fixed_nodes(int count)
 // {
 //     std::uniform_real_distribution<> dis(0, 1);
 //     
-//     for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+//     for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
 //     {
-//         std::shared_ptr<mmWaveBS> mmB = (*it);
+//         bs_ptr mmB = (*it);
 //         if(mmB->get_backhaul_Type()==Backhaul::wired)
 //             continue;
 //         
@@ -183,15 +194,20 @@ void Manager::update_locations(bool fixed, double wired_density)
 {
     std::uniform_real_distribution<> dis(0, 1);
     
-    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+//     std::lock_guard<std::mutex> guard(m_mutex);
+    for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
     {
-        std::shared_ptr<mmWaveBS> mmB = (*it);
-        
+        bs_ptr mmB = (*it);
+        if(!mmB) std::cerr << "FUCK!!!" << std::endl;
+        mmB->route_found(false);
+        mmB->reset_load();
         if(mmB->get_backhaul_Type()==Backhaul::wired && fixed)
             continue;        
 //         std::cout << "Tree size = " << tree_size(1000) << std::endl;
         //TODO it might not work!
+//         std::cout << "use count before = " << mmB.use_count();
         m_tree.remove(std::make_pair(mmB->get_loc(), mmB));
+//         std::cout << "use count after = " << mmB.use_count();
 //         std::cout << "Tree size = " << tree_size(1000) << std::endl;
         
         //TODO for now IAB and wired have the same distro but different density
@@ -232,9 +248,9 @@ void Manager::listen_For_Candidacy(const candidacy_msg& message)
 	double x = message.x;
 	double y = message.y;
 	bool ib_found = false;
-	for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it = m_vector_BSs.begin(); it != m_vector_BSs.end(); ++it) 
+	for(std::vector<bs_ptr>::iterator it = m_vector_BSs.begin(); it != m_vector_BSs.end(); ++it) 
 	{
-		std::shared_ptr<mmWaveBS> mmB = (*it);
+		bs_ptr mmB = (*it);
 		if(euclidean_dist2(x, y, mmB->getX(), mmB->getY()) <=  pow(in_bound, 2))
 		{
 			if(mmB->getStatus()==Status::clusterHead)
@@ -263,9 +279,9 @@ void Manager::listen_For_ClusterHead(const cluster_head_msg& message)
 	std::size_t new_cluster_color = message.color;
 	
 // 	std::lock_guard<std::mutex> guard(m_mutex);
-	for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it != m_vector_BSs.end(); ++it)
+	for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it != m_vector_BSs.end(); ++it)
 	{
-		std::shared_ptr<mmWaveBS> mmB = (*it);
+		bs_ptr mmB = (*it);
 		double dist2 = euclidean_dist2(x, y, mmB->getX(), mmB->getY());
 		if(dist2>0) // dist2=0 means the same node
 		{
@@ -302,7 +318,7 @@ void Manager::listen_For_Conflict(const std::string& message)
 void Manager::joinCluster(uint32_t id, Status st, uint32_t cluster_id, std::size_t color)
 {
 	std::lock_guard<std::mutex> guard(m_mutex);
-	for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it = m_vector_BSs.begin(); it != m_vector_BSs.end(); ++it)
+	for(std::vector<bs_ptr>::iterator it = m_vector_BSs.begin(); it != m_vector_BSs.end(); ++it)
 	{
 		if((*it)->getID()==id)
 		{
@@ -321,7 +337,7 @@ void Manager::joinCluster(uint32_t id, Status st, uint32_t cluster_id, std::size
 void Manager::makeCluster(uint32_t id)
 {
 	std::lock_guard<std::mutex> guard(m_mutex);
-	for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+	for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
 		if((*it)->getID()==id)
 		{
 			(*it)->setClusterID(id);
@@ -346,19 +362,19 @@ void Manager::listen_For_parent_update(const update_parent_msg& msg)
     std::vector<value> results;
     m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < 2*def_MAX_MMWAVE_RANGE;}), std::back_inserter(results));
 
-    std::lock_guard<std::mutex> guard(m_mutex);
+//     std::lock_guard<std::mutex> guard(m_mutex);
     BOOST_FOREACH(value const&v, results)
     {
-        std::shared_ptr<mmWaveBS> mmB = std::dynamic_pointer_cast<mmWaveBS>(v.second);
+        bs_ptr mmB = boost::dynamic_pointer_cast<mmWaveBS>(v.second);
         if(mmB->get_IAB_parent()==id)
         {
             mmB->set_hop_count(hop_cnt+1);
             mmB->route_found(true);
         }
     }
-//     for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+//     for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
 //     {
-//         std::shared_ptr<mmWaveBS> mmB = (*it);
+//         bs_ptr mmB = (*it);
 //         if(mmB->get_IAB_parent()==id)
 //         {
 //             mmB->set_hop_count(hop_cnt+1);
@@ -367,6 +383,37 @@ void Manager::listen_For_parent_update(const update_parent_msg& msg)
 //     }
 }
 
+void Manager::spread_hop_count()
+{
+    bool all_found = false;
+    int counter = 0;
+    while(!all_found && counter<10)
+    {
+        for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+        {
+            bs_ptr mmB = (*it);
+            if(mmB->get_hop_count()!=-1)
+                mmB->update_load_hops();
+            
+        //         if(mmB->get_backhaul_Type()==Backhaul::wired)
+        //             mmB->update_load_hops(0);
+        }
+        
+        bool found = true;
+        
+        for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+        {
+            bs_ptr mmB = (*it);
+            if(mmB->get_hop_count()==-1 && mmB->get_IAB_parent()!=def_Nothing)
+            {found = false; break;}
+        }
+        if(found)
+            all_found = true;
+        counter++;
+    }
+    
+//     count_hops(m_arr_hops, m_failed);
+}
 
 void Manager::set_hop_counts()
 {
@@ -376,13 +423,39 @@ void Manager::set_hop_counts()
     while((!finish) && (counter<10))
     {
         bool all_found = true;
-        for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
+//         std::lock_guard<std::mutex> guard(m_mutex);
+        for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
         {
-            std::shared_ptr<mmWaveBS> mmB = (*it);
+            bs_ptr mmB = (*it);
+            if(!mmB) std::cerr << __func__ << std::endl;
+            
             if(mmB->get_hop_count()!=-1)
             {
 //                 std::cout << mmB->get_hop_count() << ",";
-                mmB->emit_update_parent();
+//                 mmB->emit_update_parent();
+                int h = mmB->get_hop_count(); uint32_t id = mmB->getID();
+                for(std::vector<bs_ptr>::iterator it2=m_vector_BSs.begin(); it2!=m_vector_BSs.end();++it2)
+                {
+                    bs_ptr mmB2 = (*it2);
+                    if(mmB2->get_IAB_parent()==id)
+                    {
+                        mmB2->set_hop_count(h+1);
+                        mmB2->route_found(true);
+                    }
+                }
+//                 std::vector<value> results;
+//                 point sought = mmB->get_loc();
+//                 m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < 2*def_MAX_MMWAVE_RANGE;}), std::back_inserter(results));
+// 
+//                 BOOST_FOREACH(value const &v, results)
+//                 {
+//                     bs_ptr mmB2 = boost::dynamic_pointer_cast<mmWaveBS>(v.second);
+//                     if(mmB2->get_IAB_parent()==mmB->getID())
+//                     {
+//                         mmB2->set_hop_count(mmB->get_hop_count()+1);
+//                         mmB2->route_found(true);
+//                     }
+//                 }
             }
             else
                 all_found = false;
@@ -392,8 +465,14 @@ void Manager::set_hop_counts()
             finish = true;
         counter++;
     }
-   
-    m_painter->update(m_vector_BSs);
+
+}
+
+
+void Manager::draw_svg(bool b)
+{
+    if(b)
+        m_painter->update(m_vector_BSs);
 }
 
 /**
@@ -401,9 +480,12 @@ void Manager::set_hop_counts()
  */
 void Manager::path_selection_WF()
 {
-    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+//     std::lock_guard<std::mutex> guard(m_mutex);
+    for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
     {
-        std::shared_ptr<mmWaveBS> mmB = (*it);
+        bs_ptr mmB = (*it);
+//         std::cout << "use count = " << mmB.use_count();
+        if(!mmB) std::cerr << __FUNCTION__ << std::endl;
         
         if(mmB.get()->get_backhaul_Type()==Backhaul::wired)
             continue;
@@ -420,7 +502,7 @@ void Manager::path_selection_WF()
         
         BOOST_FOREACH(value const&v, results)
         {
-            std::shared_ptr<mmWaveBS> mmB2 = std::dynamic_pointer_cast<mmWaveBS>(v.second);
+            bs_ptr mmB2 = boost::dynamic_pointer_cast<mmWaveBS>(v.second);
             if(mmB2.get()->getID() != cid)
             { 
 //                     double dist = mmB->calculate_distance_of_link(mmB2->getX(), mmB2->getY());
@@ -445,15 +527,18 @@ void Manager::path_selection_WF()
             }
         }
         mmB->set_IAB_parent(parent);
+        Add_load_BS(parent, mmB);
 //         std::cout << "SBS= "<< mmB.get()->getID() << " parent= "<< parent << std::endl;
     }
 }
 
 void Manager::path_selection_HQF()
 {
-    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+//     std::lock_guard<std::mutex> guard(m_mutex);
+    for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
     {
-        std::shared_ptr<mmWaveBS> mmB = (*it);
+        bs_ptr mmB = (*it);
+        if(!mmB) std::cerr << __FUNCTION__ << std::endl;
         
         if(mmB.get()->get_backhaul_Type()==Backhaul::wired)
             continue;
@@ -470,8 +555,7 @@ void Manager::path_selection_HQF()
         
         BOOST_FOREACH(value const&v, results)
         {
-            std::shared_ptr<mmWaveBS> mmB2 = NULL;
-            mmB2 = std::dynamic_pointer_cast<mmWaveBS>(v.second);
+            bs_ptr mmB2 = boost::dynamic_pointer_cast<mmWaveBS>(v.second);
             if(mmB2)
             {
                 if(mmB2.get()->getID() != cid)
@@ -490,6 +574,7 @@ void Manager::path_selection_HQF()
             }
         }
         mmB->set_IAB_parent(parent);
+        Add_load_BS(parent, mmB);
     }
 }
 
@@ -498,9 +583,13 @@ void Manager::path_selection_HQF()
  */
 void Manager::path_selection_PA()
 {
-    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+//     std::lock_guard<std::mutex> guard(m_mutex);
+    //TODO check this method precisely.
+    for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
     {
-        std::shared_ptr<mmWaveBS> mmB = (*it);
+        bs_ptr mmB = (*it);
+        if(!mmB) std::cerr << __FUNCTION__ << std::endl;
+        
         if(mmB.get()->get_backhaul_Type()==Backhaul::wired)
             continue;
         
@@ -518,7 +607,7 @@ void Manager::path_selection_PA()
         
         BOOST_FOREACH(value const&v, results)
         {
-            std::shared_ptr<mmWaveBS> mmB2 = std::dynamic_pointer_cast<mmWaveBS>(v.second);
+            bs_ptr mmB2 = boost::dynamic_pointer_cast<mmWaveBS>(v.second);
             if(mmB2.get()->getID() != cid)
             { 
                 double snr = mmB->calculate_SNR_of_link(mmB2.get()->getX(),mmB2.get()->getY());
@@ -537,12 +626,14 @@ void Manager::path_selection_PA()
         }
         
         mmB->set_IAB_parent(parent);
+        Add_load_BS(parent, mmB);
     }
 }
 
 
 point Manager::find_closest_wired(point loc)
 {
+    //TODO check if the answer is not equal the input loc
     point wired;// = loc;
     double search_radius = 10; // 10 meter first search radius
     int max = radius/search_radius;
@@ -555,7 +646,7 @@ point Manager::find_closest_wired(point loc)
         m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, loc) < search_radius;}), std::back_inserter(results));
         BOOST_FOREACH(value const&v, results)
         {
-            std::shared_ptr<mmWaveBS> mmB2 = std::dynamic_pointer_cast<mmWaveBS>(v.second);
+            bs_ptr mmB2 = boost::dynamic_pointer_cast<mmWaveBS>(v.second);
             if(mmB2->get_backhaul_Type()==Backhaul::wired)
             {
                 wired = mmB2->get_loc();
@@ -565,15 +656,82 @@ point Manager::find_closest_wired(point loc)
     }
     
     std::cerr << "No wired found!!" << std::endl;
-    return wired;
+//     return wired;
 }
+
+
+/**
+ * Path selection policy based on Maximum local rate
+ */
+void Manager::path_selection_MLR()
+{
+//     std::lock_guard<std::mutex> guard(m_mutex);
+    //TODO maybe here!
+    for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+    {
+        bs_ptr mmB = (*it);
+        if(!mmB) std::cerr << __FUNCTION__ << std::endl;
+        
+        if(mmB.get()->get_backhaul_Type()==Backhaul::wired)
+            continue;
+        
+        uint32_t cid = mmB.get()->getID();
+        double max_rate = -1.0;
+        uint32_t parent_id = def_Nothing;
+    
+        // search for nearest neighbours
+        point sought = mmB->get_loc();
+        std::vector<value> results;
+        m_tree.query(bgi::satisfies([&](value const&v){return bg::distance(v.first, sought)<def_MAX_MMWAVE_RANGE;}), std::back_inserter(results));
+        
+        bs_ptr parent;
+        BOOST_FOREACH(value const&v, results)
+        {
+            bs_ptr mmB2 = boost::dynamic_pointer_cast<mmWaveBS>(v.second);
+            if(cid != mmB2.get()->getID())
+            {
+                double snr = mmB.get()->calculate_SNR_of_link(mmB2.get()->getX(), mmB2.get()->getY());
+                double load = 1. + mmB2.get()->get_load_BS_count();
+                double BW =def_BW;
+                double d = def_BW/load;
+                double rate =d * bm::log1p(1.+snr)/bm::log1p(2.0);
+//                 std::cout << "rate= " << rate << ", ";
+                bool b_rate = rate > max_rate;
+                bool b_parent = mmB2.get()->get_IAB_parent()!=cid;
+                
+                if(b_rate && b_parent)
+                {
+                    max_rate = rate;
+                    parent_id = mmB2.get()->getID();
+                    parent = mmB2;
+                }
+            }
+        }
+        mmB->set_IAB_parent(parent_id);
+        Add_load_BS(parent_id, mmB);
+//         if(parent_id!=def_Nothing)
+//             parent->add_to_load_BS(mmB->getID(), mmB->get_loc());
+    }
+}
+
+void Manager::Add_load_BS(uint32_t parent, bs_ptr bs/*uint32_t member, point loc*/)
+{
+    for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
+    {
+        bs_ptr mmB = (*it);
+        if(mmB->getID()==parent)
+            mmB->add_to_load_BS(bs);
+    }
+}
+
 
 int Manager::get_IAB_count()
 {
     int cc = 0;
-    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
+//     std::lock_guard<std::mutex> guard(m_mutex);
+    for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
     {
-        std::shared_ptr<mmWaveBS> mmB = (*it);
+        bs_ptr mmB = (*it);
         if(mmB->get_backhaul_Type()==Backhaul::IAB)
             cc++;
     }
@@ -583,9 +741,10 @@ int Manager::get_IAB_count()
 int Manager::get_wired_count()
 {
     int cc = 0;
-    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
+//     std::lock_guard<std::mutex> guard(m_mutex);
+    for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
     {
-        std::shared_ptr<mmWaveBS> mmB = (*it);
+        bs_ptr mmB = (*it);
         if(mmB->get_backhaul_Type()==Backhaul::wired)
             cc++;
     }
@@ -594,12 +753,80 @@ int Manager::get_wired_count()
 
 void Manager::reset(bool fixed)
 {
-    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
+//     std::lock_guard<std::mutex> guard(m_mutex);
+    for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
     {
-        std::shared_ptr<mmWaveBS> mmB = (*it);
+        bs_ptr mmB = (*it);
         if(mmB->get_backhaul_Type()==Backhaul::IAB && fixed)
             mmB->reset();
         else
             mmB->reset();
+    }
+}
+
+std::vector<int> Manager::count_hops(int &max_hop, int &failed)
+{
+    
+    m_failed = 0; m_max_hop = -1;
+    for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
+    {
+        bs_ptr mmB = (*it);
+        if(m_max_hop < mmB->get_hop_count())
+            m_max_hop = mmB->get_hop_count();
+    }
+//     memset(m_arr_hops, 0, sizeof(m_arr_hops));
+    std::vector<int> arr_hops; arr_hops.resize(m_max_hop+1);
+    for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
+    {
+        bs_ptr mmB = (*it);
+        if(!mmB)
+        {
+            std::cerr << "NULL Pointer in " << __FUNCTION__ << " at " << __LINE__ << std::endl;
+//             continue;
+        }
+        int hcnt = mmB->get_hop_count();
+        if(hcnt != -1)
+        {
+            arr_hops[hcnt]++;
+        }
+        else
+            m_failed++;
+    }
+    failed = m_failed;
+    max_hop = m_max_hop;
+    return arr_hops;
+//     std::copy(std::begin(m_arr_hops), std::end(m_arr_hops), std::begin(hop));
+//     hop = m_arr_hops;
+//     std::vector<value> results;
+//     point sought = point(center_x, center_y);
+//     m_tree.query(bgi::satisfies([&] (value const&v){return bg::distance(v.first,sought)<radius;}), std::back_inserter(results));
+//     
+//     BOOST_FOREACH(value const&v, results)
+//     {
+//         bs_ptr mmB = boost::dynamic_pointer_cast<mmWaveBS>(v.second);
+//         if(!mmB)
+//         {
+//             std::cerr << "NULL Pointer " << __FUNCTION__ << __LINE__ << std::endl;
+// //             continue;
+//         }
+//         int hcnt = mmB->get_hop_count();
+//         if(hcnt != -1)
+//             hop[hcnt]++;
+//         else
+//             failed++;
+//         
+//     }
+//     std::lock_guard<std::mutex> guard(m_mutex);
+//     
+}
+
+
+void Manager::reset_pointers()
+{
+    for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
+    {
+        bs_ptr mmB = (*it);
+        if(mmB)
+            mmB.reset();
     }
 }

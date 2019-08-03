@@ -36,6 +36,8 @@ int main(int argc, char** argv)
     bool b_verbose = false;
     int Total_iter = 100;
     bool bPlot = true;
+    std::string svg_name = "network.svg";
+    bool b_draw = false;
     
     // Declare the supported options.
     po::options_description desc("Allowed options");
@@ -45,10 +47,11 @@ int main(int argc, char** argv)
         ("fixed", po::value<int>(), "Set wired BS implementation type (fixed or variable)")
         ("count", po::value<int>(), "Number of fixed wired base stations")
         ("dens", po::value<double>(), "Wired nodes density")
-        ("policy", po::value<int>(), "Path Selection Policy, options = HQF, WF, PA")
+        ("policy", po::value<int>(), "Path Selection Policy, options = HQF, WF, PA, MLR")
         ("verbose", po::value<bool>(), "verbose")
         ("plot", po::value<bool>(), "Plot the CDF of the policy")
-        ("file_name", po::value<string>(), "file name")
+        ("f", po::value<string>(), "file name")
+        ("svg", po::value<string>(), "file name")
     ;
 
     po::variables_map vm;
@@ -100,6 +103,9 @@ int main(int argc, char** argv)
             case(2):
                 policy = Path_Policy::PA;
                 break;
+            case(3):
+                policy = Path_Policy::MLR;
+                break;
         }
     }
     
@@ -110,12 +116,18 @@ int main(int argc, char** argv)
         bPlot = vm["plot"].as<bool>();
     
     std::string plot_name = "Hop_Count";
-    if(vm.count("file_name"))
-        plot_name = vm["file_name"].as<string>();
+    if(vm.count("f"))
+        plot_name = vm["f"].as<string>();
+    
+    if(vm.count("svg"))
+    {
+        svg_name = vm["svg"].as<string>()+".svg";
+        b_draw = true;
+    }
     
 //     std::shared_ptr<IDGenerator> _idGenerator = ;
     
-    Manager manager;
+    Manager manager(svg_name);
     m_nextId = 0; //TODO fix the id generator 
     
 //     std::shared_ptr<Painter> _painter = std::make_shared<Painter>(manager.m_vector_BSs);
@@ -132,8 +144,8 @@ int main(int argc, char** argv)
     int Total_fail = 0;
     
 //     int CDF_Hop_vec[10] = {0};
-    boost::numeric::ublas::vector<double> CDF_Hop_vec(10);
-    for(int i=0;i<10;i++) CDF_Hop_vec(i)=0;
+    boost::numeric::ublas::vector<double> CDF_Hop_vec(15);
+    for(int i=0;i<15;i++) CDF_Hop_vec(i)=0;
     
     int dm = manager.get_wired_count() + manager.get_IAB_count(); 
     std::cout << "Number of nodes = " << dm << std::endl;
@@ -165,38 +177,43 @@ int main(int argc, char** argv)
                 manager.path_selection_PA();
                 if(b_verbose) std::cout << "Selecting Parents with PA." << std::endl;
                 break;
+            case(Path_Policy::MLR):
+                manager.path_selection_MLR();
+                if(b_verbose) std::cout << "Selecting Parents with MLR." << std::endl;
+                break;
         }
         
-        manager.set_hop_counts();
+        
+        manager.spread_hop_count();
+//         manager.set_hop_counts();
+//         std::cout << __FUNCTION__<< __LINE__ << std::endl;
 
-        int hop_vec[10] = {0};
+//         int hop_vec[15] = {0};
         int failed = 0;
-        for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end(); ++it)
-        {
-            std::shared_ptr<mmWaveBS> mmB = (*it);
-            int hcnt = mmB->get_hop_count();
-            if(hcnt != -1)
-                hop_vec[hcnt]++;
-            else
-                failed++;
-    //         std::cout << "SBS " << mmB->getID() << " hop count = " << mmB->get_hop_count() << std::endl;
-        }
-        
+        int max_hop = 0;
+        std::vector<int> hop_vec = manager.count_hops(max_hop, failed);
+//         std::cout << __FUNCTION__<< __LINE__ << std::endl;
+        manager.draw_svg(b_draw);
         
 //         int total_hops = 0;
-        for(int i=0;i<10;i++)
+        if(CDF_Hop_vec.size() < max_hop+1)
+            CDF_Hop_vec.resize(max_hop+1);
+        
+        for(int i=0;i<max_hop+1;i++)
         {
             CDF_Hop_vec(i)+=hop_vec[i];
         }
         Total_fail+= failed;
         
+//         std::cout << __FUNCTION__<< __LINE__ << std::endl;
         //TODO 
         manager.update_locations(fixed, wired_density);
-        
+//         std::cout << CDF_Hop_vec << std::endl;        
         ++show_progress;
     }
     
-//     std::cout << CDF_Hop_vec << std::endl;
+    
+    std::cout << CDF_Hop_vec << std::endl;
     CDF_Hop_vec(0)=0;
     CDF_Hop_vec =  (1./Total_iter)*CDF_Hop_vec;
 //     std::cout << CDF_Hop_vec << std::endl;
@@ -204,25 +221,39 @@ int main(int argc, char** argv)
     {
         CDF_Hop_vec[i]+=CDF_Hop_vec[i-1];
     }
-//     std::cout << "Failed = " << ((double)Total_fail/Total_iter) << std::endl;
+    std::cout << "Failed = " << ((double)Total_fail/Total_iter) << std::endl;
+    std::cout << "Succeeded = " << CDF_Hop_vec[CDF_Hop_vec.size()-1] << std::endl;
     double num_nodes = CDF_Hop_vec[CDF_Hop_vec.size()-1] + ((double)Total_fail/Total_iter);
     CDF_Hop_vec = (1./(num_nodes)) * CDF_Hop_vec;
     std::cout << CDF_Hop_vec << std::endl;
     std::string name = plot_name;
     name = name + ".txt";
-    save1DArrayasText(CDF_Hop_vec, 10, name);
+    save1DArrayasText(CDF_Hop_vec, CDF_Hop_vec.size(), name);
     
     if(bPlot)
     {
         plotter* plot = new plotter();
         std::string fig_name;
-        if(policy==Path_Policy::HQF)
-            fig_name = "High Quality First";
-        else if(policy==Path_Policy::WF)
-            fig_name = "Wired First";
+        switch(policy)
+        {
+            case(Path_Policy::HQF):
+                fig_name = "High Quality First";
+                break;
+            case(Path_Policy::WF):
+                fig_name = "Wired First";
+                break;
+            case(Path_Policy::PA):
+                fig_name = "Position Aware";
+                break;
+            case(Path_Policy::MLR):
+                fig_name = "Maximum Local Rate";
+                break;
+        }
         
         plot->plot1DArray(boostVtoStdV(CDF_Hop_vec), plot_name, fig_name, std::string("Number of hops"), std::string("CDF"));
     }
+    
+    manager.reset_pointers();
     
     std::cout << "Get out of my Audio, Adios!!"<< std::endl;
     

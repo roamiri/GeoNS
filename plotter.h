@@ -49,7 +49,9 @@ public:
         // Plot a line whose name will show up as "log(x)" in the legend.
         plt::named_plot(legend,arr);
         // Set x-axis to interval [0,1000000]
-        plt::xlim(0, 10);
+        int xmax = arr.size();
+        plt::xlim(0, xmax);
+        plt::ylim(0, 1);
         // Add graph title
 //         plt::title("CDF");
         // Enable legend.

@@ -6,9 +6,13 @@
 #include <thread>
 #include <chrono>
 #include <vector>
+#include <map>
 #include <sys/prctl.h>
 #include "common.h"
 #include "node.h"
+#include <mutex>
+
+#include "boost/shared_ptr.hpp"
 
 class mmWaveBS : public node
 {
@@ -70,9 +74,17 @@ public:
     
     void emit_update_parent();
     
+    void add_to_load_BS(boost::shared_ptr<mmWaveBS> bs/*uint32_t id, point p*/);
+    void remove_from_load_BS(uint32_t id);
+    void update_load_hops();
+    int get_load_BS_count();
+    void reset_load();
+    
 private:
     std::thread the_thread;
 	bool stop_thread = false;
+    std::mutex m_mutex;
+    
     void ThreadMain();
     
 // 	uint32_t m_id;
@@ -96,7 +108,13 @@ private:
     int m_hop_cnt = -1;
     uint32_t m_IAB_parent = def_Nothing;
     bool m_found_Route = false;
+    
+    //TODO mybe is should use another data structure or I should hold just to IDs.
+//     std::vector<bs_ptr> m_load_BS; // vector containing pointers of the connected BSs as IAB nodes
+    std::vector<boost::shared_ptr<mmWaveBS>> m_load_BS;
+    
 };
 
+typedef boost::shared_ptr<mmWaveBS> bs_ptr;
 
 #endif // MMWAVEBS_H

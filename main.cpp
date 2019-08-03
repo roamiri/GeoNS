@@ -112,6 +112,7 @@ int main()
         else
                 BS = std::make_shared<mmWaveBS>(x,y, _idGenerator->next(),  def_P_tx, Backhaul::IAB);
         
+        if(!BS) std::cerr << "Object not made!!" << std::endl;
         BS.get()->setColor(0);
         manager.m_vector_BSs.push_back(BS);
 //             BS.get()->Start();
@@ -125,6 +126,9 @@ int main()
     for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end();++it)
     {
         std::shared_ptr<mmWaveBS> mmB = (*it);
+        if(!mmB)
+            continue;
+            
         uint32_t cid = mmB.get()->getID();
         
         if(mmB.get()->get_backhaul_Type()==Backhaul::wired)

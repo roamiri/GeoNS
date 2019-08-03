@@ -8,6 +8,8 @@
 #include <mutex>
 
 #include <boost/geometry/index/rtree.hpp>
+#include <boost/pointer_cast.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "mmwavebs.h"
 #include "common.h"
@@ -16,13 +18,16 @@
 
 // #include "idgenerator.h"
 
-typedef std::pair<point, std::shared_ptr<node>> value;
+typedef std::pair<point, boost::shared_ptr<node>> value;
+
+// typedef boost::shared_ptr<mmWaveBS> bs_ptr;
+
 
 class Manager
 {
     public:
         
-    Manager();
+    Manager(std::string svg_name);
 	~Manager();
 	
 	void listen_For_Candidacy(candidacy_msg const &message);
@@ -40,8 +45,11 @@ class Manager
     void path_selection_WF();
     void path_selection_HQF();
     void path_selection_PA();
+    void path_selection_MLR();
     
+    std::vector<int> count_hops(int &max_hop, int &failed);
     void set_hop_counts();
+    void spread_hop_count();
     bool check_neighbors(double x, double y);
     int tree_size(double r);
     
@@ -49,15 +57,21 @@ class Manager
     int get_wired_count();
     
     void reset(bool fixed);
+    void draw_svg(bool b);
+    
+    void reset_pointers();
     
     point find_closest_wired(point loc);
     
 	
-	std::vector<std::shared_ptr<mmWaveBS>> m_vector_BSs;
+// 	std::vector<bs_ptr> m_vector_BSs;
+    std::vector<bs_ptr> m_vector_BSs;
 //     static std::shared_ptr<IDGenerator> m_idGenerator;
 		
     
 private:
+    
+    void Add_load_BS(uint32_t parent, bs_ptr bs);
 
     // create the rtree using default constructor
     //TODO figure out the 16 number
@@ -74,6 +88,9 @@ private:
     std::mt19937 gen_wired;
     std::mt19937 gen_IAB;
     
+//     std::vector<int> m_arr_hops[15];
+    int m_failed;
+    int m_max_hop;
 // 	std::shared_ptr<Painter> m_painter;
 // 	bool stop_thread = false;
 // 	std::thread m_draw_thread;

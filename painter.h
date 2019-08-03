@@ -40,18 +40,18 @@
 class Painter
 {
 public:
-    Painter(/*std::vector<std::shared_ptr<mmWaveBS>>const &v*/);
+    Painter(std::string name);
     ~Painter();
-	void Start(/*std::vector<std::shared_ptr<mmWaveBS>>const &v*/);
+	void Start(/*std::vector<bs_ptr>const &v*/);
 	
 	void Enable();
 	void add_to_draw_queue(std::shared_ptr<draw_object> dd);
 	
-	void update(std::vector<std::shared_ptr<mmWaveBS>>const &v);
+	void update(std::vector<bs_ptr>const &v);
 private:
 	
 	std::vector<std::shared_ptr<draw_object>> m_objects;
-// 	std::vector<std::shared_ptr<mmWaveBS>>const &m_nodes;
+// 	std::vector<bs_ptr>const &m_nodes;
 
 	
 	bool m_draw = false;
