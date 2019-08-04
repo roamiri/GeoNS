@@ -129,7 +129,7 @@ void Manager::generate_nodes(bool fixed, int fixed_count, double wired_density)
                 if(prob)
                 {
                     BS->set_backhaul_Type(Backhaul::wired);
-                    BS->set_hop_count(0);
+                    BS->set_hop_count(0); BS->route_found(true);
                 }
                 else
                     BS->set_backhaul_Type(Backhaul::IAB);
@@ -194,7 +194,7 @@ void Manager::load_nodes(std::string f_name, bool fixed, int fixed_count, double
                 if(prob)
                 {
                     BS->set_backhaul_Type(Backhaul::wired);
-                    BS->set_hop_count(0);
+                    BS->set_hop_count(0); BS->route_found(true);
                 }
                 else
                     BS->set_backhaul_Type(Backhaul::IAB);
@@ -218,6 +218,7 @@ void Manager::generate_fixed_nodes(int count)
         BS.get()->setColor(0);
         BS->set_backhaul_Type(Backhaul::wired);
         BS->set_hop_count(0);
+        BS->route_found(true);
         m_tree.insert(std::make_pair(BS->get_loc(), BS));
         m_vector_BSs.push_back(BS);
 //         BS.get()->update_parent.connect_member(this, &Manager::listen_For_parent_update);
@@ -266,10 +267,10 @@ void Manager::update_locations(bool fixed, double wired_density)
     {
         bs_ptr mmB = (*it);
         if(!mmB) std::cerr << "FUCK!!!" << std::endl;
-        mmB->route_found(false);
         mmB->reset_load();
         if(mmB->get_backhaul_Type()==Backhaul::wired && fixed)
             continue;        
+        mmB->route_found(false);
 //         std::cout << "Tree size = " << tree_size(1000) << std::endl;
         //TODO it might not work!
 //         std::cout << "use count before = " << mmB.use_count();
@@ -293,7 +294,7 @@ void Manager::update_locations(bool fixed, double wired_density)
             if(prob)
             {
                 mmB->set_backhaul_Type(Backhaul::wired);
-                mmB->set_hop_count(0);
+                mmB->set_hop_count(0); mmB->route_found(true);
             }
             else
             {
@@ -752,49 +753,73 @@ void Manager::path_selection_MLR()
 {
 //     std::lock_guard<std::mutex> guard(m_mutex);
     //TODO maybe here!
-    for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
-    {
-        bs_ptr mmB = (*it);
-        if(!mmB) std::cerr << __FUNCTION__ << std::endl;
-        
-        if(mmB.get()->get_backhaul_Type()==Backhaul::wired)
-            continue;
-        
-        uint32_t cid = mmB.get()->getID();
-        double max_rate = -1.0;
-        uint32_t parent_id = def_Nothing;
-    
-        // search for nearest neighbours
-        point sought = mmB->get_loc();
-        std::vector<value> results;
-        m_tree.query(bgi::satisfies([&](value const&v){return bg::distance(v.first, sought)<def_MAX_MMWAVE_RANGE;}), std::back_inserter(results));
-        
-        bs_ptr parent;
-        BOOST_FOREACH(value const&v, results)
+//     bool b_all_nodes_route = false;
+//     int count = 0;
+//     while(!b_all_nodes_route && count<10)
+//     {
+        for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
         {
-            bs_ptr mmB2 = boost::dynamic_pointer_cast<mmWaveBS>(v.second);
-            if(cid != mmB2.get()->getID())
+            bs_ptr mmB = (*it);
+            if(!mmB) std::cerr << __FUNCTION__ << std::endl;
+            
+            if(mmB.get()->get_backhaul_Type()==Backhaul::wired)
+                continue;
+            
+            uint32_t cid = mmB.get()->getID();
+            double max_rate = -1.0;
+            uint32_t parent_id = def_Nothing;
+        
+            // search for nearest neighbours
+            point sought = mmB->get_loc();
+            std::vector<value> results;
+            m_tree.query(bgi::satisfies([&](value const&v){return bg::distance(v.first, sought)<def_MAX_MMWAVE_RANGE;}), std::back_inserter(results));
+            
+            bs_ptr parent;
+            BOOST_FOREACH(value const&v, results)
             {
-                double snr = mmB.get()->calculate_SNR_of_link(mmB2.get()->getX(), mmB2.get()->getY());
-                double load = 1. + mmB2.get()->get_load_BS_count();
-                double BW =def_BW;
-                double d = def_BW/load;
-                double rate =d * bm::log1p(1.+snr)/bm::log1p(2.0);
-//                 std::cout << "rate= " << rate << ", ";
-                bool b_rate = rate > max_rate;
-                bool b_parent = mmB2.get()->get_IAB_parent()!=cid;
-                
-                if(b_rate && b_parent)
+                bs_ptr mmB2 = boost::dynamic_pointer_cast<mmWaveBS>(v.second);
+//                 if(mmB2->get_backhaul_Type()==Backhaul::wired)
+// //                     std::cout << "here\n";
+                if(cid != mmB2.get()->getID())
                 {
-                    max_rate = rate;
-                    parent_id = mmB2.get()->getID();
-                    parent = mmB2;
+                    double snr = mmB.get()->calculate_SNR_of_link(mmB2.get()->getX(), mmB2.get()->getY());
+                    double load = 1. + mmB2.get()->get_load_BS_count();
+                    double BW =def_BW;
+                    double d = def_BW/load;
+                    double rate =d * bm::log1p(1.+snr)/bm::log1p(2.0);
+    //                 std::cout << "rate= " << rate << ", ";
+                    bool b_rate = rate > max_rate;
+                    bool b_parent = mmB2.get()->get_IAB_parent()!=cid;
+                    
+                    if(b_rate && b_parent)
+                    {
+                        max_rate = rate;
+                        parent_id = mmB2.get()->getID();
+                        parent = mmB2;
+                    }
                 }
             }
+            mmB->set_IAB_parent(parent_id);
+//             mmB->route_found(true);
+            Add_load_BS(parent_id, mmB);
         }
-        mmB->set_IAB_parent(parent_id);
-        Add_load_BS(parent_id, mmB);
+        
+//         b_all_nodes_route = check_all_routes();
+//         count++;
+//     }
+//     std::cout << "The route for all nodes was found = " << b_all_nodes_route << " with " << count << " tries!" <<std::endl;
+}
+
+bool Manager::check_all_routes()
+{
+    bool found = true;
+    for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
+    {
+        bs_ptr mmB = (*it);
+        if(!mmB->is_route_found())
+        {found = false; break;}
     }
+    return found;
 }
 
 void Manager::Add_load_BS(uint32_t parent, bs_ptr bs/*uint32_t member, point loc*/)

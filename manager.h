@@ -61,6 +61,7 @@ class Manager
     void draw_svg(bool b);
     
     void reset_pointers();
+    bool check_all_routes();
     
     point find_closest_wired(uint32_t id, point loc);
     

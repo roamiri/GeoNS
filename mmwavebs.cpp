@@ -8,7 +8,10 @@ mmWaveBS::mmWaveBS(double x, double y, uint32_t id, double ptx, Backhaul tt, Sta
     m_TxP_dBm = ptx;
     set_transmit_power(ptx);
     if(tt == Backhaul::wired)
+    {
         set_hop_count(0);
+        route_found(true);
+    }
 }
 
 // mmWaveBS::mmWaveBS(uint32_t id, double ptx)
@@ -185,7 +188,7 @@ void mmWaveBS::update_load_hops()
     {
         boost::shared_ptr<mmWaveBS> mmB = (*it);
 //             std::cout << "Route is already found!!\n";
-        if(!mmB->is_route_found())
+        if(mmB->get_hop_count()==-1)
         {
             mmB->set_hop_count(hop);
             mmB->route_found(true);
