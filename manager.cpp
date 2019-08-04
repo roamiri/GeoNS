@@ -734,7 +734,7 @@ point Manager::find_closest_wired(uint32_t id, point loc)
         }
         if(b_found)
         {
-            std::cout << "closest wired id for " << id  << " is " << cid << std::endl;
+//             std::cout << "closest wired id for " << id  << " is " << cid << std::endl;
             return wired;
         }
         
@@ -794,8 +794,6 @@ void Manager::path_selection_MLR()
         }
         mmB->set_IAB_parent(parent_id);
         Add_load_BS(parent_id, mmB);
-//         if(parent_id!=def_Nothing)
-//             parent->add_to_load_BS(mmB->getID(), mmB->get_loc());
     }
 }
 
