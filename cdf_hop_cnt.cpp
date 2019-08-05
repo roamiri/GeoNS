@@ -35,7 +35,7 @@ int main(int argc, char** argv)
     double wired_density = def_prob_Wired;
     bool b_verbose = false;
     int Total_iter = 100;
-    bool bPlot = true;
+    bool bPlot = false;
     std::string svg_name = "network.svg";
     bool b_draw = false;
     
@@ -49,7 +49,6 @@ int main(int argc, char** argv)
         ("dens", po::value<double>(), "Wired nodes density")
         ("policy", po::value<int>(), "Path Selection Policy, options = HQF, WF, PA, MLR, HQIF")
         ("verbose", po::value<bool>(), "verbose")
-        ("plot", po::value<bool>(), "Plot the CDF of the policy")
         ("if", po::value<string>(), "Input file name")
         ("of", po::value<string>(), "Output file name")
         ("svg", po::value<string>(), "Topology SVG file name")
@@ -117,12 +116,13 @@ int main(int argc, char** argv)
     if(vm.count("verbose"))
         b_verbose = vm["verbose"].as<bool>();
         
-    if(vm.count("plot"))
-        bPlot = vm["plot"].as<bool>();
     
     std::string plot_name = "Hop_Count";
     if(vm.count("of"))
+    {
         plot_name = vm["of"].as<string>();
+        bPlot = true;
+    }
     
     std::string input;
     bool b_input = false;
@@ -268,6 +268,9 @@ int main(int argc, char** argv)
                 break;
             case(Path_Policy::MLR):
                 fig_name = "Maximum Local Rate";
+                break;
+            case(Path_Policy::HQIF):
+                fig_name = "High SINR First";
                 break;
         }
         
