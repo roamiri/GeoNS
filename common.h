@@ -34,7 +34,7 @@ static double out_bound = 200.0;
 #define def_backhaul_zeta_nlos 7.9
 #define def_G_max 18 // dB main lobe gain
 #define def_G_min -2 // dB side lobe gain
-#define def_teta_b 10 // degree beam-width
+#define def_Phi_m 10 // degree beam-width
 #define def_NoiseFigure 10 // dB
 #define def_MAX_MMWAVE_RANGE 200 // maximum mmWave range = 200 meters
 
@@ -46,7 +46,7 @@ static double out_bound = 200.0;
 
 enum Status{idle, candiate, inBound, outBound, clusterHead};
 enum Backhaul{wired, IAB};
-enum Path_Policy{HQF, WF, PA, MLR}; //HQF = High Quality First, WF = Wired First, PA = Position Aware, MLR = Maximum local rate
+enum Path_Policy{HQF, WF, PA, MLR, HQIF}; //HQF = High Quality First, WF = Wired First, PA = Position Aware, MLR = Maximum local rate, HQIF = High Quality Interference First
     
 static uint32_t m_nextId;
 static uint32_t get_nextID() {m_nextId++; return m_nextId;}

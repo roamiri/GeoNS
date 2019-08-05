@@ -48,6 +48,9 @@ class Manager
     void path_selection_PA();
     void path_selection_MLR();
     
+    // Path selection considering interference
+    void path_selection_HQF_Interf();
+    
     std::vector<int> count_hops(int &max_hop, int &failed);
     void set_hop_counts();
     void spread_hop_count();
@@ -62,6 +65,9 @@ class Manager
     
     void reset_pointers();
     bool check_all_routes();
+    
+    // directional triangle from p1 to p2
+    polygon2D directional_polygon(point p1, point p2, double phi_m);
     
     point find_closest_wired(uint32_t id, point loc);
     

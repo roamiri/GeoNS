@@ -57,8 +57,10 @@ public:
     
     void set_transmit_power(double ptx);
     double calculate_SNR_of_link(double x, double y);
+    double calculate_SINR_of_link(double x, double y, double interf);
     double calculate_Rate_of_link(double x, double y);
     double calculate_distance_of_link(double x, double y);
+    double calculate_Interf_of_link(double x, double y);
     
     void set_hop_count(int i)
     {
@@ -79,6 +81,9 @@ public:
     void update_load_hops();
     int get_load_BS_count();
     void reset_load();
+    
+    // Return Phi_m in radian
+    double get_phi_m(){return m_phi_m*(M_PI/180.);}
     
 private:
     std::thread the_thread;
@@ -102,6 +107,7 @@ private:
     double m_TxP_dBm;
     double m_RxPower;
     double m_Antenna_Gain;
+    double m_phi_m;
     
     // Routing parameters
     Backhaul m_bkhl;

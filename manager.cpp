@@ -603,6 +603,95 @@ void Manager::path_selection_WF()
     }
 }
 
+void Manager::path_selection_HQF_Interf()
+{
+//     std::lock_guard<std::mutex> guard(m_mutex);
+    for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
+    {
+        bs_ptr mmB = (*it);
+        if(!mmB) std::cerr << __FUNCTION__ << std::endl;
+        
+        if(mmB.get()->get_backhaul_Type()==Backhaul::wired)
+            continue;
+        
+        uint32_t cid = mmB.get()->getID();
+        double max_snr = -1.0;
+        uint32_t parent = def_Nothing;
+        
+        // search for nearest neighbours
+        std::vector<value> results;
+        point sought = mmB->get_loc();
+        m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < def_MAX_MMWAVE_RANGE;}),
+                    std::back_inserter(results));
+        
+        double x1 = mmB->getX(); double y1 = mmB->getY(); point p1 = mmB->get_loc(); 
+//         std::cout << "cid1 = " << cid << std::endl;
+        BOOST_FOREACH(value const&v, results)
+        {
+            bs_ptr mmB2 = boost::dynamic_pointer_cast<mmWaveBS>(v.second);
+            if(mmB2)
+            {
+                uint32_t cid2 = mmB2.get()->getID();
+//                 std::cout << "cid2 = " << cid2 << std::endl;
+                if( cid2!= cid)
+                { 
+                    double x2 = mmB2->getX(); double y2 = mmB2->getY(); point p2 = mmB2->get_loc();
+                    polygon2D poly = directional_polygon(p1, p2, mmB->get_phi_m());
+                    std::vector<value> vec_query;
+                    m_tree.query(bgi::intersects(poly), std::back_inserter(vec_query));
+                    double interf=0.;
+                    BOOST_FOREACH(value const&mz, vec_query)
+                    {
+                        bs_ptr mmB3 = boost::dynamic_pointer_cast<mmWaveBS>(mz.second);
+                        uint32_t cid3 = mmB3->getID();
+//                         std::cout << "cid3 = " << cid3 << std::endl;
+                        if(cid3!=cid2 && cid3!=cid)
+                            interf+= mmB->calculate_Interf_of_link(mmB3->getX(), mmB3->getY());
+                    }
+                    
+                    double sinr = mmB->calculate_SINR_of_link(x2,y2, interf);
+//                     // Rules
+                    bool b_snr = sinr>max_snr;
+                    bool b_parent = mmB2.get()->get_IAB_parent()!=mmB.get()->getID();
+                    
+                    if(b_snr && b_parent)
+                    {
+                        max_snr = sinr;
+                        parent = mmB2.get()->getID();
+                    }
+                }
+            }
+        }
+        mmB->set_IAB_parent(parent);
+        Add_load_BS(parent, mmB);
+    }
+}
+
+/**
+ * Returns the directional triangle from p1 tp p2 considering angle of main lobe phi_m
+ * phi_m should be in radian
+ */
+polygon2D Manager::directional_polygon(point p1, point p2, double phi_m)
+{
+    polygon2D poly;
+    // first vertice
+    poly.outer().push_back(p1);
+    
+    // Two other vertices
+    double phi = atan2(p2.get<1>()-p1.get<1>(), p2.get<0>()-p1.get<0>());
+    double t1 = phi - phi_m/2.;
+    double t2 = phi + phi_m/2.;
+    double r = def_MAX_MMWAVE_RANGE;
+    point p3(p1.get<0>()+r*cos(t1), p1.get<1>()+r*sin(t1));
+    point p4(p1.get<0>()+r*cos(t2), p1.get<1>()+r*sin(t2));
+    poly.outer().push_back(p3);
+    poly.outer().push_back(p4);
+    
+    // last vertice
+    poly.outer().push_back(p1);
+    return poly;
+}
+
 void Manager::path_selection_HQF()
 {
 //     std::lock_guard<std::mutex> guard(m_mutex);

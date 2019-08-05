@@ -47,7 +47,7 @@ int main(int argc, char** argv)
         ("fixed", po::value<int>(), "Set wired BS implementation type (fixed or variable)")
         ("count", po::value<int>(), "Number of fixed wired base stations")
         ("dens", po::value<double>(), "Wired nodes density")
-        ("policy", po::value<int>(), "Path Selection Policy, options = HQF, WF, PA, MLR")
+        ("policy", po::value<int>(), "Path Selection Policy, options = HQF, WF, PA, MLR, HQIF")
         ("verbose", po::value<bool>(), "verbose")
         ("plot", po::value<bool>(), "Plot the CDF of the policy")
         ("if", po::value<string>(), "Input file name")
@@ -107,6 +107,9 @@ int main(int argc, char** argv)
                 break;
             case(3):
                 policy = Path_Policy::MLR;
+                break;
+            case(4):
+                policy = Path_Policy::HQIF;
                 break;
         }
     }
@@ -195,6 +198,10 @@ int main(int argc, char** argv)
             case(Path_Policy::MLR):
                 manager.path_selection_MLR();
                 if(b_verbose) std::cout << "Selecting Parents with MLR." << std::endl;
+                break;
+            case(Path_Policy::HQIF):
+                manager.path_selection_HQF_Interf();
+                if(b_verbose) std::cout << "Selecting Parents with HQIF." << std::endl;
                 break;
         }
         

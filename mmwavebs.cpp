@@ -7,6 +7,7 @@ mmWaveBS::mmWaveBS(double x, double y, uint32_t id, double ptx, Backhaul tt, Sta
 	m_bkhl= tt; m_status = st;
     m_TxP_dBm = ptx;
     set_transmit_power(ptx);
+    m_phi_m = def_Phi_m;
     if(tt == Backhaul::wired)
     {
         set_hop_count(0);
@@ -117,6 +118,40 @@ double mmWaveBS::calculate_SNR_of_link(double x, double y)
     double noise_dBm = -174 + 10*log10(def_BW) + def_NoiseFigure; // N = -174 dBm/Hz + 10log10(BW) + noise figure //TODO def_BW should be derives based on resource allocation
     double snr = dBm_to_watt(plg)/dBm_to_watt(noise_dBm);
     return snr;
+}
+
+/**
+ * interf should be based on Watt not Decibel
+ */
+double mmWaveBS::calculate_SINR_of_link(double x, double y, double interf)
+{
+    // SNR = S/N
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::normal_distribution<> dis(0., sqrt(def_backhaul_zeta_los));
+    
+    double dist = euclidean_dist(x, y, (double) getX(), (double) getY());
+    double zeta = dis(gen);
+    double path_loss_db = def_beta + 10.* def_backhaul_alpha_los * log10(dist) + zeta; //TODO implement zeta better with randn, PL = alpha + 10 beta log10(||distance||) + zeta, 
+    double plg = m_TxP_dBm + def_G_max + def_G_max - path_loss_db; // S = P_transmit * G_max * G_max / pathloss
+    double noise_dBm = -174 + 10*log10(def_BW) + def_NoiseFigure; // N = -174 dBm/Hz + 10log10(BW) + noise figure //TODO def_BW should be derives based on resource allocation
+    double sinr = dBm_to_watt(plg)/(dBm_to_watt(noise_dBm)+interf);
+    return sinr;
+}
+
+double mmWaveBS::calculate_Interf_of_link(double x, double y)
+{
+    // SNR = S/N
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::normal_distribution<> dis(0., sqrt(def_backhaul_zeta_los));
+    
+    double dist = euclidean_dist(x, y, (double) getX(), (double) getY());
+    double zeta = dis(gen);
+    double path_loss_db = def_beta + 10.* def_backhaul_alpha_los * log10(dist) + zeta; //TODO implement zeta better with randn, PL = alpha + 10 beta log10(||distance||) + zeta, 
+    double plg = m_TxP_dBm + def_G_max + def_G_max - path_loss_db; // S = P_transmit * G_max * G_max / pathloss
+    
+    return dBm_to_watt(plg);
 }
 
 double mmWaveBS::calculate_Rate_of_link(double x, double y)
