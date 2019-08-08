@@ -225,7 +225,8 @@ void mmWaveBS::update_load_hops()
     for(std::vector<boost::shared_ptr<mmWaveBS>>::iterator it=m_load_BS.begin(); it!=m_load_BS.end();++it)
     {
         boost::shared_ptr<mmWaveBS> mmB = (*it);
-//             std::cout << "Route is already found!!\n";
+//         if(mmB->get_IAB_parent()!=getID())
+//             std::cout << "parent=" << getID() << ", IAB_parent=" << mmB->get_IAB_parent() << "my id=" << mmB->getID()<< "\n";
         if(mmB->get_hop_count()==-1)
         {
             mmB->set_hop_count(hop);
@@ -237,6 +238,7 @@ void mmWaveBS::update_load_hops()
 
 void mmWaveBS::reset_load()
 {
-    for(int i=0;i<m_load_BS.size();++i)
+    int n = m_load_BS.size();
+    for(int i=0;i<n;++i)
         m_load_BS.pop_back();
 }

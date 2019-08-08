@@ -256,28 +256,30 @@ int main(int argc, char** argv)
     if(bPlot)
     {
         plotter* plot = new plotter();
-        std::string fig_name;
+        std::string legend; 
+        std::string plot1 = plot_name;
+        std::string plot2 = "SNR_"+plot_name;
         switch(policy)
         {
             case(Path_Policy::HQF):
-                fig_name = "High Quality First";
+                legend = "High Quality First";
                 break;
             case(Path_Policy::WF):
-                fig_name = "Wired First";
+                legend = "Wired First";
                 break;
             case(Path_Policy::PA):
-                fig_name = "Position Aware";
+                legend = "Position Aware";
                 break;
             case(Path_Policy::MLR):
-                fig_name = "Maximum Local Rate";
+                legend = "Maximum Local Rate";
                 break;
             case(Path_Policy::HQIF):
-                fig_name = "High SINR First";
+                legend = "High SINR First";
                 break;
         }
         
-        plot->plot1DArray(boostVtoStdV(CDF_Hop_vec), plot_name, fig_name, std::string("Number of hops"), std::string("CDF"));
-        plot->plot_CDF_Array(vec_SNR_bottleneck, "SNR", fig_name, std::string("SNR"), std::string("CDF"));
+        plot->plot1DArray(boostVtoStdV(CDF_Hop_vec), plot1, legend, std::string("Number of hops"), std::string("CDF"));
+        plot->plot_CDF_Array(vec_SNR_bottleneck, plot2, legend, std::string("SNR"), std::string("CDF"));
     }
     
     manager.reset_pointers();

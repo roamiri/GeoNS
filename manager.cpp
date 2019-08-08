@@ -436,7 +436,7 @@ void Manager::listen_For_parent_update(const update_parent_msg& msg)
         if(mmB->get_IAB_parent()==id)
         {
             mmB->set_hop_count(hop_cnt+1);
-            mmB->route_found(true);
+//             mmB->route_found(true);
         }
     }
 //     for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end();++it)
@@ -507,7 +507,7 @@ void Manager::set_hop_counts()
                     if(mmB2->get_IAB_parent()==id)
                     {
                         mmB2->set_hop_count(h+1);
-                        mmB2->route_found(true);
+//                         mmB2->route_found(true);
                     }
                 }
 //                 std::vector<value> results;
@@ -586,6 +586,9 @@ void Manager::path_selection_WF()
                 if(b_wired)
                 {
                     parent = mmB2.get()->getID();
+//                     if(snr==0.)
+//                         std::cout << "here\n";
+                    max_snr = snr;
                     break;
                 }
                 
@@ -596,9 +599,15 @@ void Manager::path_selection_WF()
                 }
             }
         }
-        mmB->set_IAB_parent(parent);
-        Add_load_BS(parent, mmB);
-//         std::cout << "SBS= "<< mmB.get()->getID() << " parent= "<< parent << std::endl;
+        if(parent!=def_Nothing)
+        {
+            if(max_snr==0.)
+                std::cout << "here\n";
+            mmB->set_IAB_parent(parent);
+            mmB->set_SNR(max_snr);
+//             mmB->set_SINR(max_sinr);
+            Add_load_BS(parent, mmB);
+        }
     }
 }
 
@@ -790,8 +799,13 @@ void Manager::path_selection_PA()
             
         }
         
-        mmB->set_IAB_parent(parent);
-        Add_load_BS(parent, mmB);
+        if(parent!=def_Nothing)
+        {
+            mmB->set_IAB_parent(parent);
+            mmB->set_SNR(max_snr);
+//             mmB->set_SINR(max_sinr);
+            Add_load_BS(parent, mmB);
+        }
     }
 }
 
@@ -893,9 +907,13 @@ void Manager::path_selection_MLR()
                     }
                 }
             }
-            mmB->set_IAB_parent(parent_id);
-//             mmB->route_found(true);
-            Add_load_BS(parent_id, mmB);
+            if(parent_id!=def_Nothing)
+            {
+                mmB->set_IAB_parent(parent_id);
+//                 mmB->set_SNR(max_snr);
+//             mmB->set_SINR(max_sinr);
+                Add_load_BS(parent_id, mmB);
+            }
         }
         
 //         b_all_nodes_route = check_all_routes();
@@ -922,7 +940,11 @@ void Manager::Add_load_BS(uint32_t parent, bs_ptr bs/*uint32_t member, point loc
     {
         bs_ptr mmB = (*it);
         if(mmB->getID()==parent)
+        {
+            if(mmB->getID()!=bs->get_IAB_parent())
+                std::cerr << "WTF!\n";
             mmB->add_to_load_BS(bs);
+        }
     }
 }
 
@@ -1042,6 +1064,8 @@ double Manager::find_SNR_bottleneck()
         if(mmB->is_route_found() && mmB->get_backhaul_Type()==Backhaul::IAB)
         {
             double snr = mmB->get_SNR();
+            if(snr==0.)
+                std::cout << "here\n";
             if(snr<bottleneck)
                 bottleneck = snr;
         }

@@ -76,10 +76,9 @@ public:
         for(int i=0;i<n;++i)
             p.push_back(1.*i/(n-1));
 
-//         plt::plot(data, p);
         plt::figure_size(1200, 780);
         plt::named_plot(legend,data, p);
-//         plt::xlim(0., data[n-1]);
+        plt::xlim(10., 30.);
         plt::ylim(0., 1.2);
         plt::legend();
         if(grid)
