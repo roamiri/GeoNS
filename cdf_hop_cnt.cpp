@@ -52,14 +52,13 @@ int main(int argc, char** argv)
         ("if", po::value<string>(), "Input file name")
         ("of", po::value<string>(), "Output file name")
         ("svg", po::value<string>(), "Topology SVG file name")
-        
-    ;
+        ;
 
     po::variables_map vm;
     po::store(po::parse_command_line(argc, argv, desc), vm);
-    po::notify(vm);    
+    po::notify(vm);
 
-    if (vm.count("help")) 
+    if (vm.count("help"))
     {
         std::cout << desc << "\n";
         return 1;
@@ -163,14 +162,14 @@ int main(int argc, char** argv)
     boost::numeric::ublas::vector<double> CDF_Hop_vec(15);
     for(int i=0;i<15;i++) CDF_Hop_vec(i)=0;
     
+    std::vector<double> vec_SNR_bottleneck;
+    
     int dm = manager.get_wired_count() + manager.get_IAB_count(); 
     std::cout << "Number of nodes = " << dm << std::endl;
     
     boost::progress_display show_progress(Total_iter);
     for(int iter=0;iter<Total_iter;iter++)
-    {
-
-       
+    {       
        if(b_verbose)
        { 
             std::cout << "Number of Wired nodes = " << manager.get_wired_count() << std::endl;
@@ -206,6 +205,8 @@ int main(int argc, char** argv)
         }
         
         manager.spread_hop_count();
+        
+        vec_SNR_bottleneck.push_back(manager.find_SNR_bottleneck());
 //         manager.set_hop_counts();
 //         std::cout << __FUNCTION__<< __LINE__ << std::endl;
 
@@ -250,6 +251,7 @@ int main(int argc, char** argv)
     std::string name = plot_name;
     name = name + ".txt";
     save1DArrayasText(CDF_Hop_vec, CDF_Hop_vec.size(), name);
+//     save1DArrayasText(vec_SNR_bottleneck, vec_SNR_bottleneck.size(), name);
     
     if(bPlot)
     {
@@ -275,6 +277,7 @@ int main(int argc, char** argv)
         }
         
         plot->plot1DArray(boostVtoStdV(CDF_Hop_vec), plot_name, fig_name, std::string("Number of hops"), std::string("CDF"));
+        plot->plot_CDF_Array(vec_SNR_bottleneck, "SNR", fig_name, std::string("SNR"), std::string("CDF"));
     }
     
     manager.reset_pointers();

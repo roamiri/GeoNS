@@ -85,6 +85,12 @@ public:
     // Return Phi_m in radian
     double get_phi_m(){return m_phi_m*(M_PI/180.);}
     
+    void set_SNR(double snr){m_route_SNR = snr;}
+    double get_SNR(){return m_route_SNR;}
+    
+    void set_SINR(double sinr){m_route_SINR = sinr;}
+    double get_SINR(){return m_route_SINR;}
+    
 private:
     std::thread the_thread;
 	bool stop_thread = false;
@@ -114,6 +120,8 @@ private:
     int m_hop_cnt = -1;
     uint32_t m_IAB_parent = def_Nothing;
     bool m_found_Route = false;
+    double m_route_SNR;
+    double m_route_SINR;
     
     //TODO mybe is should use another data structure or I should hold just to IDs.
 //     std::vector<bs_ptr> m_load_BS; // vector containing pointers of the connected BSs as IAB nodes

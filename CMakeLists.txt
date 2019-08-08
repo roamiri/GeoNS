@@ -3,6 +3,9 @@ set(PROJECT_NAME "mmWave_IAB")
 project(${PROJECT_NAME})
 SET(CMAKE_CXX_FLAGS "-std=c++0x")
 
+set(CMAKE_BUILD_TYPE Debug)
+
+
 add_definitions(-DGenerate_Poisson=TRUE)
 
 include_directories("/usr/include/python2.7")

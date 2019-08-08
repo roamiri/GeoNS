@@ -8,6 +8,7 @@ mmWaveBS::mmWaveBS(double x, double y, uint32_t id, double ptx, Backhaul tt, Sta
     m_TxP_dBm = ptx;
     set_transmit_power(ptx);
     m_phi_m = def_Phi_m;
+    m_route_SNR = 0.; m_route_SINR = 0.;
     if(tt == Backhaul::wired)
     {
         set_hop_count(0);
@@ -27,6 +28,8 @@ void mmWaveBS::reset()
 {
     set_hop_count(-1);
     set_IAB_parent(def_Nothing);
+    set_SNR(0.);
+    set_SINR(0.);
 }
 
 

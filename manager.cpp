@@ -305,7 +305,6 @@ void Manager::update_locations(bool fixed, double wired_density)
         m_tree.insert(std::make_pair(mmB->get_loc(), mmB));
 //         std::cout << "Tree size = " << tree_size(1000) << std::endl;
     }
-    
 }
 
 
@@ -583,7 +582,7 @@ void Manager::path_selection_WF()
                 bool b_parent = mmB2.get()->get_IAB_parent()!=mmB.get()->getID();
                 bool b_wired = mmB2->get_backhaul_Type()==Backhaul::wired;
 //                     bool b_dist = dist<def_MAX_MMWAVE_RANGE;
-
+//TODO What if there are multiple wired nodes in its vicinity????? //FIXME
                 if(b_wired)
                 {
                     parent = mmB2.get()->getID();
@@ -634,7 +633,7 @@ void Manager::path_selection_HQF_Interf()
                 uint32_t cid2 = mmB2.get()->getID();
 //                 std::cout << "cid2 = " << cid2 << std::endl;
                 if( cid2!= cid)
-                { 
+                {
                     double x2 = mmB2->getX(); double y2 = mmB2->getY(); point p2 = mmB2->get_loc();
                     polygon2D poly = directional_polygon(p1, p2, mmB->get_phi_m());
                     std::vector<value> vec_query;
@@ -704,7 +703,7 @@ void Manager::path_selection_HQF()
             continue;
         
         uint32_t cid = mmB.get()->getID();
-        double max_snr = -1.0;
+        double max_snr = -1.0; double max_sinr = -1.0;
         uint32_t parent = def_Nothing;
         
         // search for nearest neighbours
@@ -733,8 +732,14 @@ void Manager::path_selection_HQF()
                 }
             }
         }
-        mmB->set_IAB_parent(parent);
-        Add_load_BS(parent, mmB);
+        
+        if(parent!=def_Nothing)
+        {
+            mmB->set_IAB_parent(parent);
+            mmB->set_SNR(max_snr);
+//             mmB->set_SINR(max_sinr);
+            Add_load_BS(parent, mmB);
+        }
     }
 }
 
@@ -1026,4 +1031,22 @@ void Manager::reset_pointers()
         if(mmB)
             mmB.reset();
     }
+}
+
+double Manager::find_SNR_bottleneck()
+{
+    double bottleneck = 1e10;
+    for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
+    {
+        bs_ptr mmB = (*it);
+        if(mmB->is_route_found() && mmB->get_backhaul_Type()==Backhaul::IAB)
+        {
+            double snr = mmB->get_SNR();
+            if(snr<bottleneck)
+                bottleneck = snr;
+        }
+            
+    }
+    bottleneck = 10*log10(bottleneck); // returning the SNR value in dB
+    return bottleneck;
 }
