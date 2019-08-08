@@ -163,6 +163,7 @@ int main(int argc, char** argv)
     for(int i=0;i<15;i++) CDF_Hop_vec(i)=0;
     
     std::vector<double> vec_SNR_bottleneck;
+    std::vector<double> vec_SINR_bottleneck;
     
     int dm = manager.get_wired_count() + manager.get_IAB_count(); 
     std::cout << "Number of nodes = " << dm << std::endl;
@@ -207,6 +208,7 @@ int main(int argc, char** argv)
         manager.spread_hop_count();
         
         vec_SNR_bottleneck.push_back(manager.find_SNR_bottleneck());
+        vec_SINR_bottleneck.push_back(manager.find_SINR_bottleneck());
 //         manager.set_hop_counts();
 //         std::cout << __FUNCTION__<< __LINE__ << std::endl;
 
@@ -259,6 +261,7 @@ int main(int argc, char** argv)
         std::string legend; 
         std::string plot1 = plot_name;
         std::string plot2 = "SNR_"+plot_name;
+//         std::string plot2 = "SINR_"+plot_name;
         switch(policy)
         {
             case(Path_Policy::HQF):
@@ -279,7 +282,15 @@ int main(int argc, char** argv)
         }
         
         plot->plot1DArray(boostVtoStdV(CDF_Hop_vec), plot1, legend, std::string("Number of hops"), std::string("CDF"));
-        plot->plot_CDF_Array(vec_SNR_bottleneck, plot2, legend, std::string("SNR"), std::string("CDF"));
+//         plot->closePlot();
+        std::vector<std::vector<double>> cdfs; 
+        std::vector<std::string> legends = {"SNR", "SINR"};
+        std::vector<std::string> colors = {"b", "r"};
+        cdfs.push_back(vec_SNR_bottleneck); cdfs.push_back(vec_SINR_bottleneck);
+        
+        plot->plot_CDF_Array(cdfs, plot2, legends, std::string("SNR"), std::string("CDF"), colors);
+//         plot->plot_CDF_Array(vec_SINR_bottleneck, plot2, "SINR", std::string("SINR"), std::string("CDF"), "r");
+//         plot->closePlot();
     }
     
     manager.reset_pointers();

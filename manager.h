@@ -49,6 +49,7 @@ class Manager
     void path_selection_MLR();
     
     double find_SNR_bottleneck();
+    double find_SINR_bottleneck();
     // Path selection considering interference
     void path_selection_HQF_Interf();
     

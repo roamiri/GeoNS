@@ -623,6 +623,7 @@ void Manager::path_selection_HQF_Interf()
             continue;
         
         uint32_t cid = mmB.get()->getID();
+        double max_sinr = -1.0;
         double max_snr = -1.0;
         uint32_t parent = def_Nothing;
         
@@ -657,21 +658,28 @@ void Manager::path_selection_HQF_Interf()
                             interf+= mmB->calculate_Interf_of_link(mmB3->getX(), mmB3->getY());
                     }
                     
+                    double snr = mmB->calculate_SNR_of_link(x2,y2);
                     double sinr = mmB->calculate_SINR_of_link(x2,y2, interf);
 //                     // Rules
-                    bool b_snr = sinr>max_snr;
+                    bool b_snr = sinr>max_sinr;
                     bool b_parent = mmB2.get()->get_IAB_parent()!=mmB.get()->getID();
                     
                     if(b_snr && b_parent)
                     {
-                        max_snr = sinr;
+                        max_sinr = sinr;
+                        max_snr = snr;
                         parent = mmB2.get()->getID();
                     }
                 }
             }
         }
-        mmB->set_IAB_parent(parent);
-        Add_load_BS(parent, mmB);
+        if(parent!=def_Nothing)
+        {
+            mmB->set_IAB_parent(parent);
+            mmB->set_SINR(max_sinr);
+            mmB->set_SNR(max_snr);
+            Add_load_BS(parent, mmB);
+        }
     }
 }
 
@@ -1068,6 +1076,27 @@ double Manager::find_SNR_bottleneck()
                 std::cout << "here\n";
             if(snr<bottleneck)
                 bottleneck = snr;
+        }
+            
+    }
+    bottleneck = 10*log10(bottleneck); // returning the SNR value in dB
+    return bottleneck;
+}
+
+
+double Manager::find_SINR_bottleneck()
+{
+    double bottleneck = 1e10;
+    for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
+    {
+        bs_ptr mmB = (*it);
+        if(mmB->is_route_found() && mmB->get_backhaul_Type()==Backhaul::IAB)
+        {
+            double sinr = mmB->get_SINR();
+            if(sinr==0.)
+                std::cout << "here\n";
+            if(sinr<bottleneck)
+                bottleneck = sinr;
         }
             
     }

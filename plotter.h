@@ -40,6 +40,7 @@ public:
      */
     ~plotter(){}
     
+    void closePlot(){plt::close();}
     
     void plot1DArray(std::vector<double> arr, std::string name, std::string legend, std::string xlabel, std::string ylabel, bool grid=true)
     {
@@ -65,19 +66,26 @@ public:
         plt::close();
     }
     
-    void plot_CDF_Array(std::vector<double> data, std::string name, std::string legend, std::string xlabel, std::string ylabel, bool grid=true)
+    void plot_CDF_Array(std::vector<std::vector<double>> DD, std::string name, std::vector<std::string> legends, std::string xlabel, std::string ylabel, std::vector<std::string> colors, bool grid=true)
     {
-        // sort the data:
-        sort(data.begin(), data.end());
-        int n = data.size();
-
-        // calculate the proportional values of samples
-        std::vector<double>p;
-        for(int i=0;i<n;++i)
-            p.push_back(1.*i/(n-1));
 
         plt::figure_size(1200, 780);
-        plt::named_plot(legend,data, p);
+        // sort the data:
+        int num_plots = DD.size();
+        for(int i=0;i<num_plots;++i)
+        {
+            std::vector<double> data = DD[i];
+            std::string legend = legends[i];
+            std::string color = colors[i];
+            sort(data.begin(), data.end());
+            int n = data.size();
+
+            // calculate the proportional values of samples
+            std::vector<double>p;
+            for(int i=0;i<n;++i)
+                p.push_back(1.*i/(n-1));
+            plt::named_plot(legend,data, p, color);
+        }
         plt::xlim(10., 30.);
         plt::ylim(0., 1.2);
         plt::legend();
