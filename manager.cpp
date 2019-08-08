@@ -562,6 +562,7 @@ void Manager::path_selection_WF()
         
         uint32_t cid = mmB.get()->getID();
         double max_snr = -1.0;
+        double max_sinr = -1.0;
         uint32_t parent = def_Nothing;
         
         // search for nearest neighbours
@@ -570,24 +571,38 @@ void Manager::path_selection_WF()
         m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < def_MAX_MMWAVE_RANGE;}),
                     std::back_inserter(results));
         
+        point p1 = mmB->get_loc();
+        
         BOOST_FOREACH(value const&v, results)
         {
             bs_ptr mmB2 = boost::dynamic_pointer_cast<mmWaveBS>(v.second);
-            if(mmB2.get()->getID() != cid)
+            uint32_t cid2 = mmB2.get()->getID();
+            if( cid2 != cid)
             { 
-//                     double dist = mmB->calculate_distance_of_link(mmB2->getX(), mmB2->getY());
-                double snr = mmB->calculate_SNR_of_link(mmB2->getX(), mmB2->getY());
+                double x2 = mmB2->getX(); double y2 = mmB2->getY(); point p2 = mmB2->get_loc();
+                polygon2D poly = directional_polygon(p1, p2, mmB->get_phi_m());
+                std::vector<value> vec_query;
+                m_tree.query(bgi::intersects(poly), std::back_inserter(vec_query));
+                double interf=0.;
+                BOOST_FOREACH(value const&mz, vec_query)
+                {
+                    bs_ptr mmB3 = boost::dynamic_pointer_cast<mmWaveBS>(mz.second);
+                    uint32_t cid3 = mmB3->getID();
+                    if(cid3!=cid2 && cid3!=cid)
+                        interf+= mmB->calculate_Interf_of_link(mmB3->getX(), mmB3->getY());
+                }
+                double snr = mmB->calculate_SNR_of_link(x2, y2);
+                double sinr = mmB->calculate_SINR_of_link(x2,y2, interf);
                 // Rules
                 bool b_snr = snr>max_snr;
                 bool b_parent = mmB2.get()->get_IAB_parent()!=mmB.get()->getID();
                 bool b_wired = mmB2->get_backhaul_Type()==Backhaul::wired;
-//                     bool b_dist = dist<def_MAX_MMWAVE_RANGE;
+
 //TODO What if there are multiple wired nodes in its vicinity????? //FIXME
                 if(b_wired)
                 {
                     parent = mmB2.get()->getID();
-//                     if(snr==0.)
-//                         std::cout << "here\n";
+                    max_sinr = sinr;
                     max_snr = snr;
                     break;
                 }
@@ -595,17 +610,16 @@ void Manager::path_selection_WF()
                 if(b_snr && b_parent)
                 {
                     max_snr = snr;
+                    max_sinr = sinr;
                     parent = mmB2.get()->getID();
                 }
             }
         }
         if(parent!=def_Nothing)
         {
-            if(max_snr==0.)
-                std::cout << "here\n";
             mmB->set_IAB_parent(parent);
             mmB->set_SNR(max_snr);
-//             mmB->set_SINR(max_sinr);
+            mmB->set_SINR(max_sinr);
             Add_load_BS(parent, mmB);
         }
     }
@@ -729,23 +743,36 @@ void Manager::path_selection_HQF()
         m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < def_MAX_MMWAVE_RANGE;}),
                     std::back_inserter(results));
         
+        point p1 = mmB->get_loc();
         BOOST_FOREACH(value const&v, results)
         {
             bs_ptr mmB2 = boost::dynamic_pointer_cast<mmWaveBS>(v.second);
-            if(mmB2)
-            {
-                if(mmB2.get()->getID() != cid)
-                { 
-                    double snr = mmB->calculate_SNR_of_link(mmB2.get()->getX(),mmB2.get()->getY());
-//                     // Rules
-                    bool b_snr = snr>max_snr;
-                    bool b_parent = mmB2.get()->get_IAB_parent()!=mmB.get()->getID();
-                    
-                    if(b_snr && b_parent)
-                    {
-                        max_snr = snr;
-                        parent = mmB2.get()->getID();
-                    }
+            uint32_t cid2 = mmB2.get()->getID();
+            if( cid2 != cid)
+            { 
+                double x2 = mmB2->getX(); double y2 = mmB2->getY(); point p2 = mmB2->get_loc();
+                polygon2D poly = directional_polygon(p1, p2, mmB->get_phi_m());
+                std::vector<value> vec_query;
+                m_tree.query(bgi::intersects(poly), std::back_inserter(vec_query));
+                double interf=0.;
+                BOOST_FOREACH(value const&mz, vec_query)
+                {
+                    bs_ptr mmB3 = boost::dynamic_pointer_cast<mmWaveBS>(mz.second);
+                    uint32_t cid3 = mmB3->getID();
+                    if(cid3!=cid2 && cid3!=cid)
+                        interf+= mmB->calculate_Interf_of_link(mmB3->getX(), mmB3->getY());
+                }
+                double snr = mmB->calculate_SNR_of_link(x2,y2);
+                double sinr = mmB->calculate_SINR_of_link(x2,y2, interf);
+                // Rules
+                bool b_snr = snr>max_snr;
+                bool b_parent = mmB2.get()->get_IAB_parent()!=mmB.get()->getID();
+                
+                if(b_snr && b_parent)
+                {
+                    max_snr = snr;
+                    max_sinr = sinr;
+                    parent = mmB2.get()->getID();
                 }
             }
         }
@@ -754,7 +781,7 @@ void Manager::path_selection_HQF()
         {
             mmB->set_IAB_parent(parent);
             mmB->set_SNR(max_snr);
-//             mmB->set_SINR(max_sinr);
+            mmB->set_SINR(max_sinr);
             Add_load_BS(parent, mmB);
         }
     }
@@ -777,6 +804,7 @@ void Manager::path_selection_PA()
         
         uint32_t cid = mmB.get()->getID();
         double max_snr = -1.0;
+        double max_sinr = -1.0;
         uint32_t parent = def_Nothing;
         
         point closest_wired = find_closest_wired(mmB->getID(), mmB->get_loc());
@@ -787,12 +815,27 @@ void Manager::path_selection_PA()
         m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < def_MAX_MMWAVE_RANGE;}),
                     std::back_inserter(results));
         
+        point p1 = mmB->get_loc();
         BOOST_FOREACH(value const&v, results)
         {
             bs_ptr mmB2 = boost::dynamic_pointer_cast<mmWaveBS>(v.second);
-            if(mmB2.get()->getID() != cid)
-            { 
-                double snr = mmB->calculate_SNR_of_link(mmB2.get()->getX(),mmB2.get()->getY());
+            uint32_t cid2 = mmB2.get()->getID();
+            if( cid2 != cid)
+            {
+                double x2 = mmB2->getX(); double y2 = mmB2->getY(); point p2 = mmB2->get_loc();
+                polygon2D poly = directional_polygon(p1, p2, mmB->get_phi_m());
+                std::vector<value> vec_query;
+                m_tree.query(bgi::intersects(poly), std::back_inserter(vec_query));
+                double interf=0.;
+                BOOST_FOREACH(value const&mz, vec_query)
+                {
+                    bs_ptr mmB3 = boost::dynamic_pointer_cast<mmWaveBS>(mz.second);
+                    uint32_t cid3 = mmB3->getID();
+                    if(cid3!=cid2 && cid3!=cid)
+                        interf+= mmB->calculate_Interf_of_link(mmB3->getX(), mmB3->getY());
+                }
+                double snr = mmB->calculate_SNR_of_link(x2, y2);
+                double sinr = mmB->calculate_SINR_of_link(x2, y2, interf);
                 // Rules
                 bool b_snr = snr>max_snr;
                 bool b_parent = mmB2.get()->get_IAB_parent()!=mmB.get()->getID();
@@ -801,17 +844,17 @@ void Manager::path_selection_PA()
                 if(b_snr && b_parent && b_dist)
                 {
                     max_snr = snr;
+                    max_sinr = sinr;
                     parent = mmB2.get()->getID();
                 }
             }
-            
         }
         
         if(parent!=def_Nothing)
         {
             mmB->set_IAB_parent(parent);
             mmB->set_SNR(max_snr);
-//             mmB->set_SINR(max_sinr);
+            mmB->set_SINR(max_sinr);
             Add_load_BS(parent, mmB);
         }
     }

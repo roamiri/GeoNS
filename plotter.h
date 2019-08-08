@@ -86,7 +86,7 @@ public:
                 p.push_back(1.*i/(n-1));
             plt::named_plot(legend,data, p, color);
         }
-        plt::xlim(10., 30.);
+//         plt::xlim(10., 30.);
         plt::ylim(0., 1.2);
         plt::legend();
         if(grid)
