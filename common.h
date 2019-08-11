@@ -17,7 +17,7 @@ static double out_bound = 200.0;
 #define def_Nothing 4e3  // for initializing uint32_t 
 
 #define def_lambda_MBS 5e-6
-#define def_lambda_SBS 3e-5
+#define def_lambda_SBS 1e-4
 
 #define def_Wired_fraction 0.1
 #define def_BW 400000000 // Bandwidth = 400 MHz  // Reference: Distributed Path Selection by Polese
