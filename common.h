@@ -16,10 +16,10 @@ static double out_bound = 200.0;
 
 #define def_Nothing 4e3  // for initializing uint32_t 
 
-#define lambda_MBS 5e-6
-#define lambda_SBS 1e-4
+#define def_lambda_MBS 5e-6
+#define def_lambda_SBS 3e-5
 
-#define def_prob_Wired 0.1
+#define def_Wired_fraction 0.1
 #define def_BW 400000000 // Bandwidth = 400 MHz  // Reference: Distributed Path Selection by Polese
 #define def_fc  28.e9 // fc = 28 GHz
 #define def_P_tx  30 // dBm

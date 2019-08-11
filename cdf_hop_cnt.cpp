@@ -13,6 +13,7 @@
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/progress.hpp>
 #include <boost/program_options.hpp>
+#include <chrono>
 
 #include "manager.h"
 #include "mmwavebs.h"
@@ -28,11 +29,13 @@ using namespace std;
 
 int main(int argc, char** argv)
 {
+    auto start = std::chrono::high_resolution_clock::now();
     //Fixed wired Base stations
     bool fixed = false;
     int fixed_count = -1;
     Path_Policy policy = Path_Policy::WF;
-    double wired_density = def_prob_Wired;
+    double node_density = def_lambda_SBS;
+    double wired_fractoin = def_Wired_fraction;
     bool b_verbose = false;
     int Total_iter = 100;
     bool bPlot = false;
@@ -42,16 +45,17 @@ int main(int argc, char** argv)
     // Declare the supported options.
     po::options_description desc("Allowed options");
     desc.add_options()
-        ("help", "Input  1 for fixed locations of the fiber base stations or 0 for variable")
-        ("iter", po::value<int>(), "Number of iterations")
-        ("fixed", po::value<int>(), "Set wired BS implementation type (fixed or variable)")
+        ("help", "Construct your network based on the following inputs.")
+        ("dens", po::value<double>() ,"Density of the base stations, preference=1e-4 BS/1km2")
+        ("fixed", po::value<int>(), "Set wired BS implementation type (fixed(1) or variable(0))")
         ("count", po::value<int>(), "Number of fixed wired base stations")
-        ("dens", po::value<double>(), "Wired nodes density")
+        ("prob", po::value<double>(), "Wired nodes probability")
         ("policy", po::value<int>(), "Path Selection Policy, options = HQF, WF, PA, MLR, HQIF")
-        ("verbose", po::value<bool>(), "verbose")
         ("if", po::value<string>(), "Input file name")
         ("of", po::value<string>(), "Output file name")
         ("svg", po::value<string>(), "Topology SVG file name")
+        ("iter", po::value<int>(), "Number of iterations")
+        ("verbose", po::value<bool>(), "verbose")
         ;
 
     po::variables_map vm;
@@ -87,7 +91,10 @@ int main(int argc, char** argv)
         fixed_count = 4;
     
     if(vm.count("dens"))
-        wired_density = vm["dens"].as<double>();
+        node_density = vm["dens"].as<double>();
+    
+    if(vm.count("prob"))
+        wired_fractoin = vm["prob"].as<double>();
         
     if(vm.count("policy"))
     {
@@ -133,7 +140,7 @@ int main(int argc, char** argv)
     
     if(vm.count("svg"))
     {
-        svg_name = vm["svg"].as<string>()+".svg";
+        svg_name = "SVG_"+vm["svg"].as<string>()+".svg";
         b_draw = true;
     }
     
@@ -151,9 +158,9 @@ int main(int argc, char** argv)
     manager.set_center(xx0, yy0, r);
     
     if(b_input)
-        manager.load_nodes(input, fixed, fixed_count, wired_density);
+        manager.load_nodes(input, fixed, fixed_count, wired_fractoin);
     else
-        manager.generate_nodes(fixed, fixed_count, wired_density);
+        manager.generate_nodes(node_density, fixed, fixed_count, wired_fractoin);
     
     
     int Total_fail = 0;
@@ -231,7 +238,7 @@ int main(int argc, char** argv)
         
 //         std::cout << __FUNCTION__<< __LINE__ << std::endl;
         //TODO 
-        manager.update_locations(fixed, wired_density);
+        manager.update_locations(fixed, wired_fractoin);
 //         std::cout << CDF_Hop_vec << std::endl;        
         ++show_progress;
     }
@@ -259,7 +266,7 @@ int main(int argc, char** argv)
     {
         plotter* plot = new plotter();
         std::string legend; 
-        std::string plot1 = plot_name;
+        std::string plot1 = "Hop_"+plot_name;
         std::string plot2 = "SNR_"+plot_name;
 //         std::string plot2 = "SINR_"+plot_name;
         switch(policy)
@@ -294,8 +301,11 @@ int main(int argc, char** argv)
     }
     
     manager.reset_pointers();
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = finish - start;
     
-    std::cout << "Get out of my Audio, Adios!!"<< std::endl;
+
+    std::cout << "time = "<< elapsed.count() <<"Get out of my Audio, Adios!!"<< std::endl;
     
     return 0;
 }

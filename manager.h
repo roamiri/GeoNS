@@ -38,11 +38,11 @@ class Manager
 	void makeCluster(uint32_t id);
     
     void set_center(double x, double y, double r);
-    void generate_nodes(bool fixed, int fixed_count, double wired_density);
-    void load_nodes(std::string f_name, bool fixed, int fixed_count, double wired_density);
+    void generate_nodes(double node_density, bool fixed, int fixed_count, double wired_fractoin);
+    void load_nodes(std::string f_name, bool fixed, int fixed_count, double wired_fractoin);
     void generate_fixed_nodes(int count);
 //     void update_locations();
-    void update_locations(bool fixed, double wired_density);
+    void update_locations(bool fixed, double wired_fractoin);
     void path_selection_WF();
     void path_selection_HQF();
     void path_selection_PA();

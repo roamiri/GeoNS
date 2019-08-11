@@ -90,13 +90,13 @@ int Manager::tree_size(double r)
 }
 
 
-void Manager::generate_nodes(bool fixed, int fixed_count, double wired_density)
+void Manager::generate_nodes(double node_density, bool fixed, int fixed_count, double wired_fractoin)
 {
     if(fixed) generate_fixed_nodes(fixed_count);
     
     //   Create the nodes
     std::uniform_real_distribution<> dis(0, 1);
-    std::poisson_distribution<int> pd(1e6*lambda_SBS);
+    std::poisson_distribution<int> pd(1e6*node_density);
     int num_nodes=pd(gen_IAB); // Poisson number of points
     //     int num_nodes = 100; // Poisson number of points
     
@@ -125,7 +125,7 @@ void Manager::generate_nodes(bool fixed, int fixed_count, double wired_density)
             }
             else
             {
-                bool prob = (rand() % 100) < 100*wired_density;
+                bool prob = (rand() % 100) < 100*wired_fractoin;
                 if(prob)
                 {
                     BS->set_backhaul_Type(Backhaul::wired);
@@ -138,7 +138,7 @@ void Manager::generate_nodes(bool fixed, int fixed_count, double wired_density)
     }
 }
 
-void Manager::load_nodes(std::string f_name, bool fixed, int fixed_count, double wired_density)
+void Manager::load_nodes(std::string f_name, bool fixed, int fixed_count, double wired_fractoin)
 {
     int num_nodes =0;
 // 	double data[num_nodes][2];
@@ -190,7 +190,7 @@ void Manager::load_nodes(std::string f_name, bool fixed, int fixed_count, double
             }
             else
             {
-                bool prob = (rand() % 100) < 100*wired_density;
+                bool prob = (rand() % 100) < 100*wired_fractoin;
                 if(prob)
                 {
                     BS->set_backhaul_Type(Backhaul::wired);
@@ -258,7 +258,7 @@ void Manager::generate_fixed_nodes(int count)
 /*
  * For scenario of variable location wired nodes
  */
-void Manager::update_locations(bool fixed, double wired_density)
+void Manager::update_locations(bool fixed, double wired_fractoin)
 {
     std::uniform_real_distribution<> dis(0, 1);
     
@@ -287,7 +287,7 @@ void Manager::update_locations(bool fixed, double wired_density)
         
         mmB->set_loc((float)x, (float)y);
         mmB->reset(); // sets hop count = -1 and no parent
-        bool prob = (rand() % 100) < 100*wired_density;
+        bool prob = (rand() % 100) < 100*wired_fractoin;
         if(fixed)
             mmB->set_backhaul_Type(Backhaul::IAB);
         else{ 
