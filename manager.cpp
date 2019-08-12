@@ -69,7 +69,7 @@ bool Manager::check_neighbors(double x, double y)
     float xx = (float) x;
     float yy = (float) y;
     point sought(xx,yy);
-    m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < 50/*def_min_dis*/;}),
+    m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < def_min_dis;}),
                 std::back_inserter(results));
     if(results.size()>0) ans = false;
     
