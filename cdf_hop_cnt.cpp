@@ -153,8 +153,8 @@ int main(int argc, char** argv)
 //     _painter.get()->Start();
     
     // Generate data on a disk with radius r with poisson point process    
-    double r = sqrt(1/M_PI)*sqrt(def_Area); // radius of disk
-    double xx0=r; double yy0=r;    // centre of disk
+    double r = sqrt(1/M_PI)*sqrt(def_Area); // radius of the disk
+    double xx0=r; double yy0=r;    // center of the disk
     manager.set_center(xx0, yy0, r);
     
     if(b_input)
@@ -266,8 +266,8 @@ int main(int argc, char** argv)
     {
         plotter* plot = new plotter();
         std::string legend; 
-        std::string plot1 = "Hop_"+plot_name;
-        std::string plot2 = "SNR_"+plot_name;
+        std::string plot1 = "Hop_"+plot_name+".eps";
+        std::string plot2 = "SNR_"+plot_name+".eps";
 //         std::string plot2 = "SINR_"+plot_name;
         switch(policy)
         {

@@ -21,6 +21,7 @@
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/io.hpp>
 #include "bits/stdc++.h"
+#include <map>
 
 namespace plt = matplotlibcpp;
 
@@ -91,8 +92,10 @@ public:
         plt::legend();
         if(grid)
             plt::grid(true);
-        plt::xlabel(xlabel);
-        plt::ylabel(ylabel);
+        std::map<std::string, std::string> attr;
+        attr.insert(std::make_pair("size", "22"));
+        plt::xlabel(xlabel, attr);
+        plt::ylabel(ylabel, attr);
         plt::save(name);
         plt::close();
     }
