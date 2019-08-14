@@ -45,7 +45,7 @@ static double out_bound = 200.0;
 #define def_min_dis 50 // 10 meter minimum distance between the nodes
 
 enum Status{idle, candiate, inBound, outBound, clusterHead};
-enum Backhaul{wired, IAB};
+enum Backhaul{wired, wireless};
 enum Path_Policy{HQF, WF, PA, MLR, HQIF}; //HQF = High Quality First, WF = Wired First, PA = Position Aware, MLR = Maximum local rate, HQIF = High Quality Interference First
     
 static uint32_t m_nextId;

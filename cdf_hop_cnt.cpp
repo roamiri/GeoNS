@@ -13,7 +13,6 @@
 #include <boost/numeric/ublas/io.hpp>
 #include <boost/progress.hpp>
 #include <boost/program_options.hpp>
-#include <chrono>
 
 #include "manager.h"
 #include "mmwavebs.h"
@@ -151,7 +150,7 @@ int main(int argc, char** argv)
     
 //     std::shared_ptr<Painter> _painter = std::make_shared<Painter>(manager.m_vector_BSs);
 //     _painter.get()->Start();
-    
+   
     // Generate data on a disk with radius r with poisson point process    
     double r = sqrt(1/M_PI)*sqrt(def_Area); // radius of the disk
     double xx0=r; double yy0=r;    // center of the disk

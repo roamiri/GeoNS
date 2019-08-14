@@ -110,7 +110,7 @@ int main()
         if(prob)
                 BS = std::make_shared<mmWaveBS>(x,y, _idGenerator->next(),  def_P_tx, Backhaul::wired);
         else
-                BS = std::make_shared<mmWaveBS>(x,y, _idGenerator->next(),  def_P_tx, Backhaul::IAB);
+                BS = std::make_shared<mmWaveBS>(x,y, _idGenerator->next(),  def_P_tx, Backhaul::wireless);
         
         if(!BS) std::cerr << "Object not made!!" << std::endl;
         BS.get()->setColor(0);

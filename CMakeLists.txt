@@ -10,8 +10,8 @@ add_definitions(-DGenerate_Poisson=TRUE)
 
 include_directories("/usr/include/python2.7")
 
-set(SRC mmwavebs.cpp manager.cpp painter.cpp node.cpp trx.cpp)
-set(HDR mmwavebs.h common.h Signal.h manager.h painter.h plotter.h node.h trx.h)
+set(SRC painter.cpp node.cpp trx.cpp wsensor.cpp container.cpp)
+set(HDR common.h Signal.h painter.h plotter.h node.h trx.h wsensor.h container.h)
 
 add_executable(${PROJECT_NAME} RL_CRC.cpp ${SRC} ${HDR})
 

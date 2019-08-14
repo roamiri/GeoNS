@@ -73,8 +73,6 @@ class Manager
     
     point find_closest_wired(uint32_t id, point loc);
     
-	
-// 	std::vector<bs_ptr> m_vector_BSs;
     std::vector<bs_ptr> m_vector_BSs;
 //     static std::shared_ptr<IDGenerator> m_idGenerator;
 		

@@ -19,7 +19,7 @@ class mmWaveBS : public node
 public:
     /* Explicitly using the default constructor to
      * underline the fact that it does get called */
-    mmWaveBS(double x, double y, uint32_t id, double ptx, Backhaul tt=IAB, Status st=idle);
+    mmWaveBS(double x, double y, uint32_t id, double ptx, Backhaul tt=wireless, Status st=idle);
 //     mmWaveBS(uint32_t id, double ptx);
     ~mmWaveBS();
     void Start();
@@ -62,10 +62,7 @@ public:
     double calculate_distance_of_link(double x, double y);
     double calculate_Interf_of_link(double x, double y);
     
-    void set_hop_count(int i)
-    {
-        m_hop_cnt=i;
-    }
+    void set_hop_count(int i) {m_hop_cnt=i;}
     int get_hop_count(){return m_hop_cnt;}
     
     void set_IAB_parent(uint32_t i){m_IAB_parent=i;}

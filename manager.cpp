@@ -26,7 +26,7 @@
 #include <bits/stdc++.h> 
 #include <fstream>
 #include <sstream>
-
+#include "painter.cpp"
 
 namespace bm = boost::math;
 
@@ -121,7 +121,7 @@ void Manager::generate_nodes(double node_density, bool fixed, int fixed_count, d
 //             BS.get()->update_parent.connect_member(this, &Manager::listen_For_parent_update);
             if(fixed)
             {
-                BS->set_backhaul_Type(Backhaul::IAB);
+                BS->set_backhaul_Type(Backhaul::wireless);
             }
             else
             {
@@ -132,7 +132,7 @@ void Manager::generate_nodes(double node_density, bool fixed, int fixed_count, d
                     BS->set_hop_count(0); BS->route_found(true);
                 }
                 else
-                    BS->set_backhaul_Type(Backhaul::IAB);
+                    BS->set_backhaul_Type(Backhaul::wireless);
             }
         }
     }
@@ -186,7 +186,7 @@ void Manager::load_nodes(std::string f_name, bool fixed, int fixed_count, double
 //             BS.get()->update_parent.connect_member(this, &Manager::listen_For_parent_update);
             if(fixed)
             {
-                BS->set_backhaul_Type(Backhaul::IAB);
+                BS->set_backhaul_Type(Backhaul::wireless);
             }
             else
             {
@@ -197,7 +197,7 @@ void Manager::load_nodes(std::string f_name, bool fixed, int fixed_count, double
                     BS->set_hop_count(0); BS->route_found(true);
                 }
                 else
-                    BS->set_backhaul_Type(Backhaul::IAB);
+                    BS->set_backhaul_Type(Backhaul::wireless);
             }
         }
     }
@@ -289,7 +289,7 @@ void Manager::update_locations(bool fixed, double wired_fractoin)
         mmB->reset(); // sets hop count = -1 and no parent
         bool prob = (rand() % 100) < 100*wired_fractoin;
         if(fixed)
-            mmB->set_backhaul_Type(Backhaul::IAB);
+            mmB->set_backhaul_Type(Backhaul::wireless);
         else{ 
             if(prob)
             {
@@ -298,7 +298,7 @@ void Manager::update_locations(bool fixed, double wired_fractoin)
             }
             else
             {
-                mmB->set_backhaul_Type(Backhaul::IAB);
+                mmB->set_backhaul_Type(Backhaul::wireless);
             }
         }
         
@@ -541,7 +541,7 @@ void Manager::draw_svg(bool b)
     if(b)
     {
 //         m_painter->draw_node_ID(m_vector_BSs);
-        m_painter->update(m_vector_BSs);
+        m_painter->update<boost::shared_ptr<mmWaveBS>>(m_vector_BSs);
     }
 }
 
@@ -1007,7 +1007,7 @@ int Manager::get_IAB_count()
     for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
     {
         bs_ptr mmB = (*it);
-        if(mmB->get_backhaul_Type()==Backhaul::IAB)
+        if(mmB->get_backhaul_Type()==Backhaul::wireless)
             cc++;
     }
     return cc;
@@ -1032,7 +1032,7 @@ void Manager::reset(bool fixed)
     for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
     {
         bs_ptr mmB = (*it);
-        if(mmB->get_backhaul_Type()==Backhaul::IAB && fixed)
+        if(mmB->get_backhaul_Type()==Backhaul::wireless && fixed)
             mmB->reset();
         else
             mmB->reset();
@@ -1112,7 +1112,7 @@ double Manager::find_SNR_bottleneck()
     for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
     {
         bs_ptr mmB = (*it);
-        if(mmB->is_route_found() && mmB->get_backhaul_Type()==Backhaul::IAB)
+        if(mmB->is_route_found() && mmB->get_backhaul_Type()==Backhaul::wireless)
         {
             double snr = mmB->get_SNR();
             if(snr==0.)
@@ -1133,7 +1133,7 @@ double Manager::find_SINR_bottleneck()
     for(std::vector<bs_ptr>::iterator it=m_vector_BSs.begin(); it!=m_vector_BSs.end(); ++it)
     {
         bs_ptr mmB = (*it);
-        if(mmB->is_route_found() && mmB->get_backhaul_Type()==Backhaul::IAB)
+        if(mmB->is_route_found() && mmB->get_backhaul_Type()==Backhaul::wireless)
         {
             double sinr = mmB->get_SINR();
             if(sinr==0.)

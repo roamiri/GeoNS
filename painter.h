@@ -47,8 +47,82 @@ public:
 	void Enable();
 	void add_to_draw_queue(std::shared_ptr<draw_object> dd);
 	
-	void update(std::vector<bs_ptr>const &v);
-    void draw_node_ID(std::vector<bs_ptr>const &v);
+    template<class T>
+	void update(std::vector<T>const &v)
+    {
+        int size = v.size();
+        double x_shift = 0.;
+        double y_shift = 0.;
+        std::lock_guard<std::mutex> guard(m_mutex);
+        for(int i=0;i<size;i++)
+        {
+            T dd = v[i];
+            double x = (0.1) * (dd.get()->getX() + x_shift);
+            double y = (0.1) * (dd.get()->getY() + y_shift);
+        
+            std::size_t color = dd.get()->getColor();
+            std::size_t red = (color & 0xff0000) >> 16; 
+            std::size_t green =(color & 0x00ff00) >> 8; 
+            std::size_t blue = (color & 0x0000ff);  	
+    // 		std::cout << "Status = " << dd.get()->getStatus() << std::endl;
+            // Text of number of hops to the wired node
+            *m_doc << svg::Text(svg::Point(x, y+2), std::to_string(dd->get_hop_count()), svg::Fill(svg::Color(0,0,0)), svg::Font(2.,"Verdana"));
+            // Drawing the nodes
+            if(dd.get()->get_backhaul_Type()==Backhaul::wired)
+                *m_doc << svg::Circle(svg::Point(x, y), 2, svg::Fill(svg::Color(0,0,0)), svg::Stroke(1, svg::Color(RED,0,0)));
+            else
+                *m_doc << svg::Circle(svg::Point(x, y), 2, svg::Fill(svg::Color(red,green,blue)), svg::Stroke(1, svg::Color(red, green, blue)));
+            
+        }
+        
+    // 	std::lock_guard<std::mutex> guard1(m_mutex);
+        for(int i=0;i<size;i++)
+        {
+            // Drawing paths
+            T mmB = v[i];
+            double x1 = (0.1) * (mmB->getX()+x_shift);
+            double y1 = (0.1) * (mmB->getY()+y_shift);
+            uint32_t parent = mmB->get_parent();
+            //TODO correct this search!!!
+            if(parent!=def_Nothing)
+            {
+                double x2 = (0.1) * (v[parent-1]->getX()+x_shift);
+                double y2 = (0.1) * (v[parent-1]->getY()+y_shift);
+                *m_doc << svg::Line(svg::Point(x1,y1), svg::Point(x2,y2), svg::Stroke(0.5, svg::Color(0,0,BLUE)));
+            }
+        }
+        m_doc->save();
+    }
+    
+    template<class T>
+    void draw_node_ID(std::vector<T>const &v)
+    {
+        int size = v.size();
+        double x_shift = 0.;
+        double y_shift = 0.;
+        std::lock_guard<std::mutex> guard(m_mutex);
+        for(int i=0;i<size;i++)
+        {
+            T dd = v[i];
+            double x = (0.1) * (dd.get()->getX() + x_shift);
+            double y = (0.1) * (dd.get()->getY() + y_shift);
+        
+            std::size_t color = dd.get()->getColor();
+            std::size_t red = (color & 0xff0000) >> 16; 
+            std::size_t green =(color & 0x00ff00) >> 8; 
+            std::size_t blue = (color & 0x0000ff);
+    // 		std::cout << "Status = " << dd.get()->getStatus() << std::endl;
+            // Text of number of hops to the wired node
+            *m_doc << svg::Text(svg::Point(x, y+2), std::to_string(dd->getID()), svg::Fill(svg::Color(0,0,0)), svg::Font(2.,"Verdana"));
+            // Drawing the nodes
+            if(dd.get()->get_backhaul_Type()==Backhaul::wired)
+                *m_doc << svg::Circle(svg::Point(x, y), 2, svg::Fill(svg::Color(0,0,0)), svg::Stroke(1, svg::Color(RED,0,0)));
+            else
+                *m_doc << svg::Circle(svg::Point(x, y), 2, svg::Fill(svg::Color(red,green,blue)), svg::Stroke(1, svg::Color(red, green, blue)));
+            
+        }
+        m_doc->save();
+    }
 private:
 	
 	std::vector<std::shared_ptr<draw_object>> m_objects;
