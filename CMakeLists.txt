@@ -13,7 +13,7 @@ include_directories("/usr/include/python2.7")
 set(SRC mmwavebs.cpp manager.cpp painter.cpp node.cpp trx.cpp)
 set(HDR mmwavebs.h common.h Signal.h manager.h painter.h plotter.h node.h trx.h)
 
-add_executable(${PROJECT_NAME} cdf_hop_cnt.cpp ${SRC} ${HDR})
+add_executable(${PROJECT_NAME} RL_CRC.cpp ${SRC} ${HDR})
 
 target_link_libraries(${PROJECT_NAME} -lpthread -lpython2.7 -lboost_program_options)
 
