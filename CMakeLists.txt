@@ -13,7 +13,7 @@ include_directories("/usr/include/python2.7")
 set(SRC node.cpp trx.cpp mmwavebs.cpp manager.cpp wsn.cpp)
 set(HDR common.h Signal.h painter.h plotter.h node.h trx.h mmwavebs.h container.h manager.h wsn.h)
 
-add_executable(${PROJECT_NAME} RL_CRC.cpp ${SRC} ${HDR})
+add_executable(${PROJECT_NAME} WSN_cluster.cpp ${SRC} ${HDR})
 
 target_link_libraries(${PROJECT_NAME} -lpthread -lpython2.7 -lboost_program_options)
 
