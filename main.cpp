@@ -10,7 +10,7 @@
 #include <fstream>
 #include <random>
 
-#include "manager.h"
+#include "iabn.h"
 #include "mmwavebs.h"
 #include "idgenerator.h"
 #include "painter.h"
@@ -21,7 +21,7 @@ int main()
 {
   bool create_output = true;
   IDGenerator* _idGenerator = IDGenerator::instance();
-  Manager manager;
+  IABN manager;
    std::shared_ptr<Painter> _painter = std::make_shared<Painter>(manager.m_items);
   _painter.get()->Start();
   int num_nodes = -1;
@@ -116,7 +116,7 @@ int main()
         BS.get()->setColor(0);
         manager.m_items.push_back(BS);
 //             BS.get()->Start();
-        BS.get()->update_parent.connect_member(&manager, &Manager::listen_For_parent_update);
+        BS.get()->update_parent.connect_member(&manager, &IABN::listen_For_parent_update);
     }
 	
 	// Fidning the parents of nodes

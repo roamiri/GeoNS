@@ -21,7 +21,7 @@
 typedef std::pair<point, boost::shared_ptr<node>> value;
 
 /**
- * @def Manager class that contains the object of type T
+ * @def IABN class that contains the object of type T
  */
 template <class T>
 class Container

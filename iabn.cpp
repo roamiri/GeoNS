@@ -15,7 +15,7 @@
  *
  */
 
-#include "manager.h"
+#include "iabn.h"
 #include <math.h>
 #include <limits>
 #include <random>
@@ -30,7 +30,7 @@
 
 namespace bm = boost::math;
 
-Manager::Manager(std::string svg_name): Container(svg_name)
+IABN::IABN(std::string svg_name): Container(svg_name)
 {
     gen_wired = std::mt19937(rd());
     gen_IAB = std::mt19937(rd());  //TODO is it independent from the above?
@@ -38,15 +38,15 @@ Manager::Manager(std::string svg_name): Container(svg_name)
 //     m_painter = new Painter(svg_name);
 //     m_painter->Start();
     
-    std::cout << "Manager started!\n";
+    std::cout << "IABN started!\n";
 }
 
-Manager::~Manager()
+IABN::~IABN()
 {
 
 }
 
-void Manager::generate_nodes(double node_density, bool fixed, int fixed_count, double wired_fractoin)
+void IABN::generate_nodes(double node_density, bool fixed, int fixed_count, double wired_fractoin)
 {
     if(fixed) generate_fixed_nodes(fixed_count);
     
@@ -75,7 +75,7 @@ void Manager::generate_nodes(double node_density, bool fixed, int fixed_count, d
             BS.get()->setColor(0);
             m_tree.insert(std::make_pair(BS->get_loc(), BS)); //TODO maybe here!
             m_items.push_back(BS);
-//             BS.get()->update_parent.connect_member(this, &Manager::listen_For_parent_update);
+//             BS.get()->update_parent.connect_member(this, &IABN::listen_For_parent_update);
             if(fixed)
             {
                 BS->set_backhaul_Type(Backhaul::wireless);
@@ -95,7 +95,7 @@ void Manager::generate_nodes(double node_density, bool fixed, int fixed_count, d
     }
 }
 
-void Manager::load_nodes(std::string f_name, bool fixed, int fixed_count, double wired_fractoin)
+void IABN::load_nodes(std::string f_name, bool fixed, int fixed_count, double wired_fractoin)
 {
     int num_nodes =0;
 // 	double data[num_nodes][2];
@@ -141,7 +141,7 @@ void Manager::load_nodes(std::string f_name, bool fixed, int fixed_count, double
             BS.get()->setColor(0);
             m_tree.insert(std::make_pair(BS->get_loc(), BS)); //TODO maybe here!
             m_items.push_back(BS);
-//             BS.get()->update_parent.connect_member(this, &Manager::listen_For_parent_update);
+//             BS.get()->update_parent.connect_member(this, &IABN::listen_For_parent_update);
             if(fixed)
             {
                 BS->set_backhaul_Type(Backhaul::wireless);
@@ -161,7 +161,7 @@ void Manager::load_nodes(std::string f_name, bool fixed, int fixed_count, double
     }
 }
 
-void Manager::generate_fixed_nodes(int count)
+void IABN::generate_fixed_nodes(int count)
 {
     // Adding Fixed Wired BSs
     double delta_teta = 2*M_PI/count;
@@ -180,7 +180,7 @@ void Manager::generate_fixed_nodes(int count)
         BS->route_found(true);
         m_tree.insert(std::make_pair(BS->get_loc(), BS));
         m_items.push_back(BS);
-//         BS.get()->update_parent.connect_member(this, &Manager::listen_For_parent_update);
+//         BS.get()->update_parent.connect_member(this, &IABN::listen_For_parent_update);
     }
 }
 
@@ -188,7 +188,7 @@ void Manager::generate_fixed_nodes(int count)
 /**
  * For scenario of fixed wired nodes
  */
-// void Manager::update_locations()
+// void IABN::update_locations()
 // {
 //     std::uniform_real_distribution<> dis(0, 1);
 //     
@@ -217,7 +217,7 @@ void Manager::generate_fixed_nodes(int count)
 /*
  * For scenario of variable location wired nodes
  */
-void Manager::update_locations(bool fixed, double wired_fractoin)
+void IABN::update_locations(bool fixed, double wired_fractoin)
 {
     std::uniform_real_distribution<> dis(0, 1);
     
@@ -268,7 +268,7 @@ void Manager::update_locations(bool fixed, double wired_fractoin)
 
 
 
-void Manager::listen_For_parent_update(const update_parent_msg& msg)
+void IABN::listen_For_parent_update(const update_parent_msg& msg)
 {
     //TODO update the for loop
     uint32_t id = msg.id;
@@ -299,7 +299,7 @@ void Manager::listen_For_parent_update(const update_parent_msg& msg)
 //     }
 }
 
-void Manager::spread_hop_count()
+void IABN::spread_hop_count()
 {
     bool all_found = false;
     int counter = 0;
@@ -331,7 +331,7 @@ void Manager::spread_hop_count()
 //     count_hops(m_arr_hops, m_failed);
 }
 
-void Manager::set_hop_counts()
+void IABN::set_hop_counts()
 {
     // set hop count of the nodes
     bool finish = false;
@@ -385,7 +385,7 @@ void Manager::set_hop_counts()
 }
 
 
-void Manager::draw_svg(bool b)
+void IABN::draw_svg(bool b)
 {
     if(b)
     {
@@ -397,7 +397,7 @@ void Manager::draw_svg(bool b)
 /**
  * Select path based on wired first policy
  */
-void Manager::path_selection_WF()
+void IABN::path_selection_WF()
 {
 //     std::lock_guard<std::mutex> guard(m_mutex);
     for(std::vector<bs_ptr>::iterator it=m_items.begin(); it!=m_items.end();++it)
@@ -474,7 +474,7 @@ void Manager::path_selection_WF()
     }
 }
 
-void Manager::path_selection_HQF_Interf()
+void IABN::path_selection_HQF_Interf()
 {
 //     std::lock_guard<std::mutex> guard(m_mutex);
     for(std::vector<bs_ptr>::iterator it=m_items.begin(); it!=m_items.end();++it)
@@ -550,7 +550,7 @@ void Manager::path_selection_HQF_Interf()
  * Returns the directional triangle from p1 tp p2 considering angle of main lobe phi_m
  * phi_m should be in radian
  */
-polygon2D Manager::directional_polygon(point p1, point p2, double phi_m)
+polygon2D IABN::directional_polygon(point p1, point p2, double phi_m)
 {
     polygon2D poly;
     // first vertice
@@ -571,7 +571,7 @@ polygon2D Manager::directional_polygon(point p1, point p2, double phi_m)
     return poly;
 }
 
-void Manager::path_selection_HQF()
+void IABN::path_selection_HQF()
 {
 //     std::lock_guard<std::mutex> guard(m_mutex);
     for(std::vector<bs_ptr>::iterator it=m_items.begin(); it!=m_items.end();++it)
@@ -639,7 +639,7 @@ void Manager::path_selection_HQF()
 /**
  * Select path based on position-aware policy
  */
-void Manager::path_selection_PA()
+void IABN::path_selection_PA()
 {
 //     std::lock_guard<std::mutex> guard(m_mutex);
     //TODO check this method precisely.
@@ -710,7 +710,7 @@ void Manager::path_selection_PA()
 }
 
 
-point Manager::find_closest_wired(uint32_t id, point loc)
+point IABN::find_closest_wired(uint32_t id, point loc)
 {
     //TODO check if the answer is not equal the input loc
     point wired;// = loc;
@@ -757,7 +757,7 @@ point Manager::find_closest_wired(uint32_t id, point loc)
 /**
  * Path selection policy based on Maximum local rate
  */
-void Manager::path_selection_MLR()
+void IABN::path_selection_MLR()
 {
 //     std::lock_guard<std::mutex> guard(m_mutex);
     //TODO maybe here!
@@ -822,7 +822,7 @@ void Manager::path_selection_MLR()
 //     std::cout << "The route for all nodes was found = " << b_all_nodes_route << " with " << count << " tries!" <<std::endl;
 }
 
-bool Manager::check_all_routes()
+bool IABN::check_all_routes()
 {
     bool found = true;
     for(std::vector<bs_ptr>::iterator it=m_items.begin(); it!=m_items.end(); ++it)
@@ -834,7 +834,7 @@ bool Manager::check_all_routes()
     return found;
 }
 
-void Manager::Add_load_BS(uint32_t parent, bs_ptr bs/*uint32_t member, point loc*/)
+void IABN::Add_load_BS(uint32_t parent, bs_ptr bs/*uint32_t member, point loc*/)
 {
     for(std::vector<bs_ptr>::iterator it=m_items.begin(); it!=m_items.end(); ++it)
     {
@@ -849,7 +849,7 @@ void Manager::Add_load_BS(uint32_t parent, bs_ptr bs/*uint32_t member, point loc
 }
 
 
-int Manager::get_IAB_count()
+int IABN::get_IAB_count()
 {
     int cc = 0;
 //     std::lock_guard<std::mutex> guard(m_mutex);
@@ -862,7 +862,7 @@ int Manager::get_IAB_count()
     return cc;
 }
 
-int Manager::get_wired_count()
+int IABN::get_wired_count()
 {
     int cc = 0;
 //     std::lock_guard<std::mutex> guard(m_mutex);
@@ -875,7 +875,7 @@ int Manager::get_wired_count()
     return cc;
 };
 
-void Manager::reset(bool fixed)
+void IABN::reset(bool fixed)
 {
 //     std::lock_guard<std::mutex> guard(m_mutex);
     for(std::vector<bs_ptr>::iterator it=m_items.begin(); it!=m_items.end(); ++it)
@@ -888,7 +888,7 @@ void Manager::reset(bool fixed)
     }
 }
 
-std::vector<int> Manager::count_hops(int &max_hop, int &failed)
+std::vector<int> IABN::count_hops(int &max_hop, int &failed)
 {
     
     m_failed = 0; m_max_hop = -1;
@@ -945,7 +945,7 @@ std::vector<int> Manager::count_hops(int &max_hop, int &failed)
 }
 
 
-// void Manager::reset_pointers()
+// void IABN::reset_pointers()
 // {
 //     for(std::vector<bs_ptr>::iterator it=m_items.begin(); it!=m_items.end(); ++it)
 //     {
@@ -955,7 +955,7 @@ std::vector<int> Manager::count_hops(int &max_hop, int &failed)
 //     }
 // }
 
-double Manager::find_SNR_bottleneck()
+double IABN::find_SNR_bottleneck()
 {
     double bottleneck = 1e10;
     for(std::vector<bs_ptr>::iterator it=m_items.begin(); it!=m_items.end(); ++it)
@@ -976,7 +976,7 @@ double Manager::find_SNR_bottleneck()
 }
 
 
-double Manager::find_SINR_bottleneck()
+double IABN::find_SINR_bottleneck()
 {
     double bottleneck = 1e10;
     for(std::vector<bs_ptr>::iterator it=m_items.begin(); it!=m_items.end(); ++it)

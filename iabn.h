@@ -1,6 +1,6 @@
 
-#ifndef MANAGER_H
-#define MANAGER_H
+#ifndef IABN_H
+#define IABN_H
 
 #include <iostream>
 #include <thread>
@@ -23,13 +23,13 @@
 
 // typedef boost::shared_ptr<mmWaveBS> bs_ptr;
 
-
-class Manager : public Container<mmWaveBS>
+// mmWave Integrated access and backhaul network
+class IABN : public Container<mmWaveBS>
 {
     public:
         
-    Manager(std::string svg_name);
-	~Manager();
+    IABN(std::string svg_name);
+	~IABN();
 	
 	
     void listen_For_parent_update(update_parent_msg const &message);
@@ -102,6 +102,6 @@ private:
 // 	std::thread m_draw_thread;
 };
 
-// std::shared_ptr<IDGenerator> Manager::m_idGenerator(IDGenerator::instance());
+// std::shared_ptr<IDGenerator> IABN::m_idGenerator(IDGenerator::instance());
 
-#endif // MANAGER_H
+#endif // IABN_H
