@@ -1,16 +1,13 @@
 #ifndef MMWAVEBS_H
 #define MMWAVEBS_H
 
-#include "Signal.h"
 #include <iostream>
-#include <thread>
-#include <chrono>
+#include <mutex>
 #include <vector>
 #include <map>
-#include <sys/prctl.h>
+
 #include "common.h"
 #include "trx.h"
-#include <mutex>
 
 #include "boost/shared_ptr.hpp"
 
@@ -22,11 +19,9 @@ public:
     mmWaveBS(double x, double y, uint32_t id, Backhaul tt=wireless, Status st=idle);
 //     mmWaveBS(uint32_t id, double ptx);
     ~mmWaveBS();
-    void Start();
 	
     void reset();
-    void setClusterID(int id) {cluster_id = id;}
-    uint32_t getClusterID() {return cluster_id;}
+    
     
 //     uint32_t getID(){return m_id;}
     
@@ -36,26 +31,18 @@ public:
 //     double getX(){return m_xx;}
 //     double getY(){return m_yy;}
     
-    Status getStatus(){return m_status;}
-    void setStatus(Status st){m_status = st;}
+    
     
     Backhaul get_backhaul_Type(){return m_bkhl;}
     void set_backhaul_Type(Backhaul st);
     
-    Signal<candidacy_msg const &> candidacy;
-    Signal<cluster_head_msg const &> clusterHead;
-    Signal<std::string const &> conflict;
     Signal<update_parent_msg const &> update_parent;
-    
 
-    void listen(std::string const &message);
-	void declare_as_cluster_head();
 	
 // 	void setColor(std::size_t color);
 // 	std::size_t getColor(){return m_color;}
 //     std::size_t* get_rgb_Color(){return m_rgb_color;}
     
-    void set_transmit_power(double ptx);
     double calculate_SNR_of_link(double x, double y);
     double calculate_SINR_of_link(double x, double y, double interf);
     double calculate_Rate_of_link(double x, double y);
@@ -87,19 +74,19 @@ public:
     
 //     void set_SINR(double sinr){m_route_SINR = sinr;}
 //     double get_SINR(){return m_route_SINR;}
+
+    void Start();
     
 private:
-    std::thread the_thread;
-	bool stop_thread = false;
-    std::mutex m_mutex;
     
+    std::mutex m_mutex;
     void ThreadMain();
     
+    
 // 	uint32_t m_id;
-    uint32_t cluster_id = def_Nothing;
+    
 //     double m_xx;
 //     double m_yy;
-	Status m_status;
 	
 	timer_t T;
 // 	std::size_t m_rgb_color[3];

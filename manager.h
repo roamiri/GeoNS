@@ -31,12 +31,9 @@ class Manager : public Container<mmWaveBS>
     Manager(std::string svg_name);
 	~Manager();
 	
-	void listen_For_Candidacy(candidacy_msg const &message);
-	void listen_For_ClusterHead(cluster_head_msg const &message);
-	void listen_For_Conflict(std::string const &message);
+	
     void listen_For_parent_update(update_parent_msg const &message);
-	void joinCluster(uint32_t id, Status st, uint32_t cluster_id, std::size_t color);
-	void makeCluster(uint32_t id);
+	
     
 //     void set_center(double x, double y, double r);
     void generate_nodes(double node_density, bool fixed, int fixed_count, double wired_fractoin);

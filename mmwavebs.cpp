@@ -2,9 +2,9 @@
 #include <random>
 
 mmWaveBS::mmWaveBS(double x, double y, uint32_t id, Backhaul tt, Status st)
-: the_thread(), TRX((float)x,(float)y,1.,1.,id)
+: TRX((float)x,(float)y,1.,1.,id)
 {
-	m_bkhl= tt; m_status = st;
+	m_bkhl= tt;
     m_phi_m = def_Phi_m;
     m_route_SNR = 0.; m_route_SINR = 0.;
     if(tt == Backhaul::wired)
@@ -54,10 +54,7 @@ void mmWaveBS::Start()
 //     std::cout << "Class " << thread_name_buffer << " has started!" << std::endl;
 }
 
-void mmWaveBS::listen(const std::string& message)
-{
-    std::cout << " received: " << message << std::endl;
-}
+
 
 void mmWaveBS::ThreadMain()
 {
@@ -93,18 +90,6 @@ void mmWaveBS::ThreadMain()
 // 	std::size_t blue = (color & 0x0000ff);  	m_rgb_color[2] = blue;
 // }
 
-void mmWaveBS::declare_as_cluster_head()
-{
-	cluster_head_msg message(getX(), getY(), getID(), m_color);
-	clusterHead.emit(message);
-}
-
-void mmWaveBS::set_transmit_power(double ptx)
-{
-    m_TxP_dBm = ptx;
-    double p = ptx - 30;
-    m_TxP = pow(10.,p/10.0);
-}
 
 double mmWaveBS::calculate_SNR_of_link(double x, double y)
 {
