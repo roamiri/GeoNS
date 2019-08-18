@@ -1,12 +1,10 @@
 #include "mmwavebs.h"
 #include <random>
 
-mmWaveBS::mmWaveBS(double x, double y, uint32_t id, double ptx, Backhaul tt, Status st)
-: the_thread(), node((float)x,(float)y,1.,1.,id)
+mmWaveBS::mmWaveBS(double x, double y, uint32_t id, Backhaul tt, Status st)
+: the_thread(), TRX((float)x,(float)y,1.,1.,id)
 {
 	m_bkhl= tt; m_status = st;
-    m_TxP_dBm = ptx;
-    set_transmit_power(ptx);
     m_phi_m = def_Phi_m;
     m_route_SNR = 0.; m_route_SINR = 0.;
     if(tt == Backhaul::wired)
@@ -27,7 +25,7 @@ mmWaveBS::mmWaveBS(double x, double y, uint32_t id, double ptx, Backhaul tt, Sta
 void mmWaveBS::reset()
 {
     set_hop_count(-1);
-    set_IAB_parent(def_Nothing);
+    set_parent(def_Nothing);
     set_SNR(0.);
     set_SINR(0.);
 }
@@ -87,13 +85,13 @@ void mmWaveBS::ThreadMain()
     }
 }
 
-void mmWaveBS::setColor(std::size_t color)
-{
-	m_color = color;
-	std::size_t red = (color & 0xff0000) >> 16; m_rgb_color[0] = red;
-	std::size_t green =(color & 0x00ff00) >> 8; m_rgb_color[1] = green;
-	std::size_t blue = (color & 0x0000ff);  	m_rgb_color[2] = blue;
-}
+// void mmWaveBS::setColor(std::size_t color)
+// {
+// 	m_color = color;
+// 	std::size_t red = (color & 0xff0000) >> 16; m_rgb_color[0] = red;
+// 	std::size_t green =(color & 0x00ff00) >> 8; m_rgb_color[1] = green;
+// 	std::size_t blue = (color & 0x0000ff);  	m_rgb_color[2] = blue;
+// }
 
 void mmWaveBS::declare_as_cluster_head()
 {
@@ -103,6 +101,7 @@ void mmWaveBS::declare_as_cluster_head()
 
 void mmWaveBS::set_transmit_power(double ptx)
 {
+    m_TxP_dBm = ptx;
     double p = ptx - 30;
     m_TxP = pow(10.,p/10.0);
 }
@@ -225,8 +224,8 @@ void mmWaveBS::update_load_hops()
     for(std::vector<boost::shared_ptr<mmWaveBS>>::iterator it=m_load_BS.begin(); it!=m_load_BS.end();++it)
     {
         boost::shared_ptr<mmWaveBS> mmB = (*it);
-//         if(mmB->get_IAB_parent()!=getID())
-//             std::cout << "parent=" << getID() << ", IAB_parent=" << mmB->get_IAB_parent() << "my id=" << mmB->getID()<< "\n";
+//         if(mmB->get_parent()!=getID())
+//             std::cout << "parent=" << getID() << ", IAB_parent=" << mmB->get_parent() << "my id=" << mmB->getID()<< "\n";
         if(mmB->get_hop_count()==-1)
         {
             mmB->set_hop_count(hop);

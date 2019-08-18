@@ -10,10 +10,10 @@ add_definitions(-DGenerate_Poisson=TRUE)
 
 include_directories("/usr/include/python2.7")
 
-set(SRC painter.cpp node.cpp trx.cpp wsensor.cpp container.cpp)
-set(HDR common.h Signal.h painter.h plotter.h node.h trx.h wsensor.h container.h)
+set(SRC node.cpp trx.cpp mmwavebs.cpp manager.cpp)
+set(HDR common.h Signal.h painter.h plotter.h node.h trx.h mmwavebs.h container.h manager.h)
 
-add_executable(${PROJECT_NAME} RL_CRC.cpp ${SRC} ${HDR})
+add_executable(${PROJECT_NAME} cdf_hop_cnt.cpp ${SRC} ${HDR})
 
 target_link_libraries(${PROJECT_NAME} -lpthread -lpython2.7 -lboost_program_options)
 

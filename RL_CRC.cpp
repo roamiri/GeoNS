@@ -86,7 +86,6 @@ int main(int argc, char** argv)
         b_draw = true;
     }
     
-    
     Container<wSensor> WSN(svg_name);
     
     // Generate data on a disk with radius r with poisson point process    

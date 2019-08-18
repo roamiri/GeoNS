@@ -15,8 +15,8 @@
 #include <boost/program_options.hpp>
 
 #include "manager.h"
-#include "mmwavebs.h"
-#include "painter.h"
+// #include "mmwavebs.h"
+// #include "painter.h"
 // #include "ppunfix5.h"
 #include "plotter.h"
 // #include "idgenerator.h"
@@ -148,7 +148,7 @@ int main(int argc, char** argv)
     Manager manager(svg_name);
     m_nextId = 0; //TODO fix the id generator 
     
-//     std::shared_ptr<Painter> _painter = std::make_shared<Painter>(manager.m_vector_BSs);
+//     std::shared_ptr<Painter> _painter = std::make_shared<Painter>(manager.m_items);
 //     _painter.get()->Start();
    
     // Generate data on a disk with radius r with poisson point process    

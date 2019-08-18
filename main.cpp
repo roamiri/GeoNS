@@ -22,7 +22,7 @@ int main()
   bool create_output = true;
   IDGenerator* _idGenerator = IDGenerator::instance();
   Manager manager;
-   std::shared_ptr<Painter> _painter = std::make_shared<Painter>(manager.m_vector_BSs);
+   std::shared_ptr<Painter> _painter = std::make_shared<Painter>(manager.m_items);
   _painter.get()->Start();
   int num_nodes = -1;
   
@@ -114,16 +114,16 @@ int main()
         
         if(!BS) std::cerr << "Object not made!!" << std::endl;
         BS.get()->setColor(0);
-        manager.m_vector_BSs.push_back(BS);
+        manager.m_items.push_back(BS);
 //             BS.get()->Start();
         BS.get()->update_parent.connect_member(&manager, &Manager::listen_For_parent_update);
     }
 	
 	// Fidning the parents of nodes
-// 	manager.m_vector_BSs[0]->setStatus(Status::clusterHead);
-//     manager.m_vector_BSs[0]->set_hop_count(0);
+// 	manager.m_items[0]->setStatus(Status::clusterHead);
+//     manager.m_items[0]->set_hop_count(0);
     
-    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end();++it)
+    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_items.begin(); it!=manager.m_items.end();++it)
     {
         std::shared_ptr<mmWaveBS> mmB = (*it);
         if(!mmB)
@@ -138,7 +138,7 @@ int main()
         double y = mmB.get()->getY();
         double max_snr = -1.0;
         uint32_t parent = -1;
-        for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it2=manager.m_vector_BSs.begin(); it2!=manager.m_vector_BSs.end();++it2)
+        for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it2=manager.m_items.begin(); it2!=manager.m_items.end();++it2)
         {
             std::shared_ptr<mmWaveBS> mmB2 = (*it2);
             if(mmB2.get()->getID() != cid)
@@ -147,7 +147,7 @@ int main()
                 double snr = mmB->calculate_SNR_of_link(mmB2->getX(), mmB2->getY());
                 // Rules
                 bool b_snr = snr>max_snr;
-                bool b_parent = mmB2.get()->get_IAB_parent()!=mmB.get()->getID();
+                bool b_parent = mmB2.get()->get_parent()!=mmB.get()->getID();
                 bool b_wired = mmB2->get_backhaul_Type()==Backhaul::wired;
                 bool b_dist = dist<def_MAX_MMWAVE_RANGE;
 
@@ -166,18 +166,18 @@ int main()
 //                 std::cout << "SBS= "<< mmB.get()->getID() << "SBS= "<< mmB2.get()->getID() << ", dist = " <<euclidean_dist(x,y, mmB2->getX(), mmB2->getY()) <<std::endl;
             }
         }
-        mmB->set_IAB_parent(parent);
+        mmB->set_parent(parent);
         std::cout << "SBS= "<< mmB.get()->getID() << " parent= "<< parent << std::endl;
     }
     
     // set hop count of the nodes
-//     manager.m_vector_BSs[0]->emit_update_parent();
+//     manager.m_items[0]->emit_update_parent();
     bool finish = false;
     int counter = 0;
     while((!finish) && (counter<10))
     {
         bool all_found = true;
-        for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end(); ++it)
+        for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_items.begin(); it!=manager.m_items.end(); ++it)
         {
             std::shared_ptr<mmWaveBS> mmB = (*it);
             if(mmB->get_hop_count()!=-1)
@@ -193,7 +193,7 @@ int main()
     
     
     int hop_vec[10] = {0};
-    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_vector_BSs.begin(); it!=manager.m_vector_BSs.end(); ++it)
+    for(std::vector<std::shared_ptr<mmWaveBS>>::iterator it=manager.m_items.begin(); it!=manager.m_items.end(); ++it)
     {
         std::shared_ptr<mmWaveBS> mmB = (*it);
         int hcnt = mmB->get_hop_count();

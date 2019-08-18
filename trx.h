@@ -22,8 +22,8 @@ public:
      */
     ~TRX();
 
-    Backhaul get_backhaul_Type(){return m_bkhl;}
-    void set_backhaul_Type(Backhaul st){m_bkhl = st;}
+//     Backhaul get_backhaul_Type(){return m_bkhl;}
+//     void set_backhaul_Type(Backhaul st){m_bkhl = st;}
     
     void setColor(std::size_t color);
     std::size_t getColor(){return m_color;}
@@ -63,7 +63,7 @@ protected:
     double m_phi_m;
     
     // Routing parameters
-    Backhaul m_bkhl;
+//     Backhaul m_bkhl;
     int m_hop_cnt = -1;
     uint32_t m_parent = def_Nothing;
     bool m_found_Route = false;
