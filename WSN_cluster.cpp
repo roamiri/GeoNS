@@ -14,8 +14,8 @@
 
 
 #include "plotter.h"
-#include "painter.h"
-#include "container.cpp"
+// #include "painter.h"
+#include "wsn.h"
 #include "wsensor.h"
 
 #include "RL/rl.hpp"
@@ -53,7 +53,7 @@ int main(int argc, char** argv)
     po::store(po::parse_command_line(argc, argv, desc), vm);
     po::notify(vm);
     
-    if (vm.count("help"))
+    if(vm.count("help"))
     {
         std::cout << desc << "\n";
         return 1;
@@ -88,20 +88,20 @@ int main(int argc, char** argv)
         b_draw = true;
     }
     
-    
-    Container<wSensor> WSN(svg_name);
+    WSN wsn(svg_name);
+    m_nextId = 0; //TODO fix the id generator 
     
     // Generate data on a disk with radius r with poisson point process    
     double r = sqrt(1/M_PI)*sqrt(def_Area); // radius of the disk
     double xx0=r; double yy0=r;    // center of the disk
-    WSN.set_center(xx0, yy0, r);
+    wsn.set_center(xx0, yy0, r);
     
     if(b_input)
-        WSN.load_nodes(input, false, 0, wired_fractoin);
+        wsn.load_nodes(input, false, 0, wired_fractoin);
     else
-        WSN.generate_nodes(node_density, false, 0, wired_fractoin);
+        wsn.generate_nodes(node_density, false, 0, wired_fractoin);
     
-    WSN.draw_svg(b_draw);
+    wsn.draw_svg(b_draw);
     
     auto finish = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = finish - start;

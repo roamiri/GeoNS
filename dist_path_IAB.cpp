@@ -14,9 +14,9 @@
 #include <boost/progress.hpp>
 #include <boost/program_options.hpp>
 
-#include "manager.h"
-#include "mmwavebs.h"
-#include "painter.h"
+#include "iabn.h"
+// #include "mmwavebs.h"
+// #include "painter.h"
 // #include "ppunfix5.h"
 #include "plotter.h"
 // #include "idgenerator.h"
@@ -145,21 +145,21 @@ int main(int argc, char** argv)
     
 //     std::shared_ptr<IDGenerator> _idGenerator = ;
     
-    Manager manager(svg_name);
+    IABN iabn(svg_name);
     m_nextId = 0; //TODO fix the id generator 
     
-//     std::shared_ptr<Painter> _painter = std::make_shared<Painter>(manager.m_vector_BSs);
+//     std::shared_ptr<Painter> _painter = std::make_shared<Painter>(manager.m_items);
 //     _painter.get()->Start();
    
     // Generate data on a disk with radius r with poisson point process    
     double r = sqrt(1/M_PI)*sqrt(def_Area); // radius of the disk
     double xx0=r; double yy0=r;    // center of the disk
-    manager.set_center(xx0, yy0, r);
+    iabn.set_center(xx0, yy0, r);
     
     if(b_input)
-        manager.load_nodes(input, fixed, fixed_count, wired_fractoin);
+        iabn.load_nodes(input, fixed, fixed_count, wired_fractoin);
     else
-        manager.generate_nodes(node_density, fixed, fixed_count, wired_fractoin);
+        iabn.generate_nodes(node_density, fixed, fixed_count, wired_fractoin);
     
     
     int Total_fail = 0;
@@ -171,7 +171,7 @@ int main(int argc, char** argv)
     std::vector<double> vec_SNR_bottleneck;
     std::vector<double> vec_SINR_bottleneck;
     
-    int dm = manager.get_wired_count() + manager.get_IAB_count(); 
+    int dm = iabn.get_wired_count() + iabn.get_IAB_count(); 
     std::cout << "Number of nodes = " << dm << std::endl;
     
     boost::progress_display show_progress(Total_iter);
@@ -179,51 +179,51 @@ int main(int argc, char** argv)
     {       
        if(b_verbose)
        { 
-            std::cout << "Number of Wired nodes = " << manager.get_wired_count() << std::endl;
-            std::cout << "Number of IAB nodes = " << manager.get_IAB_count() << std::endl;
+            std::cout << "Number of Wired nodes = " << iabn.get_wired_count() << std::endl;
+            std::cout << "Number of IAB nodes = " << iabn.get_IAB_count() << std::endl;
        }
 
         // Path Selection
         switch(policy)
         {
             case(Path_Policy::HQF):
-                manager.path_selection_HQF();
+                iabn.path_selection_HQF();
                 if(b_verbose) std::cout << "Selecting Parents with HQF." << std::endl;
                 break;
             
             case(Path_Policy::WF):
-                manager.path_selection_WF();
+                iabn.path_selection_WF();
                 if(b_verbose) std::cout << "Selecting Parents with WF." << std::endl;
                 break;
                 
             case(Path_Policy::PA):
-                manager.path_selection_PA();
+                iabn.path_selection_PA();
                 if(b_verbose) std::cout << "Selecting Parents with PA." << std::endl;
                 break;
                 
             case(Path_Policy::MLR):
-                manager.path_selection_MLR();
+                iabn.path_selection_MLR();
                 if(b_verbose) std::cout << "Selecting Parents with MLR." << std::endl;
                 break;
             case(Path_Policy::HQIF):
-                manager.path_selection_HQF_Interf();
+                iabn.path_selection_HQF_Interf();
                 if(b_verbose) std::cout << "Selecting Parents with HQIF." << std::endl;
                 break;
         }
         
-        manager.spread_hop_count();
+        iabn.spread_hop_count();
         
-        vec_SNR_bottleneck.push_back(manager.find_SNR_bottleneck());
-        vec_SINR_bottleneck.push_back(manager.find_SINR_bottleneck());
+        vec_SNR_bottleneck.push_back(iabn.find_SNR_bottleneck());
+        vec_SINR_bottleneck.push_back(iabn.find_SINR_bottleneck());
 //         manager.set_hop_counts();
 //         std::cout << __FUNCTION__<< __LINE__ << std::endl;
 
 //         int hop_vec[15] = {0};
         int failed = 0;
         int max_hop = 0;
-        std::vector<int> hop_vec = manager.count_hops(max_hop, failed);
+        std::vector<int> hop_vec = iabn.count_hops(max_hop, failed);
 //         std::cout << __FUNCTION__<< __LINE__ << std::endl;
-        manager.draw_svg(b_draw);
+        iabn.draw_svg(b_draw);
         
 //         int total_hops = 0;
         if(CDF_Hop_vec.size() < max_hop+1)
@@ -237,7 +237,7 @@ int main(int argc, char** argv)
         
 //         std::cout << __FUNCTION__<< __LINE__ << std::endl;
         //TODO 
-        manager.update_locations(fixed, wired_fractoin);
+        iabn.update_locations(fixed, wired_fractoin);
 //         std::cout << CDF_Hop_vec << std::endl;        
         ++show_progress;
     }
@@ -299,7 +299,7 @@ int main(int argc, char** argv)
 //         plot->closePlot();
     }
     
-    manager.reset_pointers();
+    iabn.reset_pointers();
     auto finish = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = finish - start;
     

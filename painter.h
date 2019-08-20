@@ -36,19 +36,31 @@
 #include <memory>
 #include <mutex>
 #include "mmwavebs.h"
+#include <sys/prctl.h>
+
+// using namespace svg;
 
 class Painter
 {
 public:
-    Painter(std::string name);
-    ~Painter();
-	void Start(/*std::vector<bs_ptr>const &v*/);
+    Painter(std::string name)
+    {
+        m_dimesnions = new svg::Dimensions(100, 100);
+        m_doc = new svg::Document(name, svg::Layout(*m_dimesnions, svg::Layout::BottomLeft));
+    }
+    ~Painter(){m_stopThread = true;}
+	void Start()
+    {
+        char thread_name_buff [20];
+        sprintf(thread_name_buff, "Painter");
+        prctl(PR_SET_NAME,thread_name_buff,0,0,0);
+    }
 	
-	void Enable();
-	void add_to_draw_queue(std::shared_ptr<draw_object> dd);
+	void Enable(){m_draw = true;}
+	void add_to_draw_queue(std::shared_ptr<draw_object> dd){m_objects.push_back(dd);}
 	
     template<class T>
-	void update(std::vector<T>const &v)
+	void update(std::vector<boost::shared_ptr<T>>const &v)
     {
         int size = v.size();
         double x_shift = 0.;
@@ -56,7 +68,7 @@ public:
         std::lock_guard<std::mutex> guard(m_mutex);
         for(int i=0;i<size;i++)
         {
-            T dd = v[i];
+            boost::shared_ptr<T> dd = v[i];
             double x = (0.1) * (dd.get()->getX() + x_shift);
             double y = (0.1) * (dd.get()->getY() + y_shift);
         
@@ -79,7 +91,7 @@ public:
         for(int i=0;i<size;i++)
         {
             // Drawing paths
-            T mmB = v[i];
+            boost::shared_ptr<T> mmB = v[i];
             double x1 = (0.1) * (mmB->getX()+x_shift);
             double y1 = (0.1) * (mmB->getY()+y_shift);
             uint32_t parent = mmB->get_parent();
@@ -136,7 +148,18 @@ private:
 	bool m_stopThread = false;
 // 	std::thread m_draw_thread;
 
-	void ThreadMain();
+	void ThreadMain()
+    {
+        while(!m_stopThread)
+        {
+            std::this_thread::sleep_for( std::chrono::seconds(1) );
+            if(m_draw)
+            {
+    // 			update();
+                m_draw = false;
+            }
+        }
+    }
     
     std::mutex m_mutex;
 

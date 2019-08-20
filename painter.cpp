@@ -26,24 +26,22 @@
  *
  */
 
-#include "painter.h"
-#include <sys/prctl.h>
+// #include "painter.h"
 
-using namespace svg;
+// using namespace svg;
 
-Painter::Painter(std::string name)
+// Painter::Painter(std::string name)
 //:m_draw_thread(),
 //m_nodes(v)
-{
+// {
 // 	m_nodes = &nodes;
-	m_dimesnions = new svg::Dimensions(100, 100);
-	m_doc = new svg::Document(name, svg::Layout(*m_dimesnions, svg::Layout::BottomLeft));
+	
 //     Start(v);
-}
+// }
 
 Painter::~Painter()
 {
-	m_stopThread = true;
+// 	m_stopThread = true;
 // 	if(m_draw_thread.joinable())
 // 		m_draw_thread.join();
 // 	std::cout << "Deconstruct " << __FILE__ << std::endl;
@@ -52,35 +50,27 @@ Painter::~Painter()
 void Painter::Start(/*std::vector<bs_ptr>const &v*/)
 {
 // 	m_draw_thread = std::thread(&Painter::ThreadMain, this);
-	char thread_name_buff [20];
-    sprintf(thread_name_buff, "Painter");
-    prctl(PR_SET_NAME,thread_name_buff,0,0,0);
+// 	char thread_name_buff [20];
+//     sprintf(thread_name_buff, "Painter");
+//     prctl(PR_SET_NAME,thread_name_buff,0,0,0);
 }
 
 void Painter::ThreadMain(/*std::vector<bs_ptr>const &v*/)
 {
-	while(!m_stopThread)
-	{
-		std::this_thread::sleep_for( std::chrono::seconds(1) );
-		if(m_draw)
-		{
-// 			update();
-			m_draw = false;
-		}
-	}
+	
 }
 
 void Painter::Enable()
 {
 //     m_nodes = v;
-	m_draw = true;
+// 	m_draw = true;
 // 	std::cout << "ready to draw!" << std::endl;
 }
 
 void Painter::add_to_draw_queue(std::shared_ptr<draw_object> dd)
 {
 // 	std::cout << "new draw object" << dd->x << ", " << dd->y << std::endl;
-	m_objects.push_back(dd);
+// 	m_objects.push_back(dd);
 // 	std::cout << "new draw object" << m_objects.back()->x << ", " << m_objects.back()->y << std::endl;
 }
 

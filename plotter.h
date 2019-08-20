@@ -60,8 +60,10 @@ public:
         plt::legend();
         if(grid)
             plt::grid(true);
-        plt::xlabel(xlabel);
-        plt::ylabel(ylabel);
+        std::map<std::string, std::string> attr;
+        attr.insert(std::make_pair("size", "22"));
+        plt::xlabel(xlabel, attr);
+        plt::ylabel(ylabel, attr);
         // Save the image (file format is determined by the extension)
         plt::save(name);
         plt::close();
