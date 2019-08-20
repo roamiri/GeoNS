@@ -18,7 +18,7 @@ typedef Simulator::observation_type S;
 typedef Simulator::action_type A;
 
 #define S_CARDINALITY           RLRC::stateSize
-#define A_CARDINALITY           RLRC::actionSize
+#define A_CARDINALITY           rl::problem::RC::actionSize
 #define TABULAR_Q_CARDINALITY   S_CARDINALITY*A_CARDINALITY
 #define TABULAR_Q_RANK(s,a)     (static_cast<int>(a)*S_CARDINALITY+s)
 
@@ -36,6 +36,7 @@ double grad_q_parametrized(const gsl_vector* theta, gsl_vector* grad_theta_sa, S
 #define paramALPHA      .05
 #define paramEPSILON    .55
 
+using namespace std::placeholders;
 /**
  * @todo Reinforcement Learning agent
  */
@@ -68,14 +69,19 @@ public:
     
     //TODO change it to multiple (wired and wireless) in main project
     Backhaul get_backhaul_Type(){return Backhaul::wireless;}
+
     
 private:
     std::vector<boost::shared_ptr<RLAgent>> m_load_BS;
+    
+    gsl_vector* m_theta;
     
     void ThreadMain()
     {
         ;
     }
+    
+    
     
 public:
     
@@ -85,6 +91,23 @@ public:
         char thread_name [20];
         sprintf(thread_name, "RLAgent_%d", getID());
         prctl(PR_SET_NAME, thread_name, 0,0,0);
+    }
+    
+    void UpdateQFunction()
+    {
+        m_theta = gsl_vector_alloc(TABULAR_Q_CARDINALITY);
+        auto action_begin = rl::enumerator<A>(rl::problem::RC::Action::action_50);
+        auto action_end = action_begin + rl::problem::RC::actionSize;
+        
+        auto q = std::bind(q_parametrized, m_theta, _1, _2);
+        auto critic = rl::gsl::q_learning<S,A>(m_theta,
+            paramGAMA, paramALPHA,
+            action_begin, action_end,
+            q_parametrized,
+            grad_q_parametrized);
+        gsl_vector_set_zero(m_theta);
+        //TODO experiment
+        gsl_vector_free(m_theta);
     }
 };
 
