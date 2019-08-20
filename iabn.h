@@ -73,7 +73,6 @@ class IABN : public Container<mmWaveBS>
     
 //     std::vector<bs_ptr> m_items;
 //     static std::shared_ptr<IDGenerator> m_idGenerator;
-		
     
 private:
     
