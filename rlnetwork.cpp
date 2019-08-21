@@ -115,5 +115,11 @@ int RLNetwork::node_count()
 
 void RLNetwork::train()
 {
-    
+    itt it;
+    for(it=m_items.begin();it!=m_items.end();++it)
+    {
+        rl_ptr agent = (*it);
+        std::cout << "updating \n";
+        agent->UpdateQFunction();
+    }
 }
