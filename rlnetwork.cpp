@@ -101,3 +101,19 @@ void RLNetwork::load_nodes(std::string f_name, bool fixed, int fixed_count, doub
         }
     }
 }
+
+int RLNetwork::node_count()
+{
+    int cnt = 0;
+    itt it;
+    for(it=m_items.begin(); it!=m_items.end();++it)
+    {
+        cnt++;
+    }
+    return cnt;
+}
+
+void RLNetwork::train()
+{
+    
+}

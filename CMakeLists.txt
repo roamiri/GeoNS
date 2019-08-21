@@ -16,7 +16,7 @@ set(SRC node.cpp trx.cpp mmwavebs.cpp iabn.cpp wsn.cpp rlnetwork.cpp)
 set(HDR common.h Signal.h painter.h plotter.h node.h trx.h mmwavebs.h container.h iabn.h wsn.h rlagent.h rlnetwork.h)
 
 
-add_executable(${PROJECT_NAME} dist_path_IAB.cpp ${SRC} ${HDR})
+add_executable(${PROJECT_NAME} RLRC.cpp ${SRC} ${HDR})
 
 target_link_libraries(${PROJECT_NAME} -lpthread -lpython2.7 -lboost_program_options GSL::gsl GSL::gslcblas)
 

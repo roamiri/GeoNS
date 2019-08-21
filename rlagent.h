@@ -22,12 +22,12 @@ typedef Simulator::action_type A;
 #define TABULAR_Q_CARDINALITY   S_CARDINALITY*A_CARDINALITY
 #define TABULAR_Q_RANK(s,a)     (static_cast<int>(a)*S_CARDINALITY+s)
 
-double q_parametrized(const gsl_vector* theta, S s, A a)
+static double q_parametrized(const gsl_vector* theta, S s, A a)
 {
     return gsl_vector_get(theta, TABULAR_Q_RANK(s,a));
 }
 
-double grad_q_parametrized(const gsl_vector* theta, gsl_vector* grad_theta_sa, S s, A a)
+static double grad_q_parametrized(const gsl_vector* theta, gsl_vector* grad_theta_sa, S s, A a)
 {
     return gsl_vector_set_basis(grad_theta_sa, TABULAR_Q_RANK(s,a));
 }
@@ -35,6 +35,8 @@ double grad_q_parametrized(const gsl_vector* theta, gsl_vector* grad_theta_sa, S
 #define paramGAMA       .99
 #define paramALPHA      .05
 #define paramEPSILON    .55
+
+#include "RL/rl_experiment.hpp"
 
 using namespace std::placeholders;
 /**
@@ -96,6 +98,8 @@ public:
     void UpdateQFunction()
     {
         m_theta = gsl_vector_alloc(TABULAR_Q_CARDINALITY);
+        std::random_device rd;
+        std::mt19937 gen(rd());
         auto action_begin = rl::enumerator<A>(rl::problem::RC::Action::action_50);
         auto action_end = action_begin + rl::problem::RC::actionSize;
         
@@ -107,6 +111,7 @@ public:
             grad_q_parametrized);
         gsl_vector_set_zero(m_theta);
         //TODO experiment
+        make_experiment(critic, q, gen);
         gsl_vector_free(m_theta);
     }
 };

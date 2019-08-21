@@ -29,6 +29,10 @@ public:
     void generate_nodes(double node_density, bool fixed, int fixed_count, double wired_fractoin) override;
     
     void load_nodes(std::string f_name, bool fixed, int fixed_count, double wired_fractoin) override;
+    
+    int node_count();
+    
+    void train();
 
 
 };

@@ -55,9 +55,9 @@ namespace rl
             class Param 
             {
             public:
-                double goalReward(){return 1;}
-                double stepReward(){return 0;}
-                double zeroReward(){return -1;}
+                double goalReward() const {return 1.;}
+                double stepReward() const {return 0.;}
+                double zeroReward() const {return -1.;}
             };
             
             template<typename DEG, typename PARAM>
@@ -114,7 +114,7 @@ namespace rl
             private:
                 void stepGoal()
                 {
-                    r = param.stepReward();
+                    r = param.goalReward();
                     throw rl::exception::Terminal("Goal State");
                 }
                 
