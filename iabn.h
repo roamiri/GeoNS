@@ -28,7 +28,7 @@ class IABN : public Container<mmWaveBS>
 {
     public:
         
-    IABN(std::string svg_name);
+    IABN();
 	~IABN();
 	
 	

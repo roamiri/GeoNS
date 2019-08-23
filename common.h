@@ -9,7 +9,7 @@
 #include <fstream>
 #include <boost/numeric/ublas/vector.hpp>
 #include <boost/numeric/ublas/io.hpp>
-
+// #include "idgenerator.h"
 
 static double in_bound = 100.0;
 static double out_bound = 200.0;
@@ -72,6 +72,16 @@ static void counter(int seconds)
 	clock_t endTurn = clock() + seconds * CLOCKS_PER_SEC;
 	while(clock() < endTurn){}
 }
+
+
+struct neighborhood_msg
+{
+    uint32_t id;
+    float x;
+    float y;
+    double range;
+    neighborhood_msg(uint32_t iidd, float xx, float yy, double r){id=iidd;x=xx; y=yy; range=r;}
+};
 
 struct update_parent_msg
 {

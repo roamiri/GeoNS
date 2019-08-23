@@ -88,8 +88,9 @@ int main(int argc, char** argv)
         b_draw = true;
     }
     
-    WSN wsn(svg_name);
+    WSN wsn();
     m_nextId = 0; //TODO fix the id generator 
+    wsn.create_svg(svg_name);
     
     // Generate data on a disk with radius r with poisson point process    
     double r = sqrt(1/M_PI)*sqrt(def_Area); // radius of the disk

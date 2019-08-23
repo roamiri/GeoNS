@@ -24,7 +24,7 @@ public:
     /**
      * Default constructor
      */
-    WSN(std::string svg_name);
+    WSN();
 
     /**
      * Destructor

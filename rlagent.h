@@ -9,15 +9,25 @@
 #include "RL/rl.hpp"
 #include <random>
 
-using RLRC = rl::problem::RC::Degree<3>;
+// class RLNetwork;
+// 
+// extern RLNetwork* _getNet;
+
+using RLRC = rl::problem::RC::Degree;
 using Param = rl::problem::RC::Param;
-using Simulator = rl::problem::RC::Simulator<RLRC, Param>;
+// using Simulator = RLNetwork<RLRC>;
+// using Simulator = rl::problem::RC::Simulator<RLRC, Param>;
 
-typedef Simulator::reward_type Reward;
-typedef Simulator::observation_type S;
-typedef Simulator::action_type A;
+typedef typename RLRC::phase_type     phase_type;
+typedef phase_type                   observation_type;
+typedef rl::problem::RC::Action      action_type;
+typedef double                       reward_type;
 
-#define S_CARDINALITY           RLRC::stateSize
+typedef reward_type Reward;
+typedef observation_type S;
+typedef action_type A;
+
+#define S_CARDINALITY           rl::problem::RC::Degree::stateSize
 #define A_CARDINALITY           rl::problem::RC::actionSize
 #define TABULAR_Q_CARDINALITY   S_CARDINALITY*A_CARDINALITY
 #define TABULAR_Q_RANK(s,a)     (static_cast<int>(a)*S_CARDINALITY+s)
@@ -32,16 +42,32 @@ static double grad_q_parametrized(const gsl_vector* theta, gsl_vector* grad_thet
     return gsl_vector_set_basis(grad_theta_sa, TABULAR_Q_RANK(s,a));
 }
 
+template<typename AITER, typename SCORES>
+double normalized_score(const S&s, const A& a, 
+                        AITER action_begin, AITER action_end,
+                        const SCORES& scores)
+{
+    double score = exp(scores(s,a));
+    double Z = 0.0;
+    for(auto ai=action_begin; ai!=action_end; ++ai)
+        Z += exp(scores(s,*ai));
+    return score/Z;
+}
+
 #define paramGAMA       .99
 #define paramALPHA      .05
 #define paramEPSILON    .55
 
-#include "RL/rl_experiment.hpp"
+#define NB_EPISODE              1000
+#define MAX_EPISODE_DURATION    100
+#define FRAME_PERIOD            25
+#define MIN_V                   -50
 
 using namespace std::placeholders;
 /**
  * @todo Reinforcement Learning agent
  */
+
 class RLAgent : public TRX
 {
 public:
@@ -54,12 +80,16 @@ public:
         set_carrier(28.0);
         m_route_SNR = 0.; 
         m_route_SINR = 0.;
+        m_theta_size = TABULAR_Q_CARDINALITY;
     }
 
     /**
      * Destructor
      */
-    ~RLAgent(){}
+    ~RLAgent()
+    {
+        gsl_vector_free(m_theta);
+    }
 
     void reset()
     {
@@ -71,12 +101,14 @@ public:
     
     //TODO change it to multiple (wired and wireless) in main project
     Backhaul get_backhaul_Type(){return Backhaul::wireless;}
-
+    
+    gsl_vector* get_theta(){return m_theta;}
+    
+    Signal<neighborhood_msg const &> neighbors;
     
 private:
     std::vector<boost::shared_ptr<RLAgent>> m_load_BS;
     
-    gsl_vector* m_theta;
     
     void ThreadMain()
     {
@@ -84,6 +116,30 @@ private:
     }
     
     
+    //Q-learning related parameters
+    gsl_vector* m_theta;
+    int m_theta_size;
+    phase_type m_current_state;
+    phase_type m_next_state;
+    Reward m_r;
+    rl::enumerator<A> m_A_start;
+    rl::enumerator<A> m_A_End;
+    std::random_device m_rd;
+    std::mt19937 m_generator;
+    
+    double m_epsilon;
+    double m_alpha;
+    double m_gamma;
+    
+    int m_episode;
+    int m_length;
+    int m_frame;
+    int m_max_length;
+    
+    // selected action iterator
+    action_type m_a;
+    
+//     auto m_critic;
     
 public:
     
@@ -95,26 +151,71 @@ public:
         prctl(PR_SET_NAME, thread_name, 0,0,0);
     }
     
-    void UpdateQFunction()
+    const observation_type& sense() const {return m_current_state;}
+    const action_type& get_action() const {return m_a;}
+    double get_trans_range();
+    
+    void restart()
     {
-        m_theta = gsl_vector_alloc(TABULAR_Q_CARDINALITY);
-        std::random_device rd;
-        std::mt19937 gen(rd());
-        auto action_begin = rl::enumerator<A>(rl::problem::RC::Action::action_50);
-        auto action_end = action_begin + rl::problem::RC::actionSize;
-        
-        auto q = std::bind(q_parametrized, m_theta, _1, _2);
-        auto critic = rl::gsl::q_learning<S,A>(m_theta,
-            paramGAMA, paramALPHA,
-            action_begin, action_end,
-            q_parametrized,
-            grad_q_parametrized);
-        gsl_vector_set_zero(m_theta);
-        //TODO experiment
-        make_experiment(critic, q, gen);
-        gsl_vector_free(m_theta);
+        setPhase(RLRC::zero);
     }
+                
+    void setPhase(const phase_type& s)
+    {
+        m_current_state = s;
+        if(s < RLRC::zero || s > RLRC::goal)
+        {
+            std::ostringstream ostr;
+            ostr << __FUNCTION__ << "( "<<  s << " )";
+            rl::problem::RC::BadState(ostr.str());
+        }
+    }
+    
+    reward_type reward() const {return m_r;}
+    
+    void timeStep(const action_type& a)
+    {
+        switch(m_current_state)
+        {
+            case(RLRC::goal):
+            stepGoal();
+            break;
+            
+//             case(RLRC::zero):
+//             stepZero(a);
+//             break;
+            
+            default:
+            step(a);
+            break;
+                
+        }
+    }
+                
+    void initRL();
+    void takeAction();
+    void setSR(phase_type s, reward_type r);
+    void episodic_learn();
+    void UpdateQFunction();
+//     void received_SR();
+    
+    
+private:
+    void stepGoal()
+    {
+        m_r = 1;
+        throw rl::exception::Terminal("Goal State");
+    }
+    
+    void stepZero(const action_type a)
+    {
+        m_current_state;
+        m_r;
+    }
+    
+    void step(const action_type a);
 };
 
 typedef boost::shared_ptr<RLAgent> rl_ptr;
+
 #endif // RLAGENT_H

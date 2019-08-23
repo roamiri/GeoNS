@@ -5,7 +5,6 @@
 #include "trx.h"
 #include "common.h"
 #include <boost/shared_ptr.hpp>
-
 /**
  * @todo write docs
  */

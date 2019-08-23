@@ -45,11 +45,15 @@ public:
     /**
      * Default constructor
      */
-    Container(std::string svg_name)
+    Container()
     {
         m_generator = std::mt19937(m_rd());
-        m_painter = new Painter(svg_name);
     //     m_painter->Start();
+    }
+    
+    void create_svg(std::string svg_name)
+    {
+        m_painter = new Painter(svg_name);
     }
 
     /**
@@ -78,6 +82,20 @@ public:
         if(results.size()>0) ans = false;
         
         return ans;
+    }
+    
+    int num_neighbors(double x, double y, double range)
+    {
+        // search for nearest neighbours
+        std::vector<value> results;
+        float xx = (float) x;
+        float yy = (float) y;
+        point sought(xx,yy);
+        m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < range;}),
+                    std::back_inserter(results));
+        int cnt = results.size();
+        
+        return cnt;
     }
     
     

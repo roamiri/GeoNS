@@ -1,17 +1,6 @@
-
 #include "rlnetwork.h"
 
-RLNetwork::RLNetwork(std::string svg_name)
-:Container(svg_name)
-{
-
-}
-
-RLNetwork::~RLNetwork()
-{
-
-}
-
+using stateSpace = rl::problem::RC::Degree;
 
 void RLNetwork::generate_nodes(double node_density, bool fixed, int fixed_count, double wired_fractoin)
 {
@@ -42,6 +31,7 @@ void RLNetwork::generate_nodes(double node_density, bool fixed, int fixed_count,
             BS.get()->setColor(0);
             m_tree.insert(std::make_pair(BS->get_loc(), BS)); //TODO maybe here!
             m_items.push_back(BS);
+            BS->neighbors.connect_member(this, &RLNetwork::neighbor_handler);
 //             BS.get()->update_parent.connect_member(this, &IABN::listen_For_parent_update);
 //             BS.get()->Start();
 // 			BS.get()->candidacy.connect_member(&manager, &IABN::listen_For_Candidacy);
@@ -50,6 +40,7 @@ void RLNetwork::generate_nodes(double node_density, bool fixed, int fixed_count,
         }
     }
 }
+
 
 void RLNetwork::load_nodes(std::string f_name, bool fixed, int fixed_count, double wired_fractoin)
 {
@@ -97,6 +88,7 @@ void RLNetwork::load_nodes(std::string f_name, bool fixed, int fixed_count, doub
             BS.get()->setColor(0);
             m_tree.insert(std::make_pair(BS->get_loc(), BS)); //TODO maybe here!
             m_items.push_back(BS);
+            BS->neighbors.connect_member(this, &RLNetwork::neighbor_handler);
 //          BS.get()->Start();
         }
     }
@@ -115,11 +107,84 @@ int RLNetwork::node_count()
 
 void RLNetwork::train()
 {
+    synchronous_learning(NB_EPISODE);
+}
+
+void RLNetwork::neighbor_handler(const neighborhood_msg& msg)
+{
+    uint32_t id = msg.id;
+    std::cout << "received from = " << id << "\n";
+    float x = msg.x;
+    float y = msg.y;
+    double range = msg.range;
+    int num = num_neighbors(x,y,range);
+    set_state(id,num);
+}
+
+void RLNetwork::set_state(uint32_t id, int num)
+{
     itt it;
-    for(it=m_items.begin();it!=m_items.end();++it)
+    for(it=m_items.begin(); it!=m_items.end();++it)
     {
-        rl_ptr agent = (*it);
-        std::cout << "updating \n";
-        agent->UpdateQFunction();
+        rl_ptr mb = (*it);
+        if(mb->getID()==id)
+        {
+            if(num>stateSpace::Kmax) num=stateSpace::Kmax;
+            stateSpace::DEG dd = static_cast<stateSpace::DEG>(num);
+            mb->setPhase(dd);
+        }
+    }
+}
+
+
+/** 
+ * Multi-Agent learning. 
+ * All agents select their actions, receive the reward and the new states, and learn synchronously controlled by the RLNetwork.
+ */
+void RLNetwork::synchronous_learning(int num_episodes)
+{
+    for(m_global_episode=0;m_global_episode<num_episodes;++m_global_episode)
+    {
+        std::cout << "running episode " << std::setw(6) << m_global_episode+1 << "/" << num_episodes << "   \r" << std::flush;
+        
+        itt it;
+        for(it=m_items.begin(); it!=m_items.end();++it)
+        {
+            rl_ptr agent = (*it);
+            agent->initRL();
+        }
+        
+        for(it=m_items.begin(); it!=m_items.end();++it)
+        {
+            rl_ptr agent = (*it);
+            agent->takeAction();
+        }
+        
+        for(it=m_items.begin(); it!=m_items.end();++it)
+        {
+            rl_ptr agent = (*it);
+            // find next state
+            double max_range = 200.;
+            double range = agent->get_trans_range();
+            int num = num_neighbors(agent->getX(),agent->getY(),range);
+            int KMAX = stateSpace::Kmax;
+            int KGOAL = static_cast<int>(stateSpace::goal);
+            if(num>KMAX) num=KMAX;
+            stateSpace::DEG dd = static_cast<stateSpace::DEG>(num);
+            //calculate reward
+            double r=0;
+            if(dd==KGOAL)
+                r = 1-range/max_range;
+            else
+                r = 1-range/max_range - dd/KGOAL;
+            
+            agent->setSR(dd, r);
+        }
+        
+        for(it=m_items.begin(); it!=m_items.end();++it)
+        {
+            rl_ptr agent = (*it);
+            agent->episodic_learn();
+        }
     }
 }

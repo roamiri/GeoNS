@@ -30,7 +30,7 @@
 
 namespace bm = boost::math;
 
-IABN::IABN(std::string svg_name): Container(svg_name)
+IABN::IABN(): Container()
 {
     gen_wired = std::mt19937(rd());
     gen_IAB = std::mt19937(rd());  //TODO is it independent from the above?

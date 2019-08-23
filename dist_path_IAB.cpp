@@ -145,9 +145,9 @@ int main(int argc, char** argv)
     
 //     std::shared_ptr<IDGenerator> _idGenerator = ;
     
-    IABN iabn(svg_name);
+    IABN iabn();
     m_nextId = 0; //TODO fix the id generator 
-    
+    iabn.create_svg(svg_name);
 //     std::shared_ptr<Painter> _painter = std::make_shared<Painter>(manager.m_items);
 //     _painter.get()->Start();
    

@@ -12,7 +12,6 @@
 #include "common.h"
 
 
-
 namespace po = boost::program_options;
 using namespace std;
 
@@ -52,29 +51,29 @@ int main(int argc, char** argv)
         i_file = vm["if"].as<string>();
     }
     
-    
     auto start = chrono::high_resolution_clock::now();
-    RLNetwork network(svg_name);
-    m_nextId = 0;
     
+    RLNetwork* global_ENV = new RLNetwork();
+    m_nextId = 0;
+    global_ENV->create_svg(svg_name);
     double r = sqrt(def_Area/M_PI);
-    network.set_center(r,r,r);
+    global_ENV->set_center(r,r,r);
     
     if(b_input)
-        network.load_nodes(i_file, false, 0, 0.);
+        global_ENV->load_nodes(i_file, false, 0, 0.);
     else
-        network.generate_nodes(node_desnity, false, 0, 0.);
+        global_ENV->generate_nodes(node_desnity, false, 0, 0.);
     
-    network.train();
+    global_ENV->train();
     
     
     
     auto finish = chrono::high_resolution_clock::now();
     chrono::duration<double> elapsed = finish-start;
     
-    cout << "Duration time = " << elapsed.count() << " seconds for " << network.node_count() << " nodes!" << endl;
+    cout << "Duration time = " << elapsed.count() << " seconds for " << global_ENV->node_count() << " nodes!" << endl;
     
     //TODO not sure about this function!
-    network.reset_pointers();
+    global_ENV->reset_pointers();
     return 0;
 }

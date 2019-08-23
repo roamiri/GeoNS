@@ -1,7 +1,7 @@
 
 #include "wsn.h"
 
-WSN::WSN(std::string svg_name):Container(svg_name)
+WSN::WSN():Container()
 {
 
 }
