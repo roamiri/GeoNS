@@ -54,9 +54,38 @@ double normalized_score(const S&s, const A& a,
     return score/Z;
 }
 
+template<typename AITER, typename SCORES>
+void print_greedy_policy(AITER action_begin, AITER action_end,
+			 const SCORES& scores) {
+  std::cout << "The greedy policy is depicted below. For each state, the greedy action\n     is displayed with a normalized score : exp(Q(s,a_greedy)) / sum_a exp(Q(s, a))\n\n";
+
+  auto policy = rl::policy::greedy(scores, action_begin, action_end);
+  int asize = rl::problem::RC::actionSize;
+  int ssize = RLRC::stateSize;
+  
+  for(int s = 0 ; s<ssize ; ++s) 
+  {
+      for(auto ai=action_begin; ai!=action_end; ++ai)
+      {
+        std::cout << " " << std::setfill(' ') << std::setw(5) << std::setprecision(3) <<
+        normalized_score(s, (*ai), action_begin, action_end, scores) << " ";
+//         scores(s,*ai) << " ";
+      }
+//     auto action = policy(s);
+//     for(int a = 0; a< asize; ++a) 
+//     {
+//       std::cout << " " << std::setfill(' ') << std::setw(5) << std::setprecision(3) <<
+//       scores()
+//       normalized_score(s, action, action_begin, action_end, scores) << " ";
+//     }
+    std::cout << std::endl;
+    
+  }
+}
+
 #define paramGAMA       .99
 #define paramALPHA      .2
-#define paramEPSILON    .4
+#define paramEPSILON    .2
 
 #define NB_EPISODE              1000
 #define MAX_EPISODE_DURATION    100
@@ -110,6 +139,7 @@ public:
     
     void add_to_neighbors(boost::shared_ptr<RLAgent> agent);
     std::vector<uint32_t> get_neighborsID();
+    int get_num_neighbors();
     
 private:
     std::vector<boost::shared_ptr<RLAgent>> m_neighbors;
@@ -189,11 +219,12 @@ public:
     }
                 
     void initRL();
-    void takeAction();
+    void takeAction(bool episodic);
     void takeGreedyAction();
     void setSR(phase_type s, reward_type r);
     void episodic_learn();
     void UpdateQFunction();
+    void print_policy();
 //     void received_SR();
     
     

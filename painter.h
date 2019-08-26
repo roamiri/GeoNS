@@ -156,6 +156,7 @@ void draw_neighbors(std::vector<boost::shared_ptr<T>>const &v)
         std::size_t blue = (color & 0x0000ff);
         // Drawing the nodes
         *m_doc << svg::Circle(svg::Point(x, y), 2, svg::Fill(svg::Color(red,green,blue)), svg::Stroke(1, svg::Color(red, green, blue)));
+        *m_doc << svg::Text(svg::Point(x, y+2), std::to_string(dd->get_num_neighbors()), svg::Fill(svg::Color(0,0,0)), svg::Font(2.,"Verdana"));
         std::vector<uint32_t> nn = dd->get_neighborsID();
         for(int j=0;j<nn.size();++j)
         {
@@ -163,7 +164,7 @@ void draw_neighbors(std::vector<boost::shared_ptr<T>>const &v)
             boost::shared_ptr<T> mmB = v[nn[j]-1];
             double xn = (0.1) * (mmB->getX()+x_shift);
             double yn = (0.1) * (mmB->getY()+y_shift);
-            *m_doc << svg::Line(svg::Point(x,y), svg::Point(xn,yn), svg::Stroke(0.5, svg::Color(0,0,BLUE)));
+            *m_doc << svg::Line(svg::Point(x,y), svg::Point(xn,yn), svg::Stroke(0.2, svg::Color(0,0,BLUE)));
         }
     }
     m_doc->save();

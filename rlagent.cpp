@@ -34,22 +34,30 @@ void RLAgent::setPhase(const phase_type& s)
 }
 
 // episodic learning with a goal state
-void RLAgent::takeAction()
+void RLAgent::takeAction(bool episodic)
 {
     auto q = std::bind(q_parametrized, m_theta, _1, _2);
     auto learning_policy = rl::policy::epsilon_greedy(q,m_epsilon,m_A_start, m_A_End, m_generator);
 //     auto s  = this->sense();
-    if(m_length<m_max_length)
+    if(episodic)
     {
-        m_a = learning_policy(m_current_state);
-        ++m_length;
+        if(m_length<m_max_length)
+        {
+            m_a = learning_policy(m_current_state);
+            ++m_length;
+        }
+        else
+        {
+            m_length=0;
+            ++m_episode;
+            restart();
+            m_a = learning_policy(m_current_state);
+        }
     }
     else
     {
-        m_length=0;
-        ++m_episode;
-        restart();
         m_a = learning_policy(m_current_state);
+        ++m_episode;
     }
 }
 
@@ -215,4 +223,16 @@ std::vector<uint32_t> RLAgent::get_neighborsID()
         result.push_back(bs->getID());
     }
     return result;
+}
+
+int RLAgent::get_num_neighbors()
+{
+    int ss = m_neighbors.size();
+    return ss;
+}
+
+void RLAgent::print_policy()
+{
+    auto q = std::bind(q_parametrized, m_theta, _1, _2);
+    print_greedy_policy(m_A_start, m_A_End, q);
 }

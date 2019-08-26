@@ -94,6 +94,7 @@ public:
         m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < range;}),
                     std::back_inserter(results));
         int cnt = results.size();
+        if(cnt>0) cnt--;
         
         return cnt;
     }

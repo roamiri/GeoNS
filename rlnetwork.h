@@ -47,6 +47,7 @@ void neighbor_handler(const neighborhood_msg& msg);
 void set_state(uint32_t id, int num);
 
 void synchronous_learning(int num_episodes);
+void synchronous_learning_1_Agent(int num_episodes);
 
 void k_connect(int round);
 

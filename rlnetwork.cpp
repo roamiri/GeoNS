@@ -157,7 +157,7 @@ void RLNetwork::synchronous_learning(int num_episodes)
         for(it=m_items.begin(); it!=m_items.end();++it)
         {
             rl_ptr agent = (*it);
-            agent->takeAction();
+            agent->takeAction(false);
         }
         
         double max_range = MAX_RANGE;
@@ -173,10 +173,10 @@ void RLNetwork::synchronous_learning(int num_episodes)
             stateSpace::DEG dd = static_cast<stateSpace::DEG>(num);
             //calculate reward
             double r=0;
-            if(dd==KGOAL)
-                r = 1;//-range/max_range;
+            if(dd==stateSpace::zero)
+                r = 0;//-range/max_range;
             else
-                r = 0;//1-range/max_range - dd/KGOAL;
+                r = exp(-pow(num-KGOAL,2));//1-range/max_range - dd/KGOAL;
             
             agent->setSR(dd, r);
         }
@@ -187,6 +187,44 @@ void RLNetwork::synchronous_learning(int num_episodes)
             agent->episodic_learn();
         }
     }
+}
+
+void RLNetwork::synchronous_learning_1_Agent(int num_episodes)
+{
+    itt it;
+    for(it=m_items.begin(); it!=m_items.end();++it)
+    {
+        rl_ptr agent = (*it);
+        agent->initRL();
+    }
+
+    it = m_items.begin();
+    rl_ptr agent = (*it);
+    for(m_global_episode=0;m_global_episode<num_episodes;++m_global_episode)
+    {
+        std::cout << "running episode " << std::setw(6) << m_global_episode+1 << "/" << num_episodes << "   \r" << std::flush;
+
+        agent->takeAction(false);
+        
+        double max_range = MAX_RANGE;
+        // find next state
+        double range = agent->get_trans_range();
+        int num = num_neighbors(agent->getX(),agent->getY(),range);
+        int KMAX = stateSpace::Kmax;
+        int KGOAL = static_cast<int>(stateSpace::goal);
+        if(num>KMAX) num=KMAX;
+        stateSpace::DEG dd = static_cast<stateSpace::DEG>(num);
+        //calculate reward
+        double r=0;
+        if(dd==stateSpace::zero)
+            r = 0;//-range/max_range;
+        else
+            r = exp(-pow(num-KGOAL,2));//1-range/max_range - dd/KGOAL;
+        
+        agent->setSR(dd, r);
+        agent->episodic_learn();
+    }
+    agent->print_policy();
 }
 
 /**
@@ -221,10 +259,10 @@ void RLNetwork::k_connect(int round)
             stateSpace::DEG dd = static_cast<stateSpace::DEG>(num);
             //calculate reward
             double r=0;
-            if(dd==KGOAL)
-                r = 1-range/max_range;
+            if(dd==stateSpace::zero)
+                r = 0;//-range/max_range;
             else
-                r = 1-range/max_range - dd/KGOAL;
+                r = exp(-pow(num-KGOAL,2));//1-range/max_range - dd/KGOAL;
             
             agent->setSR(dd, r);
             agent->UpdateQFunction();
@@ -232,7 +270,7 @@ void RLNetwork::k_connect(int round)
                 break;
             --round;
         }
-        set_neighbors(agent, agent->get_trans_range());
+        set_neighbors(agent,agent->get_trans_range());
     }
 }
 
