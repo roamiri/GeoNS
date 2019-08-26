@@ -98,7 +98,6 @@ public:
         return cnt;
     }
     
-    
     void draw_svg(bool b)
     {
         if(b) m_painter->update<T>(m_items);

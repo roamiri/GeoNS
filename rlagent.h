@@ -55,13 +55,15 @@ double normalized_score(const S&s, const A& a,
 }
 
 #define paramGAMA       .99
-#define paramALPHA      .05
-#define paramEPSILON    .55
+#define paramALPHA      .2
+#define paramEPSILON    .4
 
 #define NB_EPISODE              1000
 #define MAX_EPISODE_DURATION    100
 #define FRAME_PERIOD            25
 #define MIN_V                   -50
+
+#define MAX_RANGE 200.
 
 using namespace std::placeholders;
 /**
@@ -106,8 +108,11 @@ public:
     
     Signal<neighborhood_msg const &> neighbors;
     
+    void add_to_neighbors(boost::shared_ptr<RLAgent> agent);
+    std::vector<uint32_t> get_neighborsID();
+    
 private:
-    std::vector<boost::shared_ptr<RLAgent>> m_load_BS;
+    std::vector<boost::shared_ptr<RLAgent>> m_neighbors;
     
     
     void ThreadMain()
@@ -160,16 +165,7 @@ public:
         setPhase(RLRC::zero);
     }
                 
-    void setPhase(const phase_type& s)
-    {
-        m_current_state = s;
-        if(s < RLRC::zero || s > RLRC::goal)
-        {
-            std::ostringstream ostr;
-            ostr << __FUNCTION__ << "( "<<  s << " )";
-            rl::problem::RC::BadState(ostr.str());
-        }
-    }
+    void setPhase(const phase_type& s);
     
     reward_type reward() const {return m_r;}
     
@@ -194,6 +190,7 @@ public:
                 
     void initRL();
     void takeAction();
+    void takeGreedyAction();
     void setSR(phase_type s, reward_type r);
     void episodic_learn();
     void UpdateQFunction();

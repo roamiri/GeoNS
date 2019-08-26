@@ -20,15 +20,18 @@ int main(int argc, char** argv)
 {
     
     string svg_name = "test";
+    bool bdraw = false;
     bool b_input = false;
     string i_file;
     double node_desnity = def_lambda_SBS;
+    int nb_episode = 100;
     
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help", "Use the following flags to input the required parameters.")
         ("if", po::value<string>(), "input file")
         ("svg", po::value<string>(), "Topology SVG output file name")
+        ("episode", po::value<int>(), "Number of training episodes")
         ;
         
         
@@ -43,12 +46,20 @@ int main(int argc, char** argv)
     }
     
     if(vm.count("svg"))
-        svg_name = vm["svg"].as<string>();
+    {
+        svg_name = vm["svg"].as<string>()+".svg";
+        bdraw = true;
+    }
     
     if(vm.count("if"))
     {
         b_input = true;
         i_file = vm["if"].as<string>();
+    }
+    
+    if(vm.count("episode"))
+    {
+        nb_episode = vm["episode"].as<int>();
     }
     
     auto start = chrono::high_resolution_clock::now();
@@ -64,8 +75,11 @@ int main(int argc, char** argv)
     else
         global_ENV->generate_nodes(node_desnity, false, 0, 0.);
     
-    global_ENV->train();
+    global_ENV->train(nb_episode);
     
+    global_ENV->k_connect(10);
+    
+    global_ENV->draw_neighbors(bdraw);
     
     
     auto finish = chrono::high_resolution_clock::now();

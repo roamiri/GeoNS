@@ -22,6 +22,16 @@ void RLAgent::initRL()
     restart();
 }
 
+void RLAgent::setPhase(const phase_type& s)
+{
+    m_current_state = s;
+    if(s < RLRC::zero || s > RLRC::Kmax)
+    {
+        std::ostringstream ostr;
+        ostr << __FUNCTION__ << "( "<<  s << " )";
+        rl::problem::RC::BadState(ostr.str());
+    }
+}
 
 // episodic learning with a goal state
 void RLAgent::takeAction()
@@ -43,6 +53,13 @@ void RLAgent::takeAction()
     }
 }
 
+void RLAgent::takeGreedyAction()
+{
+    auto q = std::bind(q_parametrized, m_theta, _1, _2);
+    auto policy = rl::policy::greedy(q, m_A_start, m_A_End);
+    m_a = policy(m_current_state);
+}
+
 
 void RLAgent::setSR(phase_type s, reward_type r)
 {
@@ -52,7 +69,6 @@ void RLAgent::setSR(phase_type s, reward_type r)
 
 void RLAgent::episodic_learn()
 {
-    auto q = std::bind(q_parametrized, m_theta, _1, _2);
     auto critic = rl::gsl::q_learning<S,A>(m_theta,
             m_gamma, m_alpha,
             m_A_start, m_A_End,
@@ -72,6 +88,18 @@ void RLAgent::episodic_learn()
     }   
 }
 
+void RLAgent::UpdateQFunction()
+{
+    auto q = std::bind(q_parametrized, m_theta, _1, _2);
+    auto critic = rl::gsl::q_learning<S,A>(m_theta, m_gamma, m_alpha, m_A_start, m_A_End, q_parametrized, grad_q_parametrized);
+    if(m_next_state==stateSpace::DEG::goal)
+        critic.learn(m_current_state, m_a, reward());
+    else
+    {
+        critic.learn(m_current_state, m_a, reward(), m_next_state);
+    }
+    setPhase(m_next_state); //TODO not sure, check it.
+}
 
 // void RLAgent::UpdateQFunction()
 // {
@@ -157,4 +185,34 @@ void RLAgent::step(const action_type a)
 //     }
 // 
 //     m_r;
+}
+
+void RLAgent::add_to_neighbors(boost::shared_ptr<RLAgent> agent)
+{
+    bool found = false;
+    std::vector<boost::shared_ptr<RLAgent>>::iterator it;
+    for(it=m_neighbors.begin(); it!=m_neighbors.end();++it)
+    {
+        rl_ptr bs = (*it);
+        if(bs->getID()==agent->getID())
+        {found = true; break;}
+    }
+    
+    if(!found)
+    {
+        m_neighbors.push_back(agent);
+    }
+
+}
+
+std::vector<uint32_t> RLAgent::get_neighborsID()
+{
+    std::vector<uint32_t> result;
+    std::vector<boost::shared_ptr<RLAgent>>::iterator it;
+    for(it=m_neighbors.begin(); it!=m_neighbors.end();++it)
+    {
+        rl_ptr bs = (*it);
+        result.push_back(bs->getID());
+    }
+    return result;
 }

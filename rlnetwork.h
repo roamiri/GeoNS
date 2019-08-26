@@ -40,7 +40,7 @@ void load_nodes(std::string f_name, bool fixed, int fixed_count, double wired_fr
 
 int node_count();
 
-void train();
+void train(int nb_episode);
 
 void neighbor_handler(const neighborhood_msg& msg);
 
@@ -48,6 +48,10 @@ void set_state(uint32_t id, int num);
 
 void synchronous_learning(int num_episodes);
 
+void k_connect(int round);
+
+void set_neighbors(rl_ptr agent, double range);
+void draw_neighbors(bool bdraw);
 
 private:
     int m_global_episode;

@@ -105,9 +105,9 @@ int RLNetwork::node_count()
     return cnt;
 }
 
-void RLNetwork::train()
+void RLNetwork::train(int nb_episode)
 {
-    synchronous_learning(NB_EPISODE);
+    synchronous_learning(nb_episode);
 }
 
 void RLNetwork::neighbor_handler(const neighborhood_msg& msg)
@@ -143,32 +143,80 @@ void RLNetwork::set_state(uint32_t id, int num)
  */
 void RLNetwork::synchronous_learning(int num_episodes)
 {
+    itt it;
+    for(it=m_items.begin(); it!=m_items.end();++it)
+    {
+        rl_ptr agent = (*it);
+        agent->initRL();
+    }
+
     for(m_global_episode=0;m_global_episode<num_episodes;++m_global_episode)
     {
         std::cout << "running episode " << std::setw(6) << m_global_episode+1 << "/" << num_episodes << "   \r" << std::flush;
-        
-        itt it;
-        for(it=m_items.begin(); it!=m_items.end();++it)
-        {
-            rl_ptr agent = (*it);
-            agent->initRL();
-        }
-        
+
         for(it=m_items.begin(); it!=m_items.end();++it)
         {
             rl_ptr agent = (*it);
             agent->takeAction();
         }
         
+        double max_range = MAX_RANGE;
         for(it=m_items.begin(); it!=m_items.end();++it)
         {
             rl_ptr agent = (*it);
             // find next state
-            double max_range = 200.;
             double range = agent->get_trans_range();
             int num = num_neighbors(agent->getX(),agent->getY(),range);
             int KMAX = stateSpace::Kmax;
             int KGOAL = static_cast<int>(stateSpace::goal);
+            if(num>KMAX) num=KMAX;
+            stateSpace::DEG dd = static_cast<stateSpace::DEG>(num);
+            //calculate reward
+            double r=0;
+            if(dd==KGOAL)
+                r = 1;//-range/max_range;
+            else
+                r = 0;//1-range/max_range - dd/KGOAL;
+            
+            agent->setSR(dd, r);
+        }
+        
+        for(it=m_items.begin(); it!=m_items.end();++it)
+        {
+            rl_ptr agent = (*it);
+            agent->episodic_learn();
+        }
+    }
+}
+
+/**
+ * Runs Q-learning for #round to obtain connectivity for each node
+ */
+void RLNetwork::k_connect(int round)
+{
+    itt it;
+    double max_range = MAX_RANGE;
+    int KGOAL = static_cast<int>(stateSpace::DEG::goal);
+    for(it=m_items.begin(); it!=m_items.end();++it)
+    {
+        rl_ptr agent = (*it);
+        // Figure out state of agent for maximum transmission range
+        int num = num_neighbors(agent->getX(),agent->getY(),max_range);
+        int KMAX = stateSpace::Kmax;
+        if(num>KMAX) num=KMAX;
+        stateSpace::DEG dd = static_cast<stateSpace::DEG>(num);
+        agent->setPhase(dd);
+    }
+    
+    for(it=m_items.begin();it!=m_items.end();++it)
+    {
+        rl_ptr agent = (*it);
+        while(round>0)
+        {
+            agent->takeGreedyAction();
+            double range = agent->get_trans_range();
+            int num = num_neighbors(agent->getX(),agent->getY(),range);
+            int KMAX = stateSpace::Kmax;
             if(num>KMAX) num=KMAX;
             stateSpace::DEG dd = static_cast<stateSpace::DEG>(num);
             //calculate reward
@@ -179,12 +227,37 @@ void RLNetwork::synchronous_learning(int num_episodes)
                 r = 1-range/max_range - dd/KGOAL;
             
             agent->setSR(dd, r);
+            agent->UpdateQFunction();
+            if(dd==stateSpace::DEG::goal)
+                break;
+            --round;
         }
-        
-        for(it=m_items.begin(); it!=m_items.end();++it)
-        {
-            rl_ptr agent = (*it);
-            agent->episodic_learn();
-        }
+        set_neighbors(agent, agent->get_trans_range());
+    }
+}
+
+
+void RLNetwork::set_neighbors(rl_ptr agent, double range)
+{
+    // search for nearest neighbours
+    std::vector<value> results;
+    float xx = (float) agent->getX();
+    float yy = (float) agent->getY();
+    point sought(xx,yy);
+    m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < range;}),std::back_inserter(results));
+    
+    BOOST_FOREACH(value const&v, results)
+    {
+        rl_ptr bs = boost::dynamic_pointer_cast<RLAgent>(v.second);
+        if(agent->getID()!=bs->getID())
+            agent->add_to_neighbors(bs);
+    }
+}
+
+void RLNetwork::draw_neighbors(bool bdraw)
+{
+    if(bdraw)
+    {
+        m_painter->draw_neighbors<RLAgent>(m_items);
     }
 }

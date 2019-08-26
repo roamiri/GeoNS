@@ -135,6 +135,39 @@ public:
         }
         m_doc->save();
     }
+    
+    
+template<class T>
+void draw_neighbors(std::vector<boost::shared_ptr<T>>const &v)
+{
+    int size = v.size();
+    double x_shift = 0.;
+    double y_shift = 0.;
+    std::lock_guard<std::mutex> guard(m_mutex);
+    for(int i=0;i<size;i++)
+    {
+        boost::shared_ptr<T> dd = v[i];
+        double x = (0.1) * (dd.get()->getX() + x_shift);
+        double y = (0.1) * (dd.get()->getY() + y_shift);
+    
+        std::size_t color = dd.get()->getColor();
+        std::size_t red = (color & 0xff0000) >> 16; 
+        std::size_t green =(color & 0x00ff00) >> 8; 
+        std::size_t blue = (color & 0x0000ff);
+        // Drawing the nodes
+        *m_doc << svg::Circle(svg::Point(x, y), 2, svg::Fill(svg::Color(red,green,blue)), svg::Stroke(1, svg::Color(red, green, blue)));
+        std::vector<uint32_t> nn = dd->get_neighborsID();
+        for(int j=0;j<nn.size();++j)
+        {
+            // Drawing paths
+            boost::shared_ptr<T> mmB = v[nn[j]-1];
+            double xn = (0.1) * (mmB->getX()+x_shift);
+            double yn = (0.1) * (mmB->getY()+y_shift);
+            *m_doc << svg::Line(svg::Point(x,y), svg::Point(xn,yn), svg::Stroke(0.5, svg::Color(0,0,BLUE)));
+        }
+    }
+    m_doc->save();
+}
 private:
 	
 	std::vector<std::shared_ptr<draw_object>> m_objects;
