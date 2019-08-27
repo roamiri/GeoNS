@@ -100,7 +100,12 @@ int main(int argc, char** argv)
     else
         wsn.generate_nodes(node_density, false, 0, wired_fractoin);
     
-    wsn.draw_svg(b_draw);
+    
+    std::this_thread::sleep_for( std::chrono::seconds(20) );
+    
+    wsn.draw_clusters(b_draw);
+    
+    wsn.save("clusters.csv");
     
     auto finish = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = finish - start;

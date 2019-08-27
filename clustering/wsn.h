@@ -41,6 +41,9 @@ public:
     
     void load_nodes(std::string f_name, bool fixed, int fixed_count, double wired_fractoin);
     
+    void save(std::string f_name);
+    
+    void draw_clusters(bool b);
 private:
     std::mutex m_mutex;
 

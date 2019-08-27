@@ -168,6 +168,32 @@ void draw_neighbors(std::vector<boost::shared_ptr<T>>const &v)
     }
     m_doc->save();
 }
+
+template<typename T>
+void draw_clusters(std::vector<boost::shared_ptr<T>>const &v)
+{
+    int size = v.size();
+	for(int i=0;i<size;i++)
+	{
+		boost::shared_ptr<T> dd = v[i];
+		double x = (0.1) * dd.get()->getX();
+		double y = (0.1) * dd.get()->getY();
+	
+		std::size_t color = dd.get()->getColor();
+		std::size_t red = (color & 0xff0000) >> 16; 
+		std::size_t green =(color & 0x00ff00) >> 8; 
+		std::size_t blue = (color & 0x0000ff);  	
+// 		std::cout << "Status = " << dd.get()->getStatus() << std::endl;
+		if(dd.get()->getStatus()==Status::clusterHead)
+			*m_doc << svg::Circle(svg::Point(x, y), 2, svg::Fill(svg::Color(0,0,0)), svg::Stroke(1, svg::Color(red,green,blue)));
+		else
+			*m_doc << svg::Circle(svg::Point(x, y), 2, svg::Fill(svg::Color(red,green,blue)), svg::Stroke(1, svg::Color(red, green, blue)));
+		
+		m_doc->save();
+	}
+}
+
+
 private:
 	
 	std::vector<std::shared_ptr<draw_object>> m_objects;

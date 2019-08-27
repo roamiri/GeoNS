@@ -163,11 +163,10 @@ void WSN::generate_nodes(double node_density, bool fixed, int fixed_count, doubl
             BS.get()->setColor(0);
             m_tree.insert(std::make_pair(BS->get_loc(), BS)); //TODO maybe here!
             m_items.push_back(BS);
-//             BS.get()->update_parent.connect_member(this, &IABN::listen_For_parent_update);
-//             BS.get()->Start();
-// 			BS.get()->candidacy.connect_member(&manager, &IABN::listen_For_Candidacy);
-// 			BS.get()->clusterHead.connect_member(&manager, &IABN::listen_For_ClusterHead);
-// 			BS.get()->conflict.connect_member(&manager, &IABN::listen_For_Conflict);
+            BS.get()->Start();
+			BS.get()->candidacy.connect_member(this, &WSN::listen_For_Candidacy);
+			BS.get()->clusterHead.connect_member(this, &WSN::listen_For_ClusterHead);
+			BS.get()->conflict.connect_member(this, &WSN::listen_For_Conflict);
         }
     }
 }
@@ -218,10 +217,42 @@ void WSN::load_nodes(std::string f_name, bool fixed, int fixed_count, double wir
             BS.get()->setColor(0);
             m_tree.insert(std::make_pair(BS->get_loc(), BS)); //TODO maybe here!
             m_items.push_back(BS);
-//          BS.get()->Start();
+            BS.get()->Start();
 			BS.get()->candidacy.connect_member(this, &WSN::listen_For_Candidacy);
 			BS.get()->clusterHead.connect_member(this, &WSN::listen_For_ClusterHead);
 			BS.get()->conflict.connect_member(this, &WSN::listen_For_Conflict);
         }
     }
+}
+
+
+void WSN::save(std::string f_name)
+{
+    std::ofstream output_file(f_name);
+    itt it;
+    for(it=m_items.begin(); it!=m_items.end();++it)
+    {
+        boost::shared_ptr<wSensor> mmB = (*it);
+        if(mmB.get()->getStatus()==Status::clusterHead)
+        {
+            uint32_t cid = mmB.get()->getClusterID();
+            output_file << mmB.get()->getX() << "," << mmB.get()->getY() << ",";
+            itt it2;
+            for(it2=m_items.begin(); it2!=m_items.end();++it2)
+            {
+                boost::shared_ptr<wSensor> mmB2 = (*it2);
+                if(mmB2.get()->getClusterID() == cid)
+                {
+                    output_file << mmB2.get()->getX() << "," << mmB2.get()->getY() << ",";
+                }
+            }
+            output_file << std::endl;
+        }
+    }
+}
+
+
+void WSN::draw_clusters(bool b)
+{
+    if(b) m_painter->draw_clusters<wSensor>(m_items);
 }
