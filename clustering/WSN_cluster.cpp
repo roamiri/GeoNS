@@ -1,5 +1,4 @@
 
-#include "Signal.h"
 #include <iostream>
 #include <thread>
 #include <chrono>
@@ -13,12 +12,11 @@
 #include <boost/program_options.hpp>
 
 
+#include "Signal.h"
 #include "plotter.h"
-// #include "painter.h"
 #include "wsn.h"
 #include "wsensor.h"
 
-#include "RL/rl.hpp"
 
 
 namespace po = boost::program_options;
@@ -88,7 +86,7 @@ int main(int argc, char** argv)
         b_draw = true;
     }
     
-    WSN wsn();
+    WSN wsn;
     m_nextId = 0; //TODO fix the id generator 
     wsn.create_svg(svg_name);
     

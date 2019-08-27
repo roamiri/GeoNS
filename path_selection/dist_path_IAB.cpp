@@ -15,11 +15,8 @@
 #include <boost/program_options.hpp>
 
 #include "iabn.h"
-// #include "mmwavebs.h"
-// #include "painter.h"
-// #include "ppunfix5.h"
 #include "plotter.h"
-// #include "idgenerator.h"
+
 
 // using namespace boost::numeric::ublas;
 
@@ -145,7 +142,7 @@ int main(int argc, char** argv)
     
 //     std::shared_ptr<IDGenerator> _idGenerator = ;
     
-    IABN iabn();
+    IABN iabn;
     m_nextId = 0; //TODO fix the id generator 
     iabn.create_svg(svg_name);
 //     std::shared_ptr<Painter> _painter = std::make_shared<Painter>(manager.m_items);

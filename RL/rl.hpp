@@ -42,11 +42,6 @@
 #include <rlTD.hpp>
 // #include <rlActorCritic.hpp>
 #include <rlTypes.hpp>
-
-// #include <rl-boyan-chain.hpp>
-// #include <rl-mountain-car.hpp>
-// #include <rl-inverted-pendulum.hpp>
-#include <rl-cliff-walking.hpp>
 #include <rl_range_control.hpp>
 // #include <rl-garnet.hpp>
 

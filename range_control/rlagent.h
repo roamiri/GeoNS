@@ -6,7 +6,7 @@
 
 #include "trx.h"
 #include "common.h"
-#include "RL/rl.hpp"
+#include "rl.hpp"
 #include <random>
 
 // class RLNetwork;

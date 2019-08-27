@@ -12,7 +12,6 @@
 #include <boost/pointer_cast.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "mmwavebs.h"
 #include "common.h"
 #include "node.h"
 #include "painter.h"

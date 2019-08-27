@@ -15,17 +15,18 @@
  *
  */
 
-#include "iabn.h"
 #include <math.h>
 #include <limits>
 #include <random>
-#include "common.h"
 #include "boost/math/special_functions/log1p.hpp"
 #include <algorithm>
 #include <iterator>
 #include <bits/stdc++.h> 
 #include <fstream>
 #include <sstream>
+
+#include "iabn.h"
+#include "common.h"
 #include "painter.h"
 
 namespace bm = boost::math;
