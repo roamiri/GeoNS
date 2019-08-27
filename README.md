@@ -1,2 +1,2 @@
 # mmWave_IAB
-Millimeter Wave Integrated Access and Backhaul
+Reinforcement Learning platform for wireless communications
