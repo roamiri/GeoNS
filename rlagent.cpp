@@ -166,7 +166,9 @@ void RLAgent::UpdateQFunction()
 double RLAgent::get_trans_range()
 {
     double dum = static_cast<double>(m_a);
-    dum *= 50;
+    int steps = A_CARDINALITY-1;
+    double coef = MAX_RANGE/(steps);
+    dum *= coef;
     return dum;
 }
 
@@ -209,7 +211,7 @@ void RLAgent::add_to_neighbors(boost::shared_ptr<RLAgent> agent)
     if(!found)
     {
         m_neighbors.push_back(agent);
-    }
+    } 
 
 }
 
@@ -231,8 +233,8 @@ int RLAgent::get_num_neighbors()
     return ss;
 }
 
-void RLAgent::print_policy()
+void RLAgent::print_policy(O_POLICY p)
 {
     auto q = std::bind(q_parametrized, m_theta, _1, _2);
-    print_greedy_policy(m_A_start, m_A_End, q);
+    print_greedy_policy(m_A_start, m_A_End, q, p);
 }

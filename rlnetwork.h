@@ -54,6 +54,8 @@ void k_connect(int round);
 void set_neighbors(rl_ptr agent, double range);
 void draw_neighbors(bool bdraw);
 
+void print_Q_function(uint32_t id, O_POLICY op);
+
 private:
     int m_global_episode;
 

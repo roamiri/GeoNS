@@ -15,14 +15,13 @@ namespace rl
             // Action Space //TODO make it template based or variable size!
             enum class Action
             {
-                action_00 = 0,
-                action_50 = 1,
-                action_100 = 2,
-                action_150 = 3,
-                action_200 = 4
+                action_00 = 0, action_20 = 1, action_40 = 2,
+                action_60 = 3, action_80 = 4, action_100 = 5,
+                action_120 = 6, action_140 = 7, action_160 = 8,
+                action_180 = 9, action_200 = 10
             };
             
-            constexpr int actionSize = 5;
+            constexpr int actionSize = 11;
             
             // check action and state consistency
             
@@ -43,7 +42,7 @@ namespace rl
             class Degree  // Degree of node connectivity
             {
             public:
-            const static int Kmax = 10;
+            const static int Kmax = 20;
             enum DEG
             {
                 stateSize = Kmax+1,  // the number of states 

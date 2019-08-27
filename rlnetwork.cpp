@@ -224,7 +224,7 @@ void RLNetwork::synchronous_learning_1_Agent(int num_episodes)
         agent->setSR(dd, r);
         agent->episodic_learn();
     }
-    agent->print_policy();
+    agent->print_policy(O_POLICY::softmax);
 }
 
 /**
@@ -272,6 +272,7 @@ void RLNetwork::k_connect(int round)
         }
         set_neighbors(agent,agent->get_trans_range());
     }
+    
 }
 
 
@@ -299,3 +300,12 @@ void RLNetwork::draw_neighbors(bool bdraw)
         m_painter->draw_neighbors<RLAgent>(m_items);
     }
 }
+
+void RLNetwork::print_Q_function(uint32_t id, O_POLICY op)
+{
+    m_items[id-1]->print_policy(op);
+}
+
+
+
+

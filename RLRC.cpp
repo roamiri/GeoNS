@@ -25,13 +25,16 @@ int main(int argc, char** argv)
     string i_file;
     double node_desnity = def_lambda_SBS;
     int nb_episode = 100;
+    uint32_t Q_id = 1;
+    bool bQ = false;
     
     po::options_description desc("Allowed options");
     desc.add_options()
         ("help", "Use the following flags to input the required parameters.")
         ("if", po::value<string>(), "input file")
         ("svg", po::value<string>(), "Topology SVG output file name")
-        ("episode", po::value<int>(), "Number of training episodes")
+        ("episode", po::value<double>(), "Number of training episodes")
+        ("Q", po::value<uint32_t>(), "node id to print Q-function in softmax")
         ;
         
         
@@ -59,7 +62,13 @@ int main(int argc, char** argv)
     
     if(vm.count("episode"))
     {
-        nb_episode = vm["episode"].as<int>();
+        nb_episode = vm["episode"].as<double>();
+    } 
+    
+    if(vm.count("Q"))
+    {
+        Q_id = vm["Q"].as<uint32_t>();
+        bQ = true;
     }
     
     auto start = chrono::high_resolution_clock::now();
@@ -81,6 +90,7 @@ int main(int argc, char** argv)
     
     global_ENV->draw_neighbors(bdraw);
     
+    if(bQ) global_ENV->print_Q_function(Q_id, O_POLICY::softmax);
     
     auto finish = chrono::high_resolution_clock::now();
     chrono::duration<double> elapsed = finish-start;
