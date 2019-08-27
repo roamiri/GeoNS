@@ -1,3 +1,5 @@
 # SONS
-Self Organizing Network Simulator \n
+
+Self Organizing Network Simulator
+
 Reinforcement Learning platform for wireless communications
