@@ -13,7 +13,7 @@
 
 
 #include "Signal.h"
-#include "plotter.h"
+// #include "plotter.h"
 #include "wsn.h"
 #include "wsensor.h"
 

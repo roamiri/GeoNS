@@ -44,7 +44,6 @@ void RLNetwork::generate_nodes(double node_density, bool fixed, int fixed_count,
     }
 }
 
-
 void RLNetwork::load_nodes(std::string f_name, bool fixed, int fixed_count, double wired_fractoin)
 {
     int num_nodes =0;
@@ -93,6 +92,10 @@ void RLNetwork::load_nodes(std::string f_name, bool fixed, int fixed_count, doub
             m_items.push_back(BS);
             BS->neighbors.connect_member(this, &RLNetwork::neighbor_handler);
 //          BS.get()->Start();
+            initiRL.connect_member(BS.get(), &RLAgent::receive_init_RL);
+            newSR.connect_member(BS.get(), &RLAgent::receive_SR);
+            BS->neighbors.connect_member(this, &RLNetwork::neighbor_handler);
+            BS->finished.connect_member(this, &RLNetwork::finish_training);
         }
     }
 }
@@ -108,9 +111,15 @@ int RLNetwork::node_count()
     return cnt;
 }
 
-void RLNetwork::train(int nb_episode)
+void RLNetwork::train(bool sync, int nb_episode)
 {
-    Asynchronous_learning(nb_episode);
+    if(sync)
+    {
+        synchronous_learning(nb_episode);
+        b_ready= true;
+    }
+    else 
+        Asynchronous_learning(nb_episode);
 }
 
 void RLNetwork::neighbor_handler(const neighborhood_msg& msg)

@@ -27,6 +27,7 @@ int main(int argc, char** argv)
     int nb_episode = 100;
     uint32_t Q_id = 1;
     bool bQ = false;
+    bool bsync = true;
     
     po::options_description desc("Allowed options");
     desc.add_options()
@@ -34,6 +35,7 @@ int main(int argc, char** argv)
         ("if", po::value<string>(), "input file")
         ("svg", po::value<string>(), "Topology SVG output file name")
         ("episode", po::value<double>(), "Number of training episodes")
+        ("sync", po::value<bool>(), "Synchronous (1) or Asynchronous (0) learning")
         ("Q", po::value<uint32_t>(), "node id to print Q-function in softmax")
         ;
         
@@ -65,6 +67,13 @@ int main(int argc, char** argv)
         nb_episode = vm["episode"].as<double>();
     } 
     
+    if(vm.count("sync"))
+    {
+        bsync = vm["sync"].as<bool>();
+        std::cout << "sync learning = " <<bsync << std::endl;
+    }
+    
+    
     if(vm.count("Q"))
     {
         Q_id = vm["Q"].as<uint32_t>();
@@ -84,7 +93,7 @@ int main(int argc, char** argv)
     else
         global_ENV->generate_nodes(node_desnity, false, 0, 0.);
     
-    global_ENV->train(nb_episode);
+    global_ENV->train(bsync , nb_episode);
     
     while(!global_ENV->isNetworkReady())
     {

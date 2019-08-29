@@ -256,6 +256,8 @@ int main(int argc, char** argv)
     std::string name = plot_name;
     name = name + ".txt";
     save1DArrayasText(CDF_Hop_vec, CDF_Hop_vec.size(), name);
+    save1DArrayasText(vec_SNR_bottleneck, vec_SNR_bottleneck.size(), name, "SNR");
+    save1DArrayasText(vec_SINR_bottleneck, vec_SINR_bottleneck.size(), name, "SINR");
 //     save1DArrayasText(vec_SNR_bottleneck, vec_SNR_bottleneck.size(), name);
     
     if(bPlot)

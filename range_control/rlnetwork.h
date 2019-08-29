@@ -42,7 +42,7 @@ void load_nodes(std::string f_name, bool fixed, int fixed_count, double wired_fr
 
 int node_count();
 
-void train(int nb_episode);
+void train(bool sync, int nb_episode);
 
 
 void set_state(uint32_t id, int num);

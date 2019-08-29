@@ -155,17 +155,25 @@ static std::size_t generateColor()
 static void save1DArrayasText(boost::numeric::ublas::vector<double> array, int size, std::string name)
 {
     std::ofstream test;
-    test.open(name);
+    test.open(name, std::ofstream::app);
     test << array;
-    test << "\n";
+    test << "\n\n\n";
     test.close();
-//     for(int i=0;i<size;i++)
-//     {
+}
+
+static void save1DArrayasText(std::vector<double> array, int size, std::string name, std::string WHAT)
+{
+    std::ofstream test;
+    test.open(name, std::ofstream::app);
+    test << WHAT << " ";
+    for(int i=0;i<size;i++)
+    {
 //         test << i;//std::to_string(i);
-//         test << " ";
-//         test << array;//std::to_string(array[i]);
-//         test << "\n";
-//     }
+        test << std::to_string(array[i]);
+        test << " ";
+    }
+    test << "\n\n\n";
+    test.close();
 }
 
 static std::vector<double> boostVtoStdV(boost::numeric::ublas::vector<double> v)
