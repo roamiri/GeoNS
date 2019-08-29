@@ -31,7 +31,10 @@ void RLNetwork::generate_nodes(double node_density, bool fixed, int fixed_count,
             BS.get()->setColor(0);
             m_tree.insert(std::make_pair(BS->get_loc(), BS)); //TODO maybe here!
             m_items.push_back(BS);
+            initiRL.connect_member(BS.get(), &RLAgent::receive_init_RL);
+            newSR.connect_member(BS.get(), &RLAgent::receive_SR);
             BS->neighbors.connect_member(this, &RLNetwork::neighbor_handler);
+            BS->finished.connect_member(this, &RLNetwork::finish_training);
 //             BS.get()->update_parent.connect_member(this, &IABN::listen_For_parent_update);
 //             BS.get()->Start();
 // 			BS.get()->candidacy.connect_member(&manager, &IABN::listen_For_Candidacy);
@@ -107,18 +110,29 @@ int RLNetwork::node_count()
 
 void RLNetwork::train(int nb_episode)
 {
-    synchronous_learning(nb_episode);
+    Asynchronous_learning(nb_episode);
 }
 
 void RLNetwork::neighbor_handler(const neighborhood_msg& msg)
 {
     uint32_t id = msg.id;
-    std::cout << "received from = " << id << "\n";
+//     std::cout << "received from = " << id << "\n";
     float x = msg.x;
     float y = msg.y;
     double range = msg.range;
     int num = num_neighbors(x,y,range);
-    set_state(id,num);
+    if(num>stateSpace::Kmax) num=stateSpace::Kmax;
+    stateSpace::DEG dd = static_cast<stateSpace::DEG>(num);
+    //calculate reward
+    int KGOAL = static_cast<int>(stateSpace::goal);
+    double r=0;
+    if(dd==stateSpace::zero)
+        r = 0;//-range/max_range;
+    else
+        r = exp(-pow(num-KGOAL,2));//1-range/max_range - dd/KGOAL;
+    SR_msg message(id, dd, r);
+    newSR.emit(message);
+//     set_state(id,num);
 }
 
 void RLNetwork::set_state(uint32_t id, int num)
@@ -144,6 +158,7 @@ void RLNetwork::set_state(uint32_t id, int num)
 void RLNetwork::synchronous_learning(int num_episodes)
 {
     itt it;
+    // Initialize RL agents
     for(it=m_items.begin(); it!=m_items.end();++it)
     {
         rl_ptr agent = (*it);
@@ -153,13 +168,13 @@ void RLNetwork::synchronous_learning(int num_episodes)
     for(m_global_episode=0;m_global_episode<num_episodes;++m_global_episode)
     {
         std::cout << "running episode " << std::setw(6) << m_global_episode+1 << "/" << num_episodes << "   \r" << std::flush;
-
+        //Action selection
         for(it=m_items.begin(); it!=m_items.end();++it)
         {
             rl_ptr agent = (*it);
             agent->takeAction(false);
         }
-        
+        // Receive reward and new state
         double max_range = MAX_RANGE;
         for(it=m_items.begin(); it!=m_items.end();++it)
         {
@@ -180,7 +195,7 @@ void RLNetwork::synchronous_learning(int num_episodes)
             
             agent->setSR(dd, r);
         }
-        
+        // learning
         for(it=m_items.begin(); it!=m_items.end();++it)
         {
             rl_ptr agent = (*it);
@@ -225,6 +240,17 @@ void RLNetwork::synchronous_learning_1_Agent(int num_episodes)
         agent->episodic_learn();
     }
     agent->print_policy(O_POLICY::softmax);
+}
+
+void RLNetwork::Asynchronous_learning(int num_episodes)
+{
+    itt it;
+    for(it=m_items.begin(); it!=m_items.end();++it)
+    {
+        rl_ptr bs = (*it);
+        bs->Start();
+    }
+    initiRL.emit(num_episodes);
 }
 
 /**
@@ -306,6 +332,10 @@ void RLNetwork::print_Q_function(uint32_t id, O_POLICY op)
     m_items[id-1]->print_policy(op);
 }
 
-
-
-
+void RLNetwork::finish_training(const uint32_t id)
+{
+    std::cout << "agent " << id << "finished training!\n";
+    ++m_finished_agents;
+    if(m_finished_agents==m_items.size())
+        b_ready = true;
+}

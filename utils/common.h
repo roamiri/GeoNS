@@ -73,16 +73,6 @@ static void counter(int seconds)
 	while(clock() < endTurn){}
 }
 
-
-struct neighborhood_msg
-{
-    uint32_t id;
-    float x;
-    float y;
-    double range;
-    neighborhood_msg(uint32_t iidd, float xx, float yy, double r){id=iidd;x=xx; y=yy; range=r;}
-};
-
 struct update_parent_msg
 {
     uint32_t id;

@@ -20,8 +20,55 @@ void RLAgent::initRL()
     m_length = 0;
     m_max_length = MAX_EPISODE_DURATION;
     restart();
+    
+    // asynchronous learning params
+    b_initialize=false;
+    b_receivedSR=false;
+    b_takeAction=false;
+    b_updateQ = false;
 }
 
+void RLAgent::Start()
+{
+    the_thread = std::thread(&RLAgent::ThreadMain, this);
+    char thread_name [20];
+    sprintf(thread_name, "RLAgent_%d", getID());
+    prctl(PR_SET_NAME, thread_name, 0,0,0);
+}
+
+void RLAgent::ThreadMain()
+{
+    while(!stop_thread)
+    {
+        if(b_initialize)
+        {
+            initRL();
+            b_initialize = false;
+            b_takeAction = true;
+        }
+        
+        if(b_takeAction)
+        {
+            takeAction(false);
+            b_takeAction = false;
+        }
+        
+        if(b_receivedSR)
+        {
+            b_receivedSR = false;
+            b_updateQ = true;
+        }
+        if(b_updateQ)
+        {
+            episodic_learn();
+            b_updateQ = false;
+            b_takeAction = true;
+        }
+    }
+}
+
+    
+    
 void RLAgent::setPhase(const phase_type& s)
 {
     m_current_state = s;
@@ -58,6 +105,13 @@ void RLAgent::takeAction(bool episodic)
     {
         m_a = learning_policy(m_current_state);
         ++m_episode;
+    }
+    if(m_episode<m_max_episode)
+        step(m_a);
+    else
+    {
+        finished.emit(getID());
+        stop_thread = true;
     }
 }
 
@@ -176,7 +230,9 @@ double RLAgent::get_trans_range()
 void RLAgent::step(const action_type a)
 {
     double dum = static_cast<double>(a);
-    dum *= 50;
+    int steps = A_CARDINALITY -1;
+    double coef = MAX_RANGE/steps;
+    dum *= coef;
     neighborhood_msg msg(getID(),getX(),getY(), dum);
     neighbors.emit(msg);
 //             int num = _getNet->instance()->num_neighbors(getX(),getY(), dum);
@@ -211,8 +267,7 @@ void RLAgent::add_to_neighbors(boost::shared_ptr<RLAgent> agent)
     if(!found)
     {
         m_neighbors.push_back(agent);
-    } 
-
+    }
 }
 
 std::vector<uint32_t> RLAgent::get_neighborsID()
@@ -238,3 +293,26 @@ void RLAgent::print_policy(O_POLICY p)
     auto q = std::bind(q_parametrized, m_theta, _1, _2);
     print_greedy_policy(m_A_start, m_A_End, q, p);
 }
+
+void RLAgent::receive_init_RL(const int num_episodes)
+{
+    m_max_episode = num_episodes;
+    b_initialize = true;
+}
+
+void RLAgent::receive_SR(const SR_msg &msg)
+{
+    uint32_t id = msg.id;
+    phase_type s = msg.s;
+    double r = msg.rw;
+    if(id==getID())
+    {
+        setSR(s,r);
+        b_updateQ = true;
+    }
+}
+
+void RLAgent::receive_take_action()
+{
+}
+

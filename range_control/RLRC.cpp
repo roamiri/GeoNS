@@ -86,6 +86,10 @@ int main(int argc, char** argv)
     
     global_ENV->train(nb_episode);
     
+    while(!global_ENV->isNetworkReady())
+    {
+        std::this_thread::sleep_for(std::chrono::nanoseconds(10));
+    }
     global_ENV->k_connect(10);
     
     global_ENV->draw_neighbors(bdraw);

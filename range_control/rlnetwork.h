@@ -26,6 +26,8 @@ public:
     RLNetwork():Container()
     {
         m_global_episode=0;
+        m_finished_agents = 0;
+        b_ready = false;
     }
 
     /**
@@ -42,11 +44,12 @@ int node_count();
 
 void train(int nb_episode);
 
-void neighbor_handler(const neighborhood_msg& msg);
 
 void set_state(uint32_t id, int num);
 
 void synchronous_learning(int num_episodes);
+void Asynchronous_learning(int num_episodes);
+
 void synchronous_learning_1_Agent(int num_episodes);
 
 void k_connect(int round);
@@ -56,8 +59,18 @@ void draw_neighbors(bool bdraw);
 
 void print_Q_function(uint32_t id, O_POLICY op);
 
+bool isNetworkReady(){return b_ready;}
+
+    //asynchronous learning signal/slots
+    Signal<int const> initiRL;
+    Signal<SR_msg const &> newSR;
+void neighbor_handler(const neighborhood_msg& msg);
+void finish_training(const uint32_t id);
+
 private:
     int m_global_episode;
+    int m_finished_agents;
+    bool b_ready;
 
 // public:
 //     static RLNetwork* instance();

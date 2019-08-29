@@ -106,6 +106,23 @@ void print_greedy_policy(AITER action_begin, AITER action_end,
 
 #define MAX_RANGE 200.
 
+struct SR_msg
+{
+    uint32_t id;
+    phase_type s;
+    double rw;
+    SR_msg(uint32_t iidd, phase_type ss, double rr){id=iidd; s=ss; rw=rr;}
+};
+
+struct neighborhood_msg
+{
+    uint32_t id;
+    float x;
+    float y;
+    double range;
+    neighborhood_msg(uint32_t iidd, float xx, float yy, double r){id=iidd;x=xx; y=yy; range=r;}
+};
+
 using namespace std::placeholders;
 /**
  * @todo Reinforcement Learning agent
@@ -148,6 +165,7 @@ public:
     gsl_vector* get_theta(){return m_theta;}
     
     Signal<neighborhood_msg const &> neighbors;
+    Signal<uint32_t const> finished;
     
     void add_to_neighbors(boost::shared_ptr<RLAgent> agent);
     std::vector<uint32_t> get_neighborsID();
@@ -155,13 +173,6 @@ public:
     
 private:
     std::vector<boost::shared_ptr<RLAgent>> m_neighbors;
-    
-    
-    void ThreadMain()
-    {
-        ;
-    }
-    
     
     //Q-learning related parameters
     gsl_vector* m_theta;
@@ -178,6 +189,7 @@ private:
     double m_alpha;
     double m_gamma;
     
+    int m_max_episode;
     int m_episode;
     int m_length;
     int m_frame;
@@ -186,18 +198,18 @@ private:
     // selected action iterator
     action_type m_a;
     
+    bool b_initialize;
+    bool b_receivedSR;
+    bool b_takeAction;
+    bool b_updateQ ;
+    
 //     auto m_critic;
     
 public:
     
-    void Start()
-    {
-        the_thread = std::thread(&RLAgent::ThreadMain, this);
-        char thread_name [20];
-        sprintf(thread_name, "RLAgent_%d", getID());
-        prctl(PR_SET_NAME, thread_name, 0,0,0);
-    }
-    
+    void Start();
+    void ThreadMain();
+
     const observation_type& sense() const {return m_current_state;}
     const action_type& get_action() const {return m_a;}
     double get_trans_range();
@@ -239,6 +251,10 @@ public:
     void print_policy(O_POLICY p);
 //     void received_SR();
     
+    // asynchronous learning signal/slots
+    void receive_init_RL(const int num_episodes);
+    void receive_take_action();
+    void receive_SR(const SR_msg &msg);
     
 private:
     void stepGoal()
