@@ -181,7 +181,7 @@ void RLNetwork::synchronous_learning(int num_episodes)
         for(it=m_items.begin(); it!=m_items.end();++it)
         {
             rl_ptr agent = (*it);
-            agent->takeAction(false);
+            agent->takeAction(true, false);
         }
         // Receive reward and new state
         double max_range = MAX_RANGE;
@@ -228,7 +228,7 @@ void RLNetwork::synchronous_learning_1_Agent(int num_episodes)
     {
         std::cout << "running episode " << std::setw(6) << m_global_episode+1 << "/" << num_episodes << "   \r" << std::flush;
 
-        agent->takeAction(false);
+        agent->takeAction(true, false);
         
         double max_range = MAX_RANGE;
         // find next state

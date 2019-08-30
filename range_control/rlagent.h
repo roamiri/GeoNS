@@ -243,7 +243,7 @@ public:
     }
                 
     void initRL();
-    void takeAction(bool episodic);
+    void takeAction(bool sync, bool episodic);
     void takeGreedyAction();
     void setSR(phase_type s, reward_type r);
     void episodic_learn();

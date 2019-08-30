@@ -49,7 +49,7 @@ void RLAgent::ThreadMain()
         
         if(b_takeAction)
         {
-            takeAction(false);
+            takeAction(false, false);
             b_takeAction = false;
         }
         
@@ -67,8 +67,7 @@ void RLAgent::ThreadMain()
     }
 }
 
-    
-    
+  
 void RLAgent::setPhase(const phase_type& s)
 {
     m_current_state = s;
@@ -81,7 +80,7 @@ void RLAgent::setPhase(const phase_type& s)
 }
 
 // episodic learning with a goal state
-void RLAgent::takeAction(bool episodic)
+void RLAgent::takeAction(bool sync, bool episodic)
 {
     auto q = std::bind(q_parametrized, m_theta, _1, _2);
     auto learning_policy = rl::policy::epsilon_greedy(q,m_epsilon,m_A_start, m_A_End, m_generator);
@@ -106,12 +105,16 @@ void RLAgent::takeAction(bool episodic)
         m_a = learning_policy(m_current_state);
         ++m_episode;
     }
-    if(m_episode<m_max_episode)
-        step(m_a);
-    else
+    
+    if(!sync)
     {
-        finished.emit(getID());
-        stop_thread = true;
+        if(m_episode<m_max_episode)
+            step(m_a);
+        else
+        {
+            finished.emit(getID());
+            stop_thread = true;
+        }
     }
 }
 
