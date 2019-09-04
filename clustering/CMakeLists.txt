@@ -3,8 +3,6 @@ set(PROJECT_NAME "floc")
 project(${PROJECT_NAME})
 SET(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_BUILD_TYPE Debug)
-
 set(MAIN
 ${CMAKE_SOURCE_DIR}/clustering/WSN_cluster.cpp 
 )

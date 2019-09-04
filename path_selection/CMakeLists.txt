@@ -2,9 +2,6 @@ cmake_minimum_required(VERSION 2.6)
 set(PROJECT_NAME "pathSelection")
 project(${PROJECT_NAME})
 
-set(CMAKE_BUILD_TYPE Debug)
-
-
 set(MAIN
 ${CMAKE_SOURCE_DIR}/path_selection/dist_path_IAB.cpp
 )
