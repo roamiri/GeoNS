@@ -1,17 +1,19 @@
-X = [1, 4];
-A = [13.64 , 8.85];
-B = [136.27, 89.46];
+X = [1, 8, 16, 32];
+A = [0.816 , 0.554, 0.357]; % 1e4
+B = [8.02, 5.35, 3.24, 3.3]; % 1e5
+C = [83.04, 53.67, 33.04, 29.94]; % 1e6
 %%
 figure;
 hold on;
 grid on;
 box on;
 % plot( ones(1,16)*2.0, '--k', 'LineWidth',1 );
-plot(X, A , '--or', 'LineWidth',1.2,'MarkerSize',8, 'MarkerFaceColor','r', 'MarkerEdgeColor','b');
-plot(X, B,'--ob', 'LineWidth',1.2,'MarkerSize',8, 'MarkerFaceColor','b', 'MarkerEdgeColor','b');
+plot(X, B , '--or', 'LineWidth',1.2,'MarkerSize',8, 'MarkerFaceColor','r', 'MarkerEdgeColor','b');
+plot(X, C,'--db', 'LineWidth',1.2,'MarkerSize',8, 'MarkerFaceColor','b', 'MarkerEdgeColor','b');
 % % title('Running time for Async learning','FontSize',14, 'FontWeight','bold');
 xlabel('number of processors','FontSize',12);%, 'FontWeight','bold');
 ylabel('Seconds','FontSize',12);%, 'FontWeight','bold');
-xlim([0 10]);
+% xlim([1 32]);
 %  ylim([0 100]);
-legend({'1e4 iterations','1e5 iterations'});%, 'Wired First', 'Position Aware'},'FontSize',12);%, 'FontWeight','bold');
+xticks([1 8 16 32]);
+legend({'1e5 iterations','1e6 iterations'});%, 'Wired First', 'Position Aware'},'FontSize',12);%, 'FontWeight','bold');
