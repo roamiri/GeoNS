@@ -1,4 +1,4 @@
-<img align="right" width="205" height="109" src="/images/logo.jpg">
+<img align="right" width="205" height="109" src="/images/logo.png">
 
 # GeoNS
 
