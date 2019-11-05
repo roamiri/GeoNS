@@ -75,7 +75,7 @@ x=h4.XData; y=h4.YData; index=[200,400, 600, 800, 1000, 1500];
 h8=plot(x(index), y(index), '*','LineWidth',2.0,'MarkerSize',8, 'MarkerEdgeColor',yellow, 'DisplayName', 'Position Aware');
 set(h4,'color', yellow, 'LineWidth',2.0,'MarkerSize',4, 'MarkerEdgeColor',yellow);
 title('','FontSize',14, 'FontWeight','bold');
-xlabel('SINR','FontSize',12);%, 'FontWeight','bold');
+xlabel('SNR','FontSize',12);%, 'FontWeight','bold');
 ylabel('CDF','FontSize',12);%, 'FontWeight','bold');
 % xlim([1 10]);
 %  ylim([0 100]);
