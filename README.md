@@ -37,28 +37,6 @@ The visualization of the network is done via simple SVG based outputs.
 2. Install the anaconda environment appropriate for the machine.
 
 
-## Extended Notes
-
-For more discussion, please see the [paper on Arxiv]().  If you use this repository in your work or otherwise wish to cite it, please make reference to the paper.
-
-
-
-### Code Organization
-
-The class types perform the following roles:
-
-* **Runner** - Connects the `sampler`, `agent`, and `algorithm`; manages the training loop and logging of diagnostics.
-  * **Sampler** - Manages `agent` / `environment` interaction to collect training data, can initialize parallel workers.
-    * **Collector** - Steps `environments` (and maybe operates `agent`) and records samples, attached to `sampler`.
-      * **Environment** - The task to be learned.
-        * **Observation Space/Action Space** - Interface specifications from `environment` to `agent`.
-      * **TrajectoryInfo** - Diagnostics logged on a per-trajectory basis.
-  * **Agent** - Chooses control action to the `environment` in `sampler`; trained by the `algorithm`.  Interface to `model`.
-    * **Model** - Torch neural network module, attached to the `agent`.
-    * **Distribution** - Samples actions for stochastic `agents` and defines related formulas for use in loss function, attached to the `agent`.
-  * **Algorithm** - Uses gathered samples to train the `agent` (e.g. defines a loss function and performs gradient descent).
-    * **Optimizer** - Training update rule (e.g. Adam), attached to the `algorithm`.
-    * **OptimizationInfo** - Diagnostics logged on a per-training batch basis.
 
 
 ### Acknowledgements
