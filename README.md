@@ -18,16 +18,32 @@ GeoNS is an open-source platform to simulate large-scale wireless networks. Cont
 **Transmission range control in topology management of wireless sensor networks (WNSs)**
 
 ### Getting Started
-Follow the installation instructions below, and then get started in the examples folder. The platform is tested on LINUX Fedora 18, 30, and 31. 
+* Download
+You can use the git to get the project or simply download a zip file. 
+```console
+$ git clone https://github.com/roamiri/GeoNS.git
+```
+* Requirements
+Follow the instructions below to install the required packages to build GeoNS. (The platform is tested on LINUX Fedora 18, 30, and 31.)
 
 ```console
 $ dnf groupinstall 'C Development Tools and Libraries'
 $ dnf install cmake boost boost-devel gsl gsl-devel python2 python2-devel numpy python2-matplotlib
 ```
+* Compilation
+Enter the GeoNS folder and follow the instructions below. 
+```console
+$ mkdir build
+$ cd build
+$ cmake ../CMakeLists.txt
+$ make
+```
+* Examples
+There are three applications implemented in with the core of GeoNS. These applications are in three different folders as independent projects as path_selection, range_control, and clustering. If you do not wish to compile any of the applications, simply comment the respective line in the main CMakeLists file. 
 
 ## Future Developments.
 
-Overall the code is stable. I am open to suggestions/contributions for other established algorithms to add or other developments to support more use cases. My next step is to add neural networks and backpropagation to the RL agents.
+Overall the code is stable. I keep developing on the develop branch and the master branch is always stable. I am open to suggestions/contributions for other established algorithms to add or other developments to support more use cases. My next step is to add neural networks and backpropagation to the RL agents.
 
 
 ## Visualization
