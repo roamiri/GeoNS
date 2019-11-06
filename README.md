@@ -18,7 +18,12 @@ GeoNS is an open-source platform to simulate large-scale wireless networks. Cont
 **Transmission range control in topology management of wireless sensor networks (WNSs)**
 
 ### Getting Started
-Follow the installation instructions below, and then get started in the examples folder.
+Follow the installation instructions below, and then get started in the examples folder. The platform is tested on LINUX Fedora 18, 30, and 31. 
+
+```console
+$ dnf groupinstall 'C Development Tools and Libraries'
+$ dnf install cmake boost boost-devel gsl gsl-devel python2 python2-devel numpy python2-matplotlib
+```
 
 ## Future Developments.
 
