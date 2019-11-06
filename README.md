@@ -12,11 +12,6 @@ GeoNS is an open-source platform to simulate large-scale wireless networks. Cont
 * Reinforcement learning is implemented with the help of *RLLib* (see https://github.com/HerveFrezza-Buet/RLlib).
 * Modularity for easy modification / re-use of existing components.
 
-### Implemented Algorithms
-**Distributed Path Selection in millimeter-wave IAB networks**
-
-**Transmission range control in topology management of wireless sensor networks (WNSs)**
-
 ### Getting Started
 * Download
 Clone this repository to the local machine. You can use the git to clone or get the project via downloading the zip file.
@@ -38,8 +33,15 @@ $ cd build
 $ cmake ../CMakeLists.txt
 $ make
 ```
-* Examples
+### Implemented Algorithms
+
 There are three applications implemented in with the core of GeoNS. These applications are in three different folders as independent projects as path_selection, range_control, and clustering. If you do not wish to compile any of the applications, simply comment the respective line in the main CMakeLists file. 
+
+**Distributed Path Selection in millimeter-wave IAB networks**
+
+**Transmission range control in topology management of wireless sensor networks (WNSs)**
+
+**Distributed clustering via message-passing (fast local clustering (floc))**
 
 ## Future Developments.
 
