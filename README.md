@@ -56,4 +56,4 @@ The visualization of the network is done via simple SVG based outputs.
 ### Acknowledgements
 Thanks to Mola Pahnadayan who inspied me always as a true programmer.
 
-Code dude!
+Code dude! :+1: :shipit:
