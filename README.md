@@ -19,7 +19,7 @@ GeoNS is an open-source platform to simulate large-scale wireless networks. Cont
 
 ### Getting Started
 * Download
-You can use the git to get the project or simply download a zip file. 
+Clone this repository to the local machine. You can use the git to clone or get the project via downloading the zip file.
 ```console
 $ git clone https://github.com/roamiri/GeoNS.git
 ```
@@ -49,15 +49,6 @@ Overall the code is stable. I keep developing on the develop branch and the mast
 ## Visualization
 
 The visualization of the network is done via simple SVG based outputs.
-
-
-## Installation
-
-1.  Clone this repository to the local machine.
-
-2. Install the anaconda environment appropriate for the machine.
-
-
 
 
 ### Acknowledgements
