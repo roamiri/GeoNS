@@ -1,4 +1,4 @@
-<img align="right" width="205" height="109" src="/images/logo.jpg">
+<img align="right" width="200" height="200" src="/images/logo.png">
 
 # GeoNS
 
@@ -12,17 +12,40 @@ GeoNS is an open-source platform to simulate large-scale wireless networks. Cont
 * Reinforcement learning is implemented with the help of *RLLib* (see https://github.com/HerveFrezza-Buet/RLlib).
 * Modularity for easy modification / re-use of existing components.
 
+### Getting Started
+* Download
+Clone this repository to the local machine. You can use the git to clone or get the project via downloading the zip file.
+```console
+$ git clone https://github.com/roamiri/GeoNS.git
+```
+* Requirements
+Follow the instructions below to install the required packages to build GeoNS. (The platform is tested on LINUX Fedora 18, 30, and 31.)
+
+```console
+$ dnf groupinstall 'C Development Tools and Libraries'
+$ dnf install cmake boost boost-devel gsl gsl-devel python2 python2-devel numpy python2-matplotlib
+```
+* Compilation
+Enter the GeoNS folder and follow the instructions below. 
+```console
+$ mkdir build
+$ cd build
+$ cmake ../CMakeLists.txt
+$ make
+```
 ### Implemented Algorithms
+
+There are three applications implemented in with the core of GeoNS. These applications are in three different folders as independent projects as path_selection, range_control, and clustering. If you do not wish to compile any of the applications, simply comment the respective line in the main CMakeLists file. 
+
 **Distributed Path Selection in millimeter-wave IAB networks**
 
 **Transmission range control in topology management of wireless sensor networks (WNSs)**
 
-### Getting Started
-Follow the installation instructions below, and then get started in the examples folder.
+**Distributed clustering via message-passing (fast local clustering (floc))**
 
 ## Future Developments.
 
-Overall the code is stable. I am open to suggestions/contributions for other established algorithms to add or other developments to support more use cases. My next step is to add neural networks and backpropagation to the RL agents.
+Overall the code is stable. I keep developing on the develop branch and the master branch is always stable. I am open to suggestions/contributions for other established algorithms to add or other developments to support more use cases. My next step is to add neural networks and backpropagation to the RL agents.
 
 
 ## Visualization
@@ -30,38 +53,7 @@ Overall the code is stable. I am open to suggestions/contributions for other est
 The visualization of the network is done via simple SVG based outputs.
 
 
-## Installation
-
-1.  Clone this repository to the local machine.
-
-2. Install the anaconda environment appropriate for the machine.
-
-
-## Extended Notes
-
-For more discussion, please see the [paper on Arxiv]().  If you use this repository in your work or otherwise wish to cite it, please make reference to the paper.
-
-
-
-### Code Organization
-
-The class types perform the following roles:
-
-* **Runner** - Connects the `sampler`, `agent`, and `algorithm`; manages the training loop and logging of diagnostics.
-  * **Sampler** - Manages `agent` / `environment` interaction to collect training data, can initialize parallel workers.
-    * **Collector** - Steps `environments` (and maybe operates `agent`) and records samples, attached to `sampler`.
-      * **Environment** - The task to be learned.
-        * **Observation Space/Action Space** - Interface specifications from `environment` to `agent`.
-      * **TrajectoryInfo** - Diagnostics logged on a per-trajectory basis.
-  * **Agent** - Chooses control action to the `environment` in `sampler`; trained by the `algorithm`.  Interface to `model`.
-    * **Model** - Torch neural network module, attached to the `agent`.
-    * **Distribution** - Samples actions for stochastic `agents` and defines related formulas for use in loss function, attached to the `agent`.
-  * **Algorithm** - Uses gathered samples to train the `agent` (e.g. defines a loss function and performs gradient descent).
-    * **Optimizer** - Training update rule (e.g. Adam), attached to the `algorithm`.
-    * **OptimizationInfo** - Diagnostics logged on a per-training batch basis.
-
-
 ### Acknowledgements
-Thanks to Mola Pahnadayan who inspied me always as a true programmer.
+Thanks to Mola Pahnadayan who inspired me always as a true programmer.
 
-Code dude!
+Code dude! :+1: :shipit:
