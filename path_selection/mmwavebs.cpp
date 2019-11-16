@@ -55,7 +55,6 @@ void mmWaveBS::Start()
 }
 
 
-
 void mmWaveBS::ThreadMain()
 {
     while(!stop_thread)
@@ -128,16 +127,23 @@ double mmWaveBS::calculate_SINR_of_link(double x, double y, double interf)
 
 double mmWaveBS::calculate_Interf_of_link(double x, double y)
 {
-    // SNR = S/N
+    // SINR = S/(I+N)
     std::random_device rd;
     std::mt19937 gen(rd());
     std::normal_distribution<> dis(0., sqrt(def_backhaul_zeta_los));
     
+    std::default_random_engine generator;
+    std::uniform_real_distribution<double> dist_uniform(0.0, 360.0);
+    
     double dist = euclidean_dist(x, y, (double) getX(), (double) getY());
     double zeta = dis(gen);
-    double path_loss_db = def_beta + 10.* def_backhaul_alpha_los * log10(dist) + zeta; //TODO implement zeta better with randn, PL = alpha + 10 beta log10(||distance||) + zeta, 
-    double plg = m_TxP_dBm + def_G_max + def_G_max - path_loss_db; // S = P_transmit * G_max * G_max / pathloss
-    
+    double path_loss_db = def_beta + 10.* def_backhaul_alpha_los * log10(dist) + zeta; //TODO implement zeta better with randn, PL = alpha + 10 beta log10(||distance||) + zeta,
+    double dum = dist_uniform(generator);
+    double plg;
+    if(dum<=m_phi_m)
+        plg = m_TxP_dBm + def_G_max + def_G_max - path_loss_db; // S = P_transmit * G_max * G_max / pathloss
+    else
+        plg = m_TxP_dBm + def_G_max + def_G_min - path_loss_db; // S = P_transmit * G_max * G_min / pathloss
     return dBm_to_watt(plg);
 }
 

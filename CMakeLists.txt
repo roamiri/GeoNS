@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.6)
-set(PROJECT_NAME "mmWave_IAB")
+set(PROJECT_NAME "GeoNS")
 project(${PROJECT_NAME})
 SET(CMAKE_CXX_STANDARD 17)
 

@@ -158,7 +158,6 @@ int main(int argc, char** argv)
     else
         iabn.generate_nodes(node_density, fixed, fixed_count, wired_fractoin);
     
-    
     int Total_fail = 0;
     
 //     int CDF_Hop_vec[10] = {0};
@@ -293,7 +292,7 @@ int main(int argc, char** argv)
         std::vector<std::string> colors = {"b", "r"};
         cdfs.push_back(vec_SNR_bottleneck); cdfs.push_back(vec_SINR_bottleneck);
         
-        plot->plot_CDF_Array(cdfs, plot2, legends, std::string("SNR"), std::string("CDF"), colors);
+//        plot->plot_CDF_Array(cdfs, plot2, legends, std::string("SNR"), std::string("CDF"), colors);
 //         plot->plot_CDF_Array(vec_SINR_bottleneck, plot2, "SINR", std::string("SINR"), std::string("CDF"), "r");
 //         plot->closePlot();
     }
