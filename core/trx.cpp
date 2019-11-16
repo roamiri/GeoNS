@@ -3,8 +3,8 @@
 #include "trx.h"
 
 
-TRX::TRX(float x, float y, float width, float height, uint32_t id)
-:node(x,y,width,height,id), the_thread()
+TRX::TRX(float x, float y, float width, float height, uint32_t id, typ tt)
+:node(x,y,width,height,id, tt), the_thread()
 {
 }
 

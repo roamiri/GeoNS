@@ -3,7 +3,7 @@ set(PROJECT_NAME "GeoNS")
 project(${PROJECT_NAME})
 SET(CMAKE_CXX_STANDARD 17)
 
-set(CMAKE_BUILD_TYPE RELEASE)
+set(CMAKE_BUILD_TYPE DEBUG)
 
 find_package(Boost REQUIRED)
 
@@ -20,6 +20,7 @@ ${CMAKE_SOURCE_DIR}/core/trx.cpp
 ${CMAKE_SOURCE_DIR}/core/container.cpp
 )
 
-add_subdirectory(range_control)
-add_subdirectory(path_selection)
-add_subdirectory(clustering)
+add_subdirectory(HetNet)
+# add_subdirectory(range_control)
+# add_subdirectory(path_selection)
+# add_subdirectory(clustering)

@@ -1,7 +1,7 @@
 
 
 #include "node.h"
-node::node(float x, float y, float width, float height, uint32_t id)
+node::node(float x, float y, float width, float height, uint32_t id, typ tt)
 {
     m_xx = x; m_yy=y;
     m_width = width;
@@ -13,8 +13,7 @@ node::node(float x, float y, float width, float height, uint32_t id)
     m_pmax = point(x+w, y+h);
     m_box = box(m_pmin, m_pmax);
     m_id = id;
-    
-    
+    m_type = tt;
 }
 
 

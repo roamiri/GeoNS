@@ -20,6 +20,7 @@ namespace bgi = boost::geometry::index;
 typedef bg::model::point<float, 2, bg::cs::cartesian> point;
 typedef bg::model::box<point> box;
 typedef bg::model::polygon<point> polygon2D;
+enum typ{MBS, SBS, UE, BL};   //representing type of the node in terms of MBS = Macro Base Sations, SBS=Small Base Station, UE=User Equipment, BL=Blockage
 
 /**
  * @todo write docs
@@ -30,7 +31,7 @@ public:
     /**
      * Default constructor
      */
-    node(float x, float y, float width, float height, uint32_t id);
+    node(float x, float y, float width, float height, uint32_t id, typ tt);
     
     /**
      * Destructor
@@ -61,9 +62,7 @@ private:
     point m_pmax;  // upper right point
     box m_box;
     uint32_t m_id;
-
-
-
+    typ m_type;
 };
 
 #endif // NODE_H

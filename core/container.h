@@ -22,11 +22,11 @@ typedef std::pair<point, boost::shared_ptr<node>> value;
 /**
  * @def IABN class that contains the object of type T
  */
-template <class T>
+
 class Container
 {
 protected:
-    std::vector<boost::shared_ptr<T>> m_items;
+//     std::vector<boost::shared_ptr<T>> m_items;
     
     bgi::rtree< value, bgi::quadratic<16> > m_tree;
     
@@ -98,10 +98,10 @@ public:
         return cnt;
     }
     
-    void draw_svg(bool b)
-    {
-        if(b) m_painter->update<T>(m_items);
-    }
+//     void draw_svg(bool b)//FIXME
+//     {
+//         if(b) m_painter->update<T>(m_items);
+//     }
     
     int tree_size(double r)
     {
@@ -115,16 +115,16 @@ public:
         return results.size();
     }
     
-    void reset_pointers()
-    {
-        typename std::vector<boost::shared_ptr<T>>::iterator it;
-        for(it=m_items.begin(); it!=m_items.end(); ++it)
-        {
-            boost::shared_ptr<T> mmB = (*it);
-            if(mmB)
-                mmB.reset();
-        }
-    }
+//     void reset_pointers()//FIXME
+//     {
+//         typename std::vector<boost::shared_ptr<T>>::iterator it;
+//         for(it=m_items.begin(); it!=m_items.end(); ++it)
+//         {
+//             boost::shared_ptr<T> mmB = (*it);
+//             if(mmB)
+//                 mmB.reset();
+//         }
+//     }
     
     virtual void generate_nodes(double node_density, bool fixed, int fixed_count, double wired_fractoin) = 0;
     
