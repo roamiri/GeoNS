@@ -9,7 +9,7 @@ find_package(Boost REQUIRED)
 
 add_definitions(-DGenerate_Poisson=TRUE)
 
-include_directories("/usr/include/python2.7")
+#include_directories("/usr/include/python2.7")
 include_directories("./core")
 include_directories("./RL")
 include_directories("./utils")

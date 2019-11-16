@@ -11,6 +11,9 @@
 #include <boost/shared_ptr.hpp>
 
 #include "smallbs.h"
+#include "macrobs.h"
+#include "user.h"
+#include "blockage.h"
 #include "common.h"
 #include "painter.h"
 #include "container.h"
@@ -34,6 +37,8 @@ public:
     void generate_nodes(double node_density, bool fixed, int fixed_count, double wired_fractoin);
     void load_nodes(std::string f_name, bool fixed, int fixed_count, double wired_fractoin);
     
+    void generate_fixed_nodes(int count);
+
     void generate_MBS(double node_density, bool fixed, int fixed_count);
     void generate_SBS(double node_density, bool fixed, int fixed_count);
     void generate_UEs(double node_density, bool fixed, int fixed_count);

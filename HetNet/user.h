@@ -41,11 +41,15 @@ public:
     
     void Start();
     
+    Backhaul get_backhaul_Type(){}
+    
 private:
     
     std::mutex m_mutex;
     void ThreadMain();
 	timer_t T;
 };
+
+typedef boost::shared_ptr<User> user_ptr;
 
 #endif // USER_H

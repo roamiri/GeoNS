@@ -120,10 +120,10 @@ int main(int argc, char** argv)
     double xx0=r; double yy0=r;    // center of the disk
     network.set_center(xx0, yy0, r);
     
-    if(false)
-        network.load_nodes(input, fixed, fixed_count, wired_fractoin);
-    else
-        network.generate_nodes(node_density, fixed, fixed_count, wired_fractoin);
+//     network.generate_MBS(node_density, fixed, fixed_count);
+//     network.generate_SBS(node_density, fixed, fixed_count);
+//     network.generate_UEs(node_density, fixed, fixed_count);
+//     network.generate_Blockage();
     
     cout << "HELLO!!" << endl;
     return 0;

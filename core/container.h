@@ -38,7 +38,7 @@ protected:
     std::random_device m_rd;
     std::mt19937 m_generator;
     
-    Painter* m_painter;
+    Painter* m_painter = NULL;
     
 public:
     /**
@@ -58,7 +58,7 @@ public:
     /**
      * Destructor
      */
-    ~Container(){ delete m_painter;}
+    ~Container(){ if(m_painter!=NULL) delete m_painter;}
     
     void set_center(double x, double y, double r)
     {
