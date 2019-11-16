@@ -66,7 +66,7 @@ void HetNet::generate_UEs(double node_density, bool fixed, int fixed_count)
     {
         user_ptr UE;
         double theta = i*delta_teta;
-        double r2 = radius/2.;
+        double r2 = radius/1.2;
         double x = center_x + r2 * cos(theta);  // Convert from polar to Cartesian coordinates
         double y = center_y + r2 * sin(theta);
         UE = boost::shared_ptr<User>(new User(x, y, get_nextID()));
@@ -96,7 +96,16 @@ void HetNet::load_UEs(double node_density, bool fixed, int fixed_count)
 
 void HetNet::generate_Blockage()
 {
+    bl_ptr block;
+    double theta = M_PI_2;
+    double r2 = radius/1.5;
+    double x = center_x + r2 * cos(theta);  // Convert from polar to Cartesian coordinates
+    double y = center_y + r2 * sin(theta);
+    float width=10.;
+    float height=10.;
+    block = boost::shared_ptr<Blockage>(new Blockage(x, y, width, height, get_nextID()));
     
+    m_tree.insert(std::make_pair(block->get_loc(), block));
 }
 
 void HetNet::load_Blockage()

@@ -26,7 +26,10 @@ public:
      * Destructor
      */
     ~Blockage(){}
+    
+    Backhaul get_backhaul_Type(){}
 
 };
 
+typedef boost::shared_ptr<Blockage> bl_ptr;
 #endif // BLOCKAGE_H
