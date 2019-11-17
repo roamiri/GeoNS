@@ -38,6 +38,7 @@ $ make
 There are three applications implemented in with the core of GeoNS. These applications are in three different folders as independent projects as path_selection, range_control, and clustering. If you do not wish to compile any of the applications, simply comment the respective line in the main CMakeLists file. 
 
 **Distributed Path Selection in millimeter-wave IAB networks**
+
 We set the name of the application as pathSelection. In order to facilitate the simulation process, we provide an application programming interface (API) based on the LINUX command bash. Users can customize the API in the main function of the simulator. The defined API can be shown by using the --help flag as follow.
 ```console
 $ ./pathSelection --help
