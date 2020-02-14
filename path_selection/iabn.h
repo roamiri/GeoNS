@@ -35,6 +35,7 @@ class IABN : public Container<mmWaveBS>
 	
     
 //     void set_center(double x, double y, double r);
+    void generate_nodes(double area_coeff, bool b_tree);
     void generate_nodes(double node_density, bool fixed, int fixed_count, double wired_fractoin);
     void load_nodes(std::string f_name, bool fixed, int fixed_count, double wired_fractoin);
     void generate_fixed_nodes(int count);
@@ -49,6 +50,10 @@ class IABN : public Container<mmWaveBS>
     double find_SINR_bottleneck();
     // Path selection considering interference
     void path_selection_HQF_Interf();
+    
+    void check_SINR_tree();
+    void check_SNR_array();
+    void check_SINR_array();
     
     std::vector<int> count_hops(int &max_hop, int &failed);
     void set_hop_counts();

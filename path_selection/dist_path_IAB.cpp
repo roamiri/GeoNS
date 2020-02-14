@@ -148,10 +148,11 @@ int main(int argc, char** argv)
 //     std::shared_ptr<Painter> _painter = std::make_shared<Painter>(manager.m_items);
 //     _painter.get()->Start();
    
-    // Generate data on a disk with radius r with poisson point process    
-    double r = sqrt(1/M_PI)*sqrt(def_Area); // radius of the disk
-    double xx0=r; double yy0=r;    // center of the disk
-    iabn.set_center(xx0, yy0, r);
+//     // Generate data on a disk with radius r with poisson point process    
+//     double area = def_Area*node_density;
+//     double r = sqrt(1/M_PI)*sqrt(area); // radius of the disk
+//     double xx0=r; double yy0=r;    // center of the disk
+//     iabn.set_center(xx0, yy0, r);
     
     if(b_input)
         iabn.load_nodes(input, fixed, fixed_count, wired_fractoin);

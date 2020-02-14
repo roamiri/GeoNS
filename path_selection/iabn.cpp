@@ -28,6 +28,7 @@
 #include "iabn.h"
 #include "common.h"
 #include "painter.h"
+#include <boost/progress.hpp>
 
 namespace bm = boost::math;
 
@@ -47,16 +48,61 @@ IABN::~IABN()
 
 }
 
+void IABN::generate_nodes(double area_coeff, bool b_tree)
+{
+    //   Create the nodes
+    double node_density = 1e-4;
+    std::uniform_real_distribution<> dis(0, 1);
+    std::poisson_distribution<int> pd(area_coeff*def_Area*node_density);
+    int num_nodes=pd(gen_IAB); // Poisson number of points
+    std::cout << "Number of nodes before vicinity = " << num_nodes << std::endl;
+    
+    // Generate data on a disk with radius r with poisson point process    
+    double area = area_coeff*def_Area*node_density;
+    double r = sqrt(1/M_PI)*sqrt(area); // radius of the disk
+    double xx0=r; double yy0=r;    // center of the disk
+    set_center(xx0, yy0, r);
+    std::cout << "center=" << xx0 << ", " << yy0 << ", " << r << std::endl; 
+//     if(fixed) generate_fixed_nodes(fixed_count);
+    for(int i =0;i<num_nodes;i++)
+    {
+        double theta=2*M_PI*(dis(gen_IAB));   // angular coordinates
+        double rho=radius*sqrt(dis(gen_IAB));      // radial coordinates
+        
+        double x = center_x + rho * cos(theta);  // Convert from polar to Cartesian coordinates
+        double y = center_y + rho * sin(theta);
+        
+        bool vicinity = check_neighbors(x,y);
+        
+        if(vicinity)
+        {
+            bs_ptr BS;
+            BS = boost::shared_ptr<mmWaveBS>(new mmWaveBS(x,y, get_nextID()));
+            BS->set_transmit_power(def_P_tx);
+            if(!BS) std::cerr << __FUNCTION__ << std::endl;
+            BS.get()->setColor(0);
+            if(b_tree) m_tree.insert(std::make_pair(BS->get_loc(), BS));
+            m_items.push_back(BS);
+        }
+    }
+}
+
 void IABN::generate_nodes(double node_density, bool fixed, int fixed_count, double wired_fractoin)
 {
-    if(fixed) generate_fixed_nodes(fixed_count);
     
     //   Create the nodes
     std::uniform_real_distribution<> dis(0, 1);
-    std::poisson_distribution<int> pd(1e6*node_density);
+    std::poisson_distribution<int> pd(def_Area*node_density);
     int num_nodes=pd(gen_IAB); // Poisson number of points
+    std::cout << "Number of nodes before vicinity = " << num_nodes << std::endl;
     //     int num_nodes = 100; // Poisson number of points
-    
+    // Generate data on a disk with radius r with poisson point process    
+    double area = def_Area*node_density;
+    double r = sqrt(1/M_PI)*sqrt(area); // radius of the disk
+    double xx0=r; double yy0=r;    // center of the disk
+    set_center(xx0, yy0, r);
+    std::cout << "center=" << xx0 << ", " << yy0 << ", " << r << std::endl; 
+    if(fixed) generate_fixed_nodes(fixed_count);
     for(int i =0;i<num_nodes;i++)
     {
         double theta=2*M_PI*(dis(gen_IAB));   // angular coordinates
@@ -497,7 +543,7 @@ void IABN::path_selection_HQF_Interf()
         m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < def_MAX_MMWAVE_RANGE;}),
                     std::back_inserter(results));
         
-        double x1 = mmB->getX(); double y1 = mmB->getY(); point p1 = mmB->get_loc(); 
+        double x1 = mmB->getX(); double y1 = mmB->getY(); point p1 = mmB->get_loc();
 //         std::cout << "cid1 = " << cid << std::endl;
         BOOST_FOREACH(value const&v, results)
         {
@@ -644,6 +690,8 @@ void IABN::path_selection_PA()
 {
 //     std::lock_guard<std::mutex> guard(m_mutex);
     //TODO check this method precisely.
+    int total = m_items.size();
+    boost::progress_display show_progress(total);
     for(std::vector<bs_ptr>::iterator it=m_items.begin(); it!=m_items.end();++it)
     {
         bs_ptr mmB = (*it);
@@ -707,6 +755,7 @@ void IABN::path_selection_PA()
             mmB->set_SINR(max_sinr);
             Add_load_BS(parent, mmB);
         }
+        ++show_progress;
     }
 }
 
@@ -996,3 +1045,122 @@ double IABN::find_SINR_bottleneck()
     bottleneck = 10*log10(bottleneck); // returning the SNR value in dB
     return bottleneck;
 }
+
+void IABN::check_SINR_tree()
+{
+    int Total_iter = m_items.size();
+    boost::progress_display show_progress(Total_iter);
+    for(std::vector<bs_ptr>::iterator it=m_items.begin(); it!=m_items.end();++it)
+    {
+        bs_ptr mmB = (*it);
+        if(!mmB) std::cerr << __FUNCTION__ << std::endl;
+        
+//         if(mmB.get()->get_backhaul_Type()==Backhaul::wired)
+//             continue;
+        
+        uint32_t cid = mmB.get()->getID();
+        double max_sinr = -1.0;
+        double max_snr = -1.0;
+        uint32_t parent = def_Nothing;
+        
+        // search for nearest neighbours
+        std::vector<value> results;
+        point sought = mmB->get_loc();
+        m_tree.query(bgi::satisfies([&](value const& v) {return bg::distance(v.first, sought) < def_MAX_MMWAVE_RANGE;}),
+                    std::back_inserter(results));
+        
+        double x1 = mmB->getX(); double y1 = mmB->getY(); point p1 = mmB->get_loc();
+//         std::cout << "cid1 = " << cid << std::endl;
+        BOOST_FOREACH(value const&v, results)
+        {
+            bs_ptr mmB2 = boost::dynamic_pointer_cast<mmWaveBS>(v.second);
+            if(mmB2)
+            {
+                uint32_t cid2 = mmB2.get()->getID();
+//                 std::cout << "cid2 = " << cid2 << std::endl;
+                if( cid2!= cid)
+                {
+                    double x2 = mmB2->getX(); double y2 = mmB2->getY(); point p2 = mmB2->get_loc();
+                    polygon2D poly = directional_polygon(p1, p2, mmB->get_phi_m());
+                    std::vector<value> vec_query;
+                    m_tree.query(bgi::intersects(poly), std::back_inserter(vec_query));
+                    double interf=0.;
+                    BOOST_FOREACH(value const&mz, vec_query)
+                    {
+                        bs_ptr mmB3 = boost::dynamic_pointer_cast<mmWaveBS>(mz.second);
+                        uint32_t cid3 = mmB3->getID();
+//                         std::cout << "cid3 = " << cid3 << std::endl;
+                        if(cid3!=cid2 && cid3!=cid)
+                            interf+= mmB->calculate_Interf_of_link(mmB3->getX(), mmB3->getY());
+                    }
+                    
+//                     double snr = mmB->calculate_SNR_of_link(x2,y2);
+                    double sinr = mmB->calculate_SINR_of_link(x2,y2, interf);
+                }
+            }
+        }
+        ++show_progress;
+    }
+}
+
+void IABN::check_SNR_array()
+{
+    int Total_iter = m_items.size();
+    boost::progress_display show_progress(Total_iter);
+    for(std::vector<bs_ptr>::iterator it=m_items.begin(); it!=m_items.end();++it)
+    {
+        bs_ptr mmB = (*it);
+        if(!mmB) std::cerr << __FUNCTION__ << std::endl;
+        
+        uint32_t cid = mmB.get()->getID();
+        point sought = mmB->get_loc();
+        for(std::vector<bs_ptr>::iterator it2=m_items.begin(); it2!=m_items.end();++it2)
+        {
+            bs_ptr mmB2 = (*it2);
+            if(!mmB2) std::cerr << __FUNCTION__ << std::endl;
+            uint32_t cid2 = mmB2.get()->getID();
+            if( cid2!= cid)
+            {
+                double x2 = mmB2->getX(); double y2 = mmB2->getY(); point p2 = mmB2->get_loc();
+                
+                if (bg::distance(sought, mmB2->get_loc()) < def_MAX_MMWAVE_RANGE)
+                {
+                    double snr = mmB->calculate_SNR_of_link(x2,y2);
+                }
+            }
+        }
+        ++show_progress;
+    }
+}
+
+void IABN::check_SINR_array()
+{
+    int Total_iter = m_items.size();
+    boost::progress_display show_progress(Total_iter);
+    for(std::vector<bs_ptr>::iterator it=m_items.begin(); it!=m_items.end();++it)
+    {
+        bs_ptr mmB = (*it);
+        if(!mmB) std::cerr << __FUNCTION__ << std::endl;
+        
+        uint32_t cid = mmB.get()->getID();
+        point sought = mmB->get_loc();
+        for(std::vector<bs_ptr>::iterator it2=m_items.begin(); it2!=m_items.end();++it2)
+        {
+            bs_ptr mmB2 = (*it2);
+            if(!mmB2) std::cerr << __FUNCTION__ << std::endl;
+            uint32_t cid2 = mmB2.get()->getID();
+            if( cid2!= cid)
+            {
+                double x2 = mmB2->getX(); double y2 = mmB2->getY(); point p2 = mmB2->get_loc();
+                
+                if (bg::distance(sought, mmB2->get_loc()) < def_MAX_MMWAVE_RANGE)
+                {
+                    double snr = mmB->calculate_SNR_of_link(x2,y2);
+                }
+                
+            }
+        }
+        ++show_progress;
+    }
+}
+
