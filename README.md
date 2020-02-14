@@ -39,6 +39,22 @@ There are three applications implemented in with the core of GeoNS. These applic
 
 **Distributed Path Selection in millimeter-wave IAB networks**
 
+We set the name of the application as pathSelection. In order to facilitate the simulation process, we provide an application programming interface (API) based on the LINUX command bash. Users can customize the API in the main function of the simulator. The defined API can be shown by using the --help flag as follow.
+```console
+$ ./pathSelection --help
+Allowed options:
+  --help                Construct your network based on the following inputs.
+  --dens arg            Density of the base stations, preference=1e-4 BS/1km2
+  --fixed arg           Set wired BS implementation type (fixed(1) or variable(0))
+  --count arg           Number of fixed wired base stations
+  --prob arg            Wired nodes probability
+  --policy arg          Path Selection Policy, options = HQF1, WF, PA, HQF2
+  --if arg              Input file name
+  --of arg              Output file name
+  --svg arg             Topology SVG file name
+  --iter arg            Number of iterations
+  --verbose arg         verbose
+```
 **Transmission range control in topology management of wireless sensor networks (WNSs)**
 
 **Distributed clustering via message-passing (fast local clustering (floc))**
