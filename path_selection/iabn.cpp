@@ -1081,21 +1081,21 @@ void IABN::check_SINR_tree()
                 if( cid2!= cid)
                 {
                     double x2 = mmB2->getX(); double y2 = mmB2->getY(); point p2 = mmB2->get_loc();
-                    polygon2D poly = directional_polygon(p1, p2, mmB->get_phi_m());
-                    std::vector<value> vec_query;
-                    m_tree.query(bgi::intersects(poly), std::back_inserter(vec_query));
-                    double interf=0.;
-                    BOOST_FOREACH(value const&mz, vec_query)
-                    {
-                        bs_ptr mmB3 = boost::dynamic_pointer_cast<mmWaveBS>(mz.second);
-                        uint32_t cid3 = mmB3->getID();
+                     polygon2D poly = directional_polygon(p1, p2, mmB->get_phi_m());
+                     std::vector<value> vec_query;
+                     m_tree.query(bgi::intersects(poly), std::back_inserter(vec_query));
+                     double interf=0.;
+                     BOOST_FOREACH(value const&mz, vec_query)
+                     {
+                         bs_ptr mmB3 = boost::dynamic_pointer_cast<mmWaveBS>(mz.second);
+                         uint32_t cid3 = mmB3->getID(); 
 //                         std::cout << "cid3 = " << cid3 << std::endl;
-                        if(cid3!=cid2 && cid3!=cid)
-                            interf+= mmB->calculate_Interf_of_link(mmB3->getX(), mmB3->getY());
-                    }
+                         if(cid3!=cid2 && cid3!=cid)
+                             interf+= mmB->calculate_Interf_of_link(mmB3->getX(), mmB3->getY());
+                     }
                     
-//                     double snr = mmB->calculate_SNR_of_link(x2,y2);
-                    double sinr = mmB->calculate_SINR_of_link(x2,y2, interf);
+//                    double snr = mmB->calculate_SNR_of_link(x2,y2);
+                     double sinr = mmB->calculate_SINR_of_link(x2,y2, interf);
                 }
             }
         }
@@ -1144,6 +1144,7 @@ void IABN::check_SINR_array()
         
         uint32_t cid = mmB.get()->getID();
         point sought = mmB->get_loc();
+        double x1 = mmB->getX(); double y1 = mmB->getY();
         for(std::vector<bs_ptr>::iterator it2=m_items.begin(); it2!=m_items.end();++it2)
         {
             bs_ptr mmB2 = (*it2);
@@ -1152,10 +1153,33 @@ void IABN::check_SINR_array()
             if( cid2!= cid)
             {
                 double x2 = mmB2->getX(); double y2 = mmB2->getY(); point p2 = mmB2->get_loc();
-                
-                if (bg::distance(sought, mmB2->get_loc()) < def_MAX_MMWAVE_RANGE)
+                double d21 = bg::distance(sought, p2);
+                if (d21 < def_MAX_MMWAVE_RANGE)
                 {
-                    double snr = mmB->calculate_SNR_of_link(x2,y2);
+                    double interf = 0.;
+                    for(std::vector<bs_ptr>::iterator it3=m_items.begin(); it3!=m_items.end();++it3)
+                    {
+                        bs_ptr mmB3 = (*it3);
+                        if(!mmB3) std::cerr << __FUNCTION__ << std::endl;
+                        uint32_t cid3 = mmB3.get()->getID(); 
+                        double x3 = mmB3->getX(); double y3 = mmB3->getY(); point p3 = mmB3->get_loc();
+                        if(cid3!=cid2 && cid3!=cid)
+                        {
+                            double d31 = bg::distance(sought, p3);
+                            if (d31 < def_MAX_MMWAVE_RANGE)
+                            {
+                                point p11 = point(x2-x1, y2-y1);
+                                point p22 = point(x3-x1, y3-y1);
+                                double dot = bg::dot_product<point, point>(p11, p22);
+                                double teta = std::acos(dot/(d21*d31));
+                                if(teta <= mmB->get_phi_m()/2.)
+                                {
+                                    interf+= mmB->calculate_Interf_of_link(x3, y3);
+                                }
+                            }
+                        }
+                    }
+                    double sinr = mmB->calculate_SINR_of_link(x2,y2, interf);
                 }
                 
             }

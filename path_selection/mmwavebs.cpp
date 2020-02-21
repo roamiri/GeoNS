@@ -127,7 +127,7 @@ double mmWaveBS::calculate_SINR_of_link(double x, double y, double interf)
 
 double mmWaveBS::calculate_Interf_of_link(double x, double y)
 {
-    // SINR = S/(I+N)
+    
     std::random_device rd;
     std::mt19937 gen(rd());
     std::normal_distribution<> dis(0., sqrt(def_backhaul_zeta_los));
