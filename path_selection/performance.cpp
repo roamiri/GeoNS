@@ -51,10 +51,10 @@ int main(int argc, char** argv)
     std::chrono::duration<double> loading_time = finish - start;
     std::cout << "load = " << loading_time.count() << "," << std::endl;
     
-    if(b_tree)
-        iabn.check_SINR_tree();
-    else
-        iabn.check_SINR_array();
+//     if(b_tree)
+//         iabn.check_SINR_tree();
+//     else
+//         iabn.check_SINR_array();
     
     finish = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = finish - start;
