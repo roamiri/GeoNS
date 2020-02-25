@@ -485,10 +485,15 @@ void IABN::path_selection_WF()
                     bs_ptr mmB3 = boost::dynamic_pointer_cast<mmWaveBS>(mz.second);
                     uint32_t cid3 = mmB3->getID();
                     if(cid3!=cid2 && cid3!=cid)
-                        interf+= mmB->calculate_Interf_of_link(mmB3->getX(), mmB3->getY());
+                    {
+                        double x3 = mmB3->getX(); double y3= mmB3->getY(); point p3 = mmB3->get_loc();
+                        double dist = bg::distance(sought, p3);
+                        interf+= mmB->calculate_Interf_of_link(x3, y3, dist);
+                    }
                 }
-                double snr = mmB->calculate_SNR_of_link(x2, y2);
-                double sinr = mmB->calculate_SINR_of_link(x2,y2, interf);
+                double d21 = bg::distance(sought, p2);
+                double snr = mmB->calculate_SNR_of_link(x2, y2, d21);
+                double sinr = mmB->calculate_SINR_of_link(x2,y2, d21, interf);
                 // Rules
                 bool b_snr = snr>max_snr;
                 bool b_parent = mmB2.get()->get_parent()!=mmB.get()->getID();
@@ -565,11 +570,15 @@ void IABN::path_selection_HQF_Interf()
                         uint32_t cid3 = mmB3->getID();
 //                         std::cout << "cid3 = " << cid3 << std::endl;
                         if(cid3!=cid2 && cid3!=cid)
-                            interf+= mmB->calculate_Interf_of_link(mmB3->getX(), mmB3->getY());
+                        {
+                            double x3 = mmB3->getX(); double y3= mmB3->getY(); point p3 = mmB3->get_loc();
+                            double dist = bg::distance(sought, p3);
+                            interf+= mmB->calculate_Interf_of_link(x3, y3, dist);
+                        }
                     }
-                    
-                    double snr = mmB->calculate_SNR_of_link(x2,y2);
-                    double sinr = mmB->calculate_SINR_of_link(x2,y2, interf);
+                    double d21 = bg::distance(sought, p2);
+                    double snr = mmB->calculate_SNR_of_link(x2,y2, d21);
+                    double sinr = mmB->calculate_SINR_of_link(x2,y2, d21, interf);
 //                     // Rules
                     bool b_snr = sinr>max_sinr;
                     bool b_parent = mmB2.get()->get_parent()!=mmB.get()->getID();
@@ -656,10 +665,15 @@ void IABN::path_selection_HQF()
                     bs_ptr mmB3 = boost::dynamic_pointer_cast<mmWaveBS>(mz.second);
                     uint32_t cid3 = mmB3->getID();
                     if(cid3!=cid2 && cid3!=cid)
-                        interf+= mmB->calculate_Interf_of_link(mmB3->getX(), mmB3->getY());
+                        {
+                            double x3 = mmB3->getX(); double y3= mmB3->getY(); point p3 = mmB3->get_loc();
+                            double dist = bg::distance(sought, p3);
+                            interf+= mmB->calculate_Interf_of_link(x3, y3, dist);
+                        }
                 }
-                double snr = mmB->calculate_SNR_of_link(x2,y2);
-                double sinr = mmB->calculate_SINR_of_link(x2,y2, interf);
+                double d21 = bg::distance(sought, p2);
+                double snr = mmB->calculate_SNR_of_link(x2,y2, d21);
+                double sinr = mmB->calculate_SINR_of_link(x2,y2, d21, interf);
                 // Rules
                 bool b_snr = snr>max_snr;
                 bool b_parent = mmB2.get()->get_parent()!=mmB.get()->getID();
@@ -730,10 +744,15 @@ void IABN::path_selection_PA()
                     bs_ptr mmB3 = boost::dynamic_pointer_cast<mmWaveBS>(mz.second);
                     uint32_t cid3 = mmB3->getID();
                     if(cid3!=cid2 && cid3!=cid)
-                        interf+= mmB->calculate_Interf_of_link(mmB3->getX(), mmB3->getY());
+                    {
+                        double x3 = mmB3->getX(); double y3= mmB3->getY(); point p3 = mmB3->get_loc();
+                        double dist = bg::distance(sought, p3);
+                        interf+= mmB->calculate_Interf_of_link(x3, y3, dist);
+                    }
                 }
-                double snr = mmB->calculate_SNR_of_link(x2, y2);
-                double sinr = mmB->calculate_SINR_of_link(x2, y2, interf);
+                double d21 = bg::distance(sought, p2);
+                double snr = mmB->calculate_SNR_of_link(x2,y2, d21);
+                double sinr = mmB->calculate_SINR_of_link(x2,y2, d21, interf);
                 // Rules
                 bool b_snr = snr>max_snr;
                 bool b_parent = mmB2.get()->get_parent()!=mmB.get()->getID();
@@ -840,11 +859,11 @@ void IABN::path_selection_MLR()
 // //                     std::cout << "here\n";
                 if(cid != mmB2.get()->getID())
                 {
-                    double snr = mmB.get()->calculate_SNR_of_link(mmB2.get()->getX(), mmB2.get()->getY());
+//                     double snr = mmB.get()->calculate_SNR_of_link(mmB2.get()->getX(), mmB2.get()->getY());
                     double load = 1. + mmB2.get()->get_load_BS_count();
                     double BW =def_BW;
                     double d = def_BW/load;
-                    double rate =d * bm::log1p(1.+snr)/bm::log1p(2.0);
+                    double rate;// =d * bm::log1p(1.+snr)/bm::log1p(2.0);
     //                 std::cout << "rate= " << rate << ", ";
                     bool b_rate = rate > max_rate;
                     bool b_parent = mmB2.get()->get_parent()!=cid;
@@ -1081,21 +1100,22 @@ void IABN::check_SINR_tree()
                 if( cid2!= cid)
                 {
                     double x2 = mmB2->getX(); double y2 = mmB2->getY(); point p2 = mmB2->get_loc();
-                     polygon2D poly = directional_polygon(p1, p2, mmB->get_phi_m());
-                     std::vector<value> vec_query;
-                     m_tree.query(bgi::intersects(poly), std::back_inserter(vec_query));
-                     double interf=0.;
-                     BOOST_FOREACH(value const&mz, vec_query)
-                     {
-                         bs_ptr mmB3 = boost::dynamic_pointer_cast<mmWaveBS>(mz.second);
-                         uint32_t cid3 = mmB3->getID(); 
-//                         std::cout << "cid3 = " << cid3 << std::endl;
-                         if(cid3!=cid2 && cid3!=cid)
-                             interf+= mmB->calculate_Interf_of_link(mmB3->getX(), mmB3->getY());
-                     }
+                    double d21 = bg::distance(sought, p2);
+//                      polygon2D poly = directional_polygon(p1, p2, mmB->get_phi_m());
+//                      std::vector<value> vec_query;
+//                      m_tree.query(bgi::intersects(poly), std::back_inserter(vec_query));
+//                      double interf=0.;
+//                      BOOST_FOREACH(value const&mz, vec_query)
+//                      {
+//                          bs_ptr mmB3 = boost::dynamic_pointer_cast<mmWaveBS>(mz.second);
+//                          uint32_t cid3 = mmB3->getID(); 
+// //                         std::cout << "cid3 = " << cid3 << std::endl;
+//                          if(cid3!=cid2 && cid3!=cid)
+//                              interf+= mmB->calculate_Interf_of_link(mmB3->getX(), mmB3->getY());
+//                      }
                     
-//                    double snr = mmB->calculate_SNR_of_link(x2,y2);
-                     double sinr = mmB->calculate_SINR_of_link(x2,y2, interf);
+                   double snr = mmB->calculate_SNR_of_link(x2,y2, d21);
+//                      double sinr = mmB->calculate_SINR_of_link(x2,y2, interf);
                 }
             }
         }
@@ -1122,10 +1142,10 @@ void IABN::check_SNR_array()
             if( cid2!= cid)
             {
                 double x2 = mmB2->getX(); double y2 = mmB2->getY(); point p2 = mmB2->get_loc();
-                
-                if (bg::distance(sought, mmB2->get_loc()) < def_MAX_MMWAVE_RANGE)
+                double dist = bg::distance(sought, mmB2->get_loc());
+                if ( dist < def_MAX_MMWAVE_RANGE)
                 {
-                    double snr = mmB->calculate_SNR_of_link(x2,y2);
+                    double snr = mmB->calculate_SNR_of_link(x2,y2, dist);
                 }
             }
         }
@@ -1174,15 +1194,79 @@ void IABN::check_SINR_array()
                                 double teta = std::acos(dot/(d21*d31));
                                 if(teta <= mmB->get_phi_m()/2.)
                                 {
-                                    interf+= mmB->calculate_Interf_of_link(x3, y3);
+                                    interf+= mmB->calculate_Interf_of_link(x3, y3, d31);
                                 }
                             }
                         }
                     }
-                    double sinr = mmB->calculate_SINR_of_link(x2,y2, interf);
+                    double sinr = mmB->calculate_SINR_of_link(x2,y2, d21, interf);
                 }
-                
             }
+        }
+        ++show_progress;
+    }
+}
+
+void IABN::check_SINR_array2()
+{
+    int Total_iter = m_items.size();
+    boost::progress_display show_progress(Total_iter);
+    for(std::vector<bs_ptr>::iterator it=m_items.begin(); it!=m_items.end();++it)
+    {
+        bs_ptr mmB = (*it);
+        if(!mmB) std::cerr << __FUNCTION__ << std::endl;
+        
+        uint32_t cid = mmB.get()->getID();
+        point sought = mmB->get_loc();
+        double x1 = mmB->getX(); double y1 = mmB->getY();
+        std::map<bs_ptr, double>neighbors;
+//         std::vector<bs_ptr> neighbors;
+        
+        for(std::vector<bs_ptr>::iterator it2=m_items.begin(); it2!=m_items.end();++it2)
+        {
+            bs_ptr mmB2 = (*it2);
+            if(!mmB2) std::cerr << __FUNCTION__ << std::endl;
+            uint32_t cid2 = mmB2.get()->getID();
+            if( cid2!= cid)
+            {
+                point p2 = mmB2->get_loc();
+                double d21 = bg::distance(sought, p2);        
+                if (d21 < def_MAX_MMWAVE_RANGE)
+                {
+                    neighbors.insert( std::pair<bs_ptr, double>(mmB2, d21));
+                }
+            }
+        }
+        
+        for(std::map<bs_ptr, double>::iterator it2=neighbors.begin(); it2!=neighbors.end();++it2)
+        {
+            bs_ptr mmB2 = it2->first;
+            double d21 = it2->second;
+            uint32_t cid2 = mmB2.get()->getID(); 
+            double x2 = mmB2->getX(); double y2 = mmB2->getY(); point p2 = mmB2->get_loc();
+            double interf = 0.;
+            for(std::map<bs_ptr, double>::iterator it3=neighbors.begin(); it3!=neighbors.end();++it3)
+            {
+                bs_ptr mmB3 = it3->first;
+                double d31 = it3->second;
+                uint32_t cid3= mmB3.get()->getID(); 
+                double x3 = mmB3->getX(); double y3 = mmB3->getY(); point p3 = mmB3->get_loc();
+//                 double d31 = bg::distance(sought, p3);
+                if(cid3!=cid2)
+                {
+//                     double d21 = bg::distance(sought, p2);
+//                     double d31 = bg::distance(sought, p3);
+                    point p11 = point(x2-x1, y2-y1);
+                    point p22 = point(x3-x1, y3-y1);
+                    double dot = bg::dot_product<point, point>(p11, p22);
+                    double teta = std::acos(dot/(d21*d31));
+                    if(teta <= mmB->get_phi_m()/2.)
+                    {
+                        interf+= mmB->calculate_Interf_of_link(x3, y3, d31);
+                    }
+                }
+            }
+//             double sinr = mmB->calculate_SINR_of_link(x2,y2, interf);
         }
         ++show_progress;
     }

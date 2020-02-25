@@ -43,11 +43,11 @@ public:
 // 	std::size_t getColor(){return m_color;}
 //     std::size_t* get_rgb_Color(){return m_rgb_color;}
     
-    double calculate_SNR_of_link(double x, double y);
-    double calculate_SINR_of_link(double x, double y, double interf);
-    double calculate_Rate_of_link(double x, double y);
+    double calculate_SNR_of_link(double x, double y, double dist);
+    double calculate_SINR_of_link(double x, double y, double dist, double interf);
+    double calculate_Rate_of_link(double x, double y, double dist);
     double calculate_distance_of_link(double x, double y);
-    double calculate_Interf_of_link(double x, double y);
+    double calculate_Interf_of_link(double x, double y, double dist);
     
 //     void set_hop_count(int i) {m_hop_cnt=i;}
 //     int get_hop_count(){return m_hop_cnt;}

@@ -54,6 +54,7 @@ class IABN : public Container<mmWaveBS>
     void check_SINR_tree();
     void check_SNR_array();
     void check_SINR_array();
+    void check_SINR_array2(); // Another implementaion. Did not improve performance!
     
     std::vector<int> count_hops(int &max_hop, int &failed);
     void set_hop_counts();

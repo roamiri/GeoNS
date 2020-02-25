@@ -90,14 +90,14 @@ void mmWaveBS::ThreadMain()
 // }
 
 
-double mmWaveBS::calculate_SNR_of_link(double x, double y)
+double mmWaveBS::calculate_SNR_of_link(double x, double y, double dist)
 {
     // SNR = S/N
     std::random_device rd;
     std::mt19937 gen(rd());
     std::normal_distribution<> dis(0., sqrt(def_backhaul_zeta_los));
     
-    double dist = euclidean_dist(x, y, (double) getX(), (double) getY());
+//     double dist = euclidean_dist(x, y, (double) getX(), (double) getY());
     double zeta = dis(gen);
     double path_loss_db = def_beta + 10.* def_backhaul_alpha_los * log10(dist) + zeta; //TODO implement zeta better with randn, PL = alpha + 10 beta log10(||distance||) + zeta, 
     double plg = m_TxP_dBm + def_G_max + def_G_max - path_loss_db; // S = P_transmit * G_max * G_max / pathloss
@@ -109,14 +109,14 @@ double mmWaveBS::calculate_SNR_of_link(double x, double y)
 /**
  * interf should be based on Watt not Decibel
  */
-double mmWaveBS::calculate_SINR_of_link(double x, double y, double interf)
+double mmWaveBS::calculate_SINR_of_link(double x, double y, double dist, double interf)
 {
     // SNR = S/N
     std::random_device rd;
     std::mt19937 gen(rd());
     std::normal_distribution<> dis(0., sqrt(def_backhaul_zeta_los));
     
-    double dist = euclidean_dist(x, y, (double) getX(), (double) getY());
+//     double dist = euclidean_dist(x, y, (double) getX(), (double) getY());
     double zeta = dis(gen);
     double path_loss_db = def_beta + 10.* def_backhaul_alpha_los * log10(dist) + zeta; //TODO implement zeta better with randn, PL = alpha + 10 beta log10(||distance||) + zeta, 
     double plg = m_TxP_dBm + def_G_max + def_G_max - path_loss_db; // S = P_transmit * G_max * G_max / pathloss
@@ -125,7 +125,7 @@ double mmWaveBS::calculate_SINR_of_link(double x, double y, double interf)
     return sinr;
 }
 
-double mmWaveBS::calculate_Interf_of_link(double x, double y)
+double mmWaveBS::calculate_Interf_of_link(double x, double y, double dist)
 {
     
     std::random_device rd;
@@ -135,7 +135,7 @@ double mmWaveBS::calculate_Interf_of_link(double x, double y)
     std::default_random_engine generator;
     std::uniform_real_distribution<double> dist_uniform(0.0, 360.0);
     
-    double dist = euclidean_dist(x, y, (double) getX(), (double) getY());
+//     double dist = euclidean_dist(x, y, (double) getX(), (double) getY());
     double zeta = dis(gen);
     double path_loss_db = def_beta + 10.* def_backhaul_alpha_los * log10(dist) + zeta; //TODO implement zeta better with randn, PL = alpha + 10 beta log10(||distance||) + zeta,
     double dum = dist_uniform(generator);
@@ -147,9 +147,9 @@ double mmWaveBS::calculate_Interf_of_link(double x, double y)
     return dBm_to_watt(plg);
 }
 
-double mmWaveBS::calculate_Rate_of_link(double x, double y)
+double mmWaveBS::calculate_Rate_of_link(double x, double y, double dist)
 {
-    double snr = calculate_SNR_of_link(x, y);
+    double snr = calculate_SNR_of_link(x, y, dist);
     double rate = def_BW * log2(1+snr);
     return rate;
 }

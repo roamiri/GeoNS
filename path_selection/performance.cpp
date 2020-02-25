@@ -49,19 +49,19 @@ int main(int argc, char** argv)
     iabn.generate_nodes(area_coeff, b_tree);
     auto finish = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> loading_time = finish - start;
-    std::cout << "Loading time = "<< loading_time.count() << std::endl;
+    std::cout << "load = " << loading_time.count() << "," << std::endl;
     
     if(b_tree)
         iabn.check_SINR_tree();
     else
-        iabn.check_SINR_array();
-    
+        iabn.check_SNR_array();
     
     finish = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = finish - start;
     
+    std::cout << "computation = "<< elapsed.count() << "," <<   "\n Get out of my Audio, Adios!!"<< std::endl;
 
-    std::cout << "time = "<< elapsed.count() << "," <<   "\n Get out of my Audio, Adios!!"<< std::endl;
+    std::cout << "search = "<< elapsed.count() - loading_time.count() << "," <<   "\n Get out of my Audio, Adios!!"<< std::endl;
     
     std::cout << "ratio = " << loading_time.count()/elapsed.count() << "," << std::endl;
     
