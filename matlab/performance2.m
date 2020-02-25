@@ -11,25 +11,30 @@ snr_array_computation =[0.0025, 0.1891, 17.3616, 69.45, 157.944, 1500];
 snr_array_search = [1.68e-4, 33.21e-4, 0.2743, 1.092, 2.439, 27.42];
 array_load = [3.08e-4, 4.07e-4, 12.83e-4, 0.0023, 0.0032, 0.0123 ];
 
-snr_ratio=snr_array./snr_tree(1:size(snr_array,2));
+% snr_ratio=snr_array./snr_tree(1:size(snr_array,2));
 %% SNR
-% figure;
+figure;
 loglog(node_1, snr_tree_computation , '--ob', 'LineWidth',1.2,'MarkerSize',8, 'MarkerFaceColor','b');
 hold on;
 loglog(node_1, snr_tree_search , '--or', 'LineWidth',1.2,'MarkerSize',8, 'MarkerFaceColor','r');
 loglog(node_1, tree_load , '--ok', 'LineWidth',1.2,'MarkerSize',8, 'MarkerFaceColor','k');
 grid on;
 box on;
+xlim([1e1,1e5]);
+ylim([1e-4,1e4]);
 xlabel('number of nodes','FontSize',12);%, 'FontWeight','bold');
 ylabel('Processing Time (s)','FontSize',12);%, 'FontWeight','bold');
 legend({'Computation time','Search time', 'Loading time'}, 'Location','northwest');
 %% SNR
+figure;
 loglog(node_2, snr_array_computation , '--db', 'LineWidth',1.2,'MarkerSize',8, 'MarkerFaceColor','b');
 hold on;
 loglog(node_2, snr_array_search , '--dr', 'LineWidth',1.2,'MarkerSize',8, 'MarkerFaceColor','r');
 loglog(node_2, array_load , '--dk', 'LineWidth',1.2,'MarkerSize',8, 'MarkerFaceColor','k');
 grid on;
 box on;
+xlim([1e1,1e5]);
+ylim([1e-4,1e4]);
 xlabel('number of nodes','FontSize',12);%, 'FontWeight','bold');
 ylabel('Processing Time (s)','FontSize',12);%, 'FontWeight','bold');
 legend({'Computation time','Search time', 'Loading time'}, 'Location','northwest');
@@ -44,12 +49,51 @@ xlabel('number of nodes','FontSize',12);%, 'FontWeight','bold');
 ylabel('Processing Time (s)','FontSize',12);%, 'FontWeight','bold');
 legend({'spatial indexing','array indexing'}, 'Location','northwest');
 %% SINR Data
-node_3 = [10,1.00E+02,2.00E+02,3.00E+02,5.00E+02,6.00E+02,1.00E+03,2.00E+03,3.00E+03,1.00E+04,2.00E+04,3.00E+04];
-sinr_tree = [4.00E-04,9.800E-04,26e-4, 55e-4, 228e-4, 0.0488, 0.15,0.99,3.15,80,560,1605];
-node_4 = [10,1.00E+02,2.00E+02,3.00E+02,5.00E+02,6.00E+02,1.00E+03];
-sinr_array = [0.0045,1.49,10,27,166,292, 1436];
-sinr_ratio=sinr_array./sinr_tree(1:size(sinr_array,2));
-%%
+
+node_3 = [10, 100, 2e2, 3e2, 5e2, 1e3, 2e3, 3e3, 5e3, 1e4, 2e4];%, 3e4, 5e4, 1e5];
+
+% sinr_tree_computation = [4.00E-04,9.800E-04,26e-4, 55e-4, 228e-4, 0.0488, 0.15,0.99,3.15,80,560,1605];
+
+sinr_tree_computation = [4.38e-4, 1.03e-3, 2.88e-3, 6.01e-3, 2.35e-2, 0.169, 1.114, 3.41, 13.77, 90.84];
+sinr_tree_search = [1.25e-4, 2.897e-4, 1e-3, 2.52e-3, 1.37e-2 ,0.1298, 0.813, 2.468, 10.74, 70.67, 476.625];
+sinr_tree_load = [3.16e-4, 4.93e-4, 7.79e-4, 1.3e-3, 2.65e-3 ,8.57e-3, 0.03, 0.0614, 0.154, 0.594, 2.28];%, 5.100, 13.766, 54.45];
+
+node_4 = [10, 100, 2e2, 3e2, 5e2, 1e3];%, 2e3, 3e3, 5e3, 1e4, 2e4];
+
+sinr_array_computation = [4.00E-04,9.800E-04,26e-4, 55e-4, 228e-4, 0.0488];%, 0.15,0.99,3.15,80,560,1605];
+sinr_array_search = [3.6e-4, 0.2055, 1.646, 5.438, 24.42, 205.2062];
+sinr_array_load = [2.76e-4, 3.85e-4, 5.15e-4, 6.38e-4, 8.67e-4, 2e-3];
+
+% sinr_array = [0.0045,1.49,10,27,166,292, 1436];
+% sinr_ratio=sinr_array./sinr_tree(1:size(sinr_array,2));
+%% SINR
+figure;
+loglog(node_3, sinr_tree_computation , '--ob', 'LineWidth',1.2,'MarkerSize',8, 'MarkerFaceColor','b');
+hold on;
+loglog(node_3, sinr_tree_search , '--or', 'LineWidth',1.2,'MarkerSize',8, 'MarkerFaceColor','r');
+loglog(node_3, sinr_tree_load , '--ok', 'LineWidth',1.2,'MarkerSize',8, 'MarkerFaceColor','k');
+grid on;
+box on;
+xlim([1e1,1e5]);
+ylim([1e-4,1e4]);
+xlabel('number of nodes','FontSize',12);%, 'FontWeight','bold');
+ylabel('Processing Time (s)','FontSize',12);%, 'FontWeight','bold');
+legend({'Computation time','Search time', 'Loading time'}, 'Location','northwest');
+%% SINR
+figure;
+loglog(node_4, sinr_array_computation , '--db', 'LineWidth',1.2,'MarkerSize',8, 'MarkerFaceColor','b');
+hold on;
+loglog(node_4, sinr_array_search , '--dr', 'LineWidth',1.2,'MarkerSize',8, 'MarkerFaceColor','r');
+loglog(node_4, sinr_array_load , '--dk', 'LineWidth',1.2,'MarkerSize',8, 'MarkerFaceColor','k');
+grid on;
+box on;
+xlim([1e1,1e5]);
+ylim([1e-4,1e4]);
+xlabel('number of nodes','FontSize',12);%, 'FontWeight','bold');
+ylabel('Processing Time (s)','FontSize',12);%, 'FontWeight','bold');
+legend({'Computation time','Search time', 'Loading time'}, 'Location','northwest');
+%% SINR
+figure;
 loglog(node_3, sinr_tree , '--ob', 'LineWidth',1.2,'MarkerSize',8, 'MarkerFaceColor','b');
 hold on;
 loglog(node_4, sinr_array , '--dr', 'LineWidth',1.2,'MarkerSize',8, 'MarkerFaceColor','r');

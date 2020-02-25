@@ -54,16 +54,18 @@ int main(int argc, char** argv)
     if(b_tree)
         iabn.check_SINR_tree();
     else
-        iabn.check_SNR_array();
+        iabn.check_SINR_array();
     
     finish = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = finish - start;
+    std::cout << "search = "<< elapsed.count() - loading_time.count() << "," << std::endl;
     
-    std::cout << "computation = "<< elapsed.count() << "," <<   "\n Get out of my Audio, Adios!!"<< std::endl;
+    std::cout << "computation = "<< elapsed.count() << "," << std::endl;
+    
+    std::cout << "Get out of my Audio, Adios!!" << std::endl;
 
-    std::cout << "search = "<< elapsed.count() - loading_time.count() << "," <<   "\n Get out of my Audio, Adios!!"<< std::endl;
     
-    std::cout << "ratio = " << loading_time.count()/elapsed.count() << "," << std::endl;
+//     std::cout << "ratio = " << loading_time.count()/elapsed.count() << "," << std::endl;
     
     return 0;
 }

@@ -1101,21 +1101,22 @@ void IABN::check_SINR_tree()
                 {
                     double x2 = mmB2->getX(); double y2 = mmB2->getY(); point p2 = mmB2->get_loc();
                     double d21 = bg::distance(sought, p2);
-//                      polygon2D poly = directional_polygon(p1, p2, mmB->get_phi_m());
-//                      std::vector<value> vec_query;
-//                      m_tree.query(bgi::intersects(poly), std::back_inserter(vec_query));
-//                      double interf=0.;
-//                      BOOST_FOREACH(value const&mz, vec_query)
-//                      {
-//                          bs_ptr mmB3 = boost::dynamic_pointer_cast<mmWaveBS>(mz.second);
-//                          uint32_t cid3 = mmB3->getID(); 
-// //                         std::cout << "cid3 = " << cid3 << std::endl;
-//                          if(cid3!=cid2 && cid3!=cid)
-//                              interf+= mmB->calculate_Interf_of_link(mmB3->getX(), mmB3->getY());
-//                      }
+                     polygon2D poly = directional_polygon(p1, p2, mmB->get_phi_m());
+                     std::vector<value> vec_query;
+                     m_tree.query(bgi::intersects(poly), std::back_inserter(vec_query));
+                     double interf=0.;
+                     BOOST_FOREACH(value const&mz, vec_query)
+                     {
+                         bs_ptr mmB3 = boost::dynamic_pointer_cast<mmWaveBS>(mz.second);
+                         uint32_t cid3 = mmB3->getID(); point p3 = mmB3->get_loc();
+                         double d31 = bg::distance(sought, p3);
+//                         std::cout << "cid3 = " << cid3 << std::endl;
+                         if(cid3!=cid2 && cid3!=cid)
+                             interf+= mmB->calculate_Interf_of_link(mmB3->getX(), mmB3->getY(), d31);
+                     }
                     
-                   double snr = mmB->calculate_SNR_of_link(x2,y2, d21);
-//                      double sinr = mmB->calculate_SINR_of_link(x2,y2, interf);
+//                    double snr = mmB->calculate_SNR_of_link(x2,y2, d21);
+                     double sinr = mmB->calculate_SINR_of_link(x2,y2, d21, interf);
                 }
             }
         }
@@ -1173,7 +1174,8 @@ void IABN::check_SINR_array()
             if( cid2!= cid)
             {
                 double x2 = mmB2->getX(); double y2 = mmB2->getY(); point p2 = mmB2->get_loc();
-                double d21 = bg::distance(sought, p2);
+//                 double d21 = bg::distance(sought, p2);
+                double d21 = euclidean_dist(x1,y1,x2,y2);
                 if (d21 < def_MAX_MMWAVE_RANGE)
                 {
                     double interf = 0.;
@@ -1185,7 +1187,8 @@ void IABN::check_SINR_array()
                         double x3 = mmB3->getX(); double y3 = mmB3->getY(); point p3 = mmB3->get_loc();
                         if(cid3!=cid2 && cid3!=cid)
                         {
-                            double d31 = bg::distance(sought, p3);
+//                             double d31 = bg::distance(sought, p3);
+                            double d31 = euclidean_dist(x1,y1,x3,y3);
                             if (d31 < def_MAX_MMWAVE_RANGE)
                             {
                                 point p11 = point(x2-x1, y2-y1);
