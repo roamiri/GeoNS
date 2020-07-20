@@ -24,9 +24,9 @@ grid on;
 box on;
 xlim([1e1,1e5]);
 ylim([1e-4,1e4]);
-xlabel('number of nodes','FontSize',12);%, 'FontWeight','bold');
-ylabel('Loading time (s)','FontSize',12);%, 'FontWeight','bold');
-legend({'Spatial indexing', 'Array indexing'}, 'Location','northwest');
+xlabel('number of nodes','FontSize',14);%, 'FontWeight','bold');
+ylabel('Loading time (s)','FontSize',14);%, 'FontWeight','bold');
+legend({'Spatial indexing', 'Array indexing'}, 'Location','northwest', 'FontSize',14);
 %% SNR
 figure;
 % loglog(node_1, snr_tree_computation , '--ob', 'LineWidth',1.2,'MarkerSize',8, 'MarkerFaceColor','b');

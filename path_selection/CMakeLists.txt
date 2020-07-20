@@ -3,7 +3,7 @@ set(PROJECT_NAME "pathSelection")
 project(${PROJECT_NAME})
 
 set(MAIN
-${CMAKE_SOURCE_DIR}/path_selection/performance.cpp 
+${CMAKE_SOURCE_DIR}/path_selection/adjacency.cpp
 )
 
 set(SRC  

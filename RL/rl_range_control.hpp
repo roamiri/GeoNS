@@ -47,7 +47,7 @@ namespace rl
             {
                 stateSize = Kmax+1,  // the number of states 
                 zero = 0,            // the starting state 
-                goal = 4   // the goal state
+                goal = 3   // the goal state
             };
                 
                 typedef int phase_type;
