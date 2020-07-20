@@ -174,8 +174,8 @@ void IABN::load_nodes(std::string f_name, bool fixed, int fixed_count, double wi
     
     for(int i =0;i<num_nodes;i++)
     {
-        double x = center_x + 1.5*radius* vec_data[i][0];  // Convert from polar to Cartesian coordinates
-        double y = center_y + 1.5*radius* vec_data[i][1];
+        double x = center_x + radius* vec_data[i][0];  // Convert from polar to Cartesian coordinates
+        double y = center_y + radius* vec_data[i][1];
         
         bool vicinity = check_neighbors(x,y);
         
@@ -216,7 +216,7 @@ void IABN::generate_fixed_nodes(int count)
     {
         bs_ptr BS;
         double theta = i*delta_teta;
-        double r2 = radius/2.;
+        double r2 = radius/4.;
         double x = center_x + r2 * cos(theta);  // Convert from polar to Cartesian coordinates
         double y = center_y + r2 * sin(theta);
         BS = boost::shared_ptr<mmWaveBS>(new mmWaveBS(x, y, get_nextID()));
