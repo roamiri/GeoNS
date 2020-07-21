@@ -19,6 +19,7 @@
 #include <limits>
 #include <random>
 #include "boost/math/special_functions/log1p.hpp"
+
 #include <algorithm>
 #include <iterator>
 #include <bits/stdc++.h> 
@@ -1065,7 +1066,7 @@ double IABN::find_SINR_bottleneck()
     return bottleneck;
 }
 
-void IABN::check_SINR_tree()
+void IABN::check_SINR_tree(matrix<double> &m)
 {
     int Total_iter = m_items.size();
     boost::progress_display show_progress(Total_iter);
@@ -1117,6 +1118,10 @@ void IABN::check_SINR_tree()
                     
 //                    double snr = mmB->calculate_SNR_of_link(x2,y2, d21);
                      double sinr = mmB->calculate_SINR_of_link(x2,y2, d21, interf);
+//                      if(cid>m.size1()-1 || cid2 > m.size2()-1)
+//                          std::cout << "Here!!" << std::endl;
+                     // Id starts from 1, so the index of the matrix is id-1
+                     m(cid-1, cid2-1) = sinr;
                 }
             }
         }
@@ -1275,3 +1280,16 @@ void IABN::check_SINR_array2()
     }
 }
 
+
+matrix<double> IABN::Generate_Matrix_SINR()
+{
+    int num = get_IAB_count() + get_wired_count();
+    // Matrix containing SINR of all links
+    // Matrix is selected from boost::numeric::ublas::matrix
+    matrix<double> matrix_sinr (num, num);
+    for (unsigned i = 0; i < matrix_sinr.size1 (); ++ i)
+        for (unsigned j = 0; j < matrix_sinr.size2 (); ++ j)
+                matrix_sinr (i, j) = 0.0;
+    check_SINR_tree(matrix_sinr);
+    return matrix_sinr;
+}

@@ -68,8 +68,8 @@ public:
         for(int i=0;i<size;i++)
         {
             boost::shared_ptr<T> dd = v[i];
-            double x = (1) * (dd.get()->getX() + x_shift);
-            double y = (1) * (dd.get()->getY() + y_shift);
+            double x = (0.2) * (dd.get()->getX() + x_shift);
+            double y = (0.2) * (dd.get()->getY() + y_shift);
         
             std::size_t color = dd.get()->getColor();
             std::size_t red = (color & 0xff0000) >> 16; 

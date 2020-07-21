@@ -91,22 +91,21 @@ int main(int argc, char** argv)
     
 // Generate data on a disk with radius r with poisson point process    
     double area = def_Area*node_density;
-    double r = sqrt(1/M_PI)*sqrt(area); // radius of the disk
+    double r = 100*sqrt(1/M_PI)*sqrt(area); // radius of the disk
     double xx0=r; double yy0=r;    // center of the disk
-    iabn.set_center(xx0, yy0, 10*r);
+    iabn.set_center(xx0, yy0, r);
     
     if(b_input)
         iabn.load_nodes(input, fixed, fixed_count, wired_fractoin);
     else
         iabn.generate_nodes(node_density, fixed, fixed_count, wired_fractoin);
     
-//     iabn.generate_nodes(area_coeff, b_tree);
-    auto finish = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> loading_time = finish - start;
-    std::cout << "Total number of SBS = " << iabn.get_IAB_count() << std::endl;
-    std::cout << "Total number of MBS = " << iabn.get_wired_count() << std::endl;
+    std::cout << "IAB node count = " << iabn.get_IAB_count() << std::endl;
+    std::cout << "Wired node count = " << iabn.get_wired_count() << std::endl;
+    matrix<double> matrix_SINR = iabn.Generate_Matrix_SINR();
     
-    iabn.check_SINR_tree();
+//     std::cout << matrix_SINR << std::endl;
+    
     
     iabn.draw_svg(b_draw);
 //     if(b_tree)

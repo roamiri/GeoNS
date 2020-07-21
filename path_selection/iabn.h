@@ -10,6 +10,8 @@
 #include <boost/geometry/index/rtree.hpp>
 #include <boost/pointer_cast.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/numeric/ublas/matrix.hpp>
+#include <boost/numeric/ublas/io.hpp>
 
 #include "mmwavebs.h"
 #include "common.h"
@@ -23,6 +25,8 @@
 // typedef boost::shared_ptr<mmWaveBS> bs_ptr;
 
 // mmWave Integrated access and backhaul network
+using namespace boost::numeric::ublas;
+
 class IABN : public Container<mmWaveBS>
 {
     public:
@@ -51,7 +55,7 @@ class IABN : public Container<mmWaveBS>
     // Path selection considering interference
     void path_selection_HQF_Interf();
     
-    void check_SINR_tree();
+    void check_SINR_tree(matrix<double> &m);
     void check_SNR_array();
     void check_SINR_array();
     void check_SINR_array2(); // Another implementaion. Did not improve performance!
@@ -75,6 +79,8 @@ class IABN : public Container<mmWaveBS>
     polygon2D directional_polygon(point p1, point p2, double phi_m);
     
     point find_closest_wired(uint32_t id, point loc);
+    
+    matrix<double> Generate_Matrix_SINR();
     
 //     std::vector<bs_ptr> m_items;
 //     static std::shared_ptr<IDGenerator> m_idGenerator;
@@ -104,6 +110,7 @@ private:
 // 	std::shared_ptr<Painter> m_painter;
 // 	bool stop_thread = false;
 // 	std::thread m_draw_thread;
+
 };
 
 // std::shared_ptr<IDGenerator> IABN::m_idGenerator(IDGenerator::instance());
