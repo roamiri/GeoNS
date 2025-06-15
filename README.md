@@ -12,6 +12,10 @@ GeoNS is an open-source platform to simulate large-scale wireless networks. Cont
 * Reinforcement learning is implemented with the help of *RLLib* (see https://github.com/HerveFrezza-Buet/RLlib).
 * Modularity for easy modification / re-use of existing components.
 
+## Publications
+
+R. Amiri, E. Balevi, J. G. Andrews and H. Mehrpouyan, "Spatial Indexing for System-Level Evaluation of 5G Heterogeneous Cellular Networks," 2020 IEEE 92nd Vehicular Technology Conference, https://ieeexplore.ieee.org/abstract/document/9348595 
+
 ### Getting Started
 * Download
 Clone this repository to the local machine. You can use the git to clone or get the project via downloading the zip file.
